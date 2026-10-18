@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>كود · ARAB code | منصة الأكواد البرمجية العربية المفتوحة</title>
+
+<!-- إعدادات الـ SEO الأساسية -->
+<meta name="description" content="منصة ARAB CODE (عرب كود) هي المنصة العربية الأولى لمشاركة وتصفح الأكواد البرمجية والمشاريع مفتوحة المصدر. اكتشف أكواد جاهزة في HTML, CSS, JavaScript, Python وغيرها.">
+<meta name="keywords" content="ARAB CODE, عرب كود, اكواد برمجية, منصة برمجية, أكواد مفتوحة المصدر, برمجة, تطوير المواقع, JavaScript, HTML, CSS, Python, مشاركة الكود, مكتبة البرمجة العربية">
+<meta name="author" content="ARAB CODE">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Facebook / Telegram -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="كود · ARAB code | منصة الأكواد البرمجية المفتوحة">
+<meta property="og:description" content="منصة ARAB CODE لمشاركة واستعراض الأكواد البرمجية مفتوحة المصدر. انضم للمجتمع العربي للمبرمجين وشارك مشاريعك الآن.">
+<meta property="og:image" content="https://www.arab-code.cv/assets/brand/logo.png">
+<meta property="og:site_name" content="ARAB CODE">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="كود · ARAB code | منصة الأكواد البرمجية المفتوحة">
+<meta name="twitter:description" content="منصة ARAB CODE لمشاركة واستعراض الأكواد البرمجية مفتوحة المصدر والحلول البرمجية.">
+<meta name="twitter:image" content="https://www.arab-code.cv/assets/brand/logo.png">
+
+<!-- Favicon الأيقونة في المتصفح -->
+<!-- Schema.org JSON-LD للتعريف بالمنصة لمجركات البحث -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "ARAB CODE",
+  "alternateName": "عرب كود",
+  "url": "https://arab-web.vercel.app/",
+  "description": "منصة عربية شاملة لمشاركة الأكواد البرمجية والمشاريع المفتوحة المصدر"
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+  /* تنسيق الصورة البديلة للكرة الصفراء */
+  .brand-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 10px rgba(240, 180, 0, 0.4);
+  }
+
+  .container {
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 15px;
+  }
+
+  .code-view {
+    max-width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  /* تنسيق مربع الكود (خلفية سوداء، منع السحب الجانبي، والاتجاه من اليسار لليمين) */
+  .code-view pre {
+    background-color: #000000 !important;
+    direction: ltr;
+    text-align: left;
+    margin: 0;
+    padding: 15px 0;
+    max-height: 450px;
+    overflow-y: auto;
+    overflow-x: hidden !important;
+  }
+
+  .code-view pre code {
+    background-color: transparent !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    font-size: 0.8rem !important;
+    line-height: 1.5;
+    padding: 0 10px;
+    display: block;
+    counter-reset: line;
+  }
+
+  /* تنسيق أرقام الأسطر */
+  .code-view .ln {
+    counter-increment: line;
+    display: inline-block;
+    width: 25px;
+    min-width: 25px;
+    color: #666;
+    text-align: right;
+    margin-right: 15px;
+    user-select: none;
+    border-right: 1px solid #333;
+    padding-right: 8px;
+  }
+  
+  .code-view .ln::before {
+    content: counter(line);
+  }
+
+  /* تنسيق شارة البروفايل للناشر */
+  .author-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+    font-weight: 600;
+  }
+
+  .author-badge .avatar{width:28px;height:28px}
+  .author-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .verified-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* تنسيق أيقونات الأزرار */
+  .btn-icon {
+    vertical-align: middle;
+    margin-left: 5px;
+    width: 16px;
+    height: 16px;
+  }
+</style>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="48x48" href="https://www.arab-code.cv/assets/brand/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://www.arab-code.cv/assets/brand/apple-touch-icon.png">
+</head>
+<body>
+<div id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <button class="close-btn" onclick="toggleSidebar()">&times;</button>
+    <h3>القائمة</h3>
+  </div>
+  <div class="sidebar-links" id="sidebar-links">
+    <a href="/"><i class="icon">🏠</i> الرئيسية</a>
+    <a href="#" onclick="toggleSidebar(); return false;"><i class="icon">🔍</i> بحث عن كود</a>
+    <a href="/submit"><i class="icon">➕</i> إضافة كود</a>
+    <a href="/admin" id="admin-link" style="display:none"><i class="icon">🛠️</i> الإدارة</a>
+    <a href="#" onclick="logout(); return false;" id="logout-link" style="display:none"><i class="icon">🚪</i> تسجيل خروج</a>
+  </div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<nav class="nav">
+  <a href="/" class="brand"><span class="dot"></span> ARAB code</a>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+
+<main class="container">
+  <div id="header">
+    <div class="skeleton-card" style="height:80px;box-shadow:none;border-style:dashed;margin-bottom:14px">
+      <div class="skeleton-line skeleton-title"></div>
+      <div class="skeleton-line skeleton-text" style="width:40%"></div>
+    </div>
+  </div>
+  <div class="code-actions" id="actions" style="margin: 15px 0;"></div>
+  <div class="code-view">
+    <div id="code-skeleton" class="skeleton-code-view">
+      <div class="skeleton-code-line" style="width:80%"></div>
+      <div class="skeleton-code-line" style="width:60%"></div>
+      <div class="skeleton-code-line" style="width:90%"></div>
+      <div class="skeleton-code-line" style="width:40%"></div>
+      <div class="skeleton-code-line" style="width:75%"></div>
+    </div>
+    <pre><code id="code" class="hljs" style="display:none"></code></pre>
+  </div>
+  <div id="preview-wrap" style="display:none;margin-top:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <strong style="color:var(--gold-2)">معاينة حيّة</strong>
+      <span style="font-size:12px;color:var(--muted)">تعمل داخل صندوق آمن (sandbox)</span>
+    </div>
+    <iframe id="preview" sandbox="allow-scripts allow-modals allow-popups" style="width:100%;height:420px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
+  </div>
+
+  <!-- ===== التعليقات والبلاغ ===== -->
+  <section id="interact-section" style="margin-top:22px;border:1px solid var(--border);border-radius:20px;background:var(--panel);padding:18px">
+    <div id="interact-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"></div>
+  </section>
+</main>
+
+<!-- Comments Modal -->
+<div id="commentsModal" class="modal-overlay" onclick="if(event.target===this)closeComments()">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>التعليقات</h3>
+      <button class="close-modal" onclick="closeComments()">✕</button>
+    </div>
+    <div class="modal-body" id="comments-box"></div>
+    <div class="modal-footer" id="comment-form" style="display:none"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-decoration"></div>
+  <div class="footer-content">
+    <div class="footer-rights">
+      <span>© 2026 Code ARAB</span>
+      <span class="bmg">— BMG</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/app.js"></script>
+<script>
+(async () => {
+  await renderNav();
+  await renderBanOverlay(await loadMe());
+  const parts = location.pathname.split('/').filter(Boolean);
+  const filename = decodeURIComponent(parts[0] === 'c' ? (parts[1] || '') : (new URLSearchParams(location.search).get('file') || new URLSearchParams(location.search).get('c') || new URLSearchParams(location.search).get('x') || ''));
+  if (!filename) { location.href='/'; return; }
+  const stripExt = (s) => String(s).replace(/\.[^.]+$/, '');
+  let meta = { title: filename, author: 'unknown', language: (filename.includes('.') ? filename.split('.').pop() : 'txt') };
+  try {
+    const { codes } = await api('/api/list?_t=' + Date.now());
+    // Vercel cleanUrls strips ".html" from the URL, so fall back to a base-name match.
+    const found = codes.find(c => c.filename === filename)
+      || codes.find(c => stripExt(c.filename) === stripExt(filename))
+      || codes.find(c => c.filename.startsWith(filename + '.'));
+    if (found) { meta = found; filename = found.filename; }
+  } catch {}
+  
+  // تحديث عنوان الصفحة ووسوم الـ SEO ديناميكياً
+  if (meta.title) {
+    const fullTitle = `${meta.title} · ARAB code | كود برمجي`;
+    document.title = fullTitle;
+    
+    // Update Meta Tags for SEO & Social Media
+    const updateMeta = (name, content, attr='name') => {
+      let el = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+    
+    updateMeta('description', meta.description || `تصفح كود ${meta.title} على منصة ARAB code.`);
+    updateMeta('og:title', fullTitle, 'property');
+    updateMeta('og:description', meta.description || `كود ${meta.title} متاح الآن على ARAB code.`, 'property');
+    updateMeta('og:url', window.location.href, 'property');
+    updateMeta('twitter:title', fullTitle);
+    updateMeta('twitter:description', meta.description || `تصفح كود ${meta.title} على ARAB code.`);
+  }
+
+  const rawUrl = `/api/raw?file=${encodeURIComponent(filename)}`;
+  const ghRaw = `https://raw.githubusercontent.com/mzml-gg/arab-web/main/codes/${encodeURIComponent(filename)}`;
+  window.__filename = filename;
+  const me = await loadMe();
+  const isOwner = me && me.username.toLowerCase() === (meta.author||'').toLowerCase();
+
+  const renderAuthor = (m) => authorLink(m);
+
+  document.getElementById('header').innerHTML = `
+    <div class="code-header">
+      <div>
+        <h2 style="margin:0 0 10px 0;">${esc(meta.title)}</h2>
+        <div class="meta-row">
+          ${renderAuthor(meta)}
+          <span>·</span>
+          <span class="lang-tag">${esc(meta.language||'txt')}</span>
+          <span>·</span>
+          <span style="opacity:0.7;">${esc(filename)}</span>
+        </div>
+      </div>
+    </div>`;
+
+  const actions = document.getElementById('actions');
+  let siteSettings = { direct_delete:false, delete_requests_enabled:true };
+  try { siteSettings = (await api('/api/public-settings')).settings || siteSettings; } catch {}
+  const isVerifiedOwner = isOwner && (me.is_verified_badge || me.is_admin);
+  const canDirectDelete = !!me && (me.is_admin || isVerifiedOwner || (isOwner && siteSettings.direct_delete));
+  const canRequestDelete = !!me && isOwner && !canDirectDelete && siteSettings.delete_requests_enabled;
+
+  // Languages that can be rendered live in a sandboxed preview
+  const ext = (filename.includes('.') ? filename.split('.').pop() : '').toLowerCase();
+  const previewable = ['html','htm','css','svg','md','markdown'].includes(ext)
+    || ['html','css','svg','markdown','md'].includes(String(meta.language||'').toLowerCase());
+  window.__filename = filename;
+
+  // ===== Interaction section =====
+  const interactSection = document.getElementById('interact-section');
+  let allComments = [];
+  let visibleCommentsCount = 5;
+
+  function showCommentsSkeleton(container, count = 3) {
+    if (!container) return;
+    container.innerHTML = Array.from({ length: count }, () => `
+      <div class="skeleton-comment">
+        <div class="skeleton-comment-avatar"></div>
+        <div class="skeleton-comment-body">
+          <div class="skeleton-comment-line" style="width:30%"></div>
+          <div class="skeleton-comment-line"></div>
+          <div class="skeleton-comment-line short"></div>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderCommentsList(me) {
+    const box = document.getElementById('comments-box');
+    if (!box) return;
+    
+    const visible = allComments.slice(0, visibleCommentsCount);
+    if (!allComments.length) {
+      box.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:10px 0">لا تعليقات بعد. كن أول من يعلّق!</p>';
+      return;
+    }
+
+    let html = visible.map((c, index) => `
+      <div class="comment-row reveal-item" style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);--i:${index}">
+        <div style="flex-shrink:0">${avatarNode({ username: c.author, avatar_url: c.avatar_url })}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <a href="/u/${encodeURIComponent(c.author)}" style="font-weight:700;color:var(--gold-2);text-decoration:none;font-size:13.5px">${esc(c.display_name || c.author)}</a>
+            ${c.is_verified_badge ? verifiedBadge() : ''}
+            ${c.line ? `<span class="lang-tag" style="font-size:10.5px">سطر ${c.line}</span>` : ''}
+            <span style="font-size:11px;color:var(--muted)">${new Date(c.created_at).toLocaleString('ar')}</span>
+            ${me && (me.username.toLowerCase() === c.author.toLowerCase() || me.is_admin) ? `<button class="btn ghost sm" style="font-size:11px;padding:3px 10px" onclick="deleteComment('${c.id}')">حذف</button>` : ''}
+          </div>
+          <p style="margin:5px 0 0;font-size:13.5px;line-height:1.7;color:var(--text);word-break:break-word">${esc(c.text)}</p>
+        </div>
+      </div>`).join('');
+
+    if (allComments.length > visibleCommentsCount) {
+      html += `<button class="load-more-comments" onclick="loadMoreComments()">عرض المزيد من التعليقات (${allComments.length - visibleCommentsCount})</button>`;
+    }
+    box.innerHTML = html;
+  }
+
+  window.loadMoreComments = function() {
+    visibleCommentsCount += 10;
+    loadMe().then(me => renderCommentsList(me));
+  };
+
+  window.openComments = function() {
+    const modal = document.getElementById('commentsModal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('open'), 10);
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeComments = function() {
+    const modal = document.getElementById('commentsModal');
+    modal.classList.remove('open');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }, 300);
+  };
+
+  async function renderInteraction() {
+    if (!interactSection) return;
+    const box = document.getElementById('comments-box');
+    showCommentsSkeleton(box);
+    
+    const [comments, me] = await Promise.all([loadComments(filename), loadMe()]);
+    allComments = comments;
+    const bannedMe = !!(me && me.ban);
+    const header = document.getElementById('interact-header');
+    header.innerHTML = `
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost" onclick="openComments()" style="display:inline-flex;align-items:center;gap:8px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          التعليقات <span style="font-weight:700">${allComments.length}</span>
+        </button>
+      </div>
+      <button class="btn ghost sm" onclick="doReportPrompt()" style="font-size:12.5px;color:var(--muted)">⚑ إبلاغ عن الكود</button>`;
+    
+    renderCommentsList(me);
+    const form = document.getElementById('comment-form');
+    if (!me) {
+      form.style.display = 'block';
+      form.innerHTML = `<a class="btn primary" href="/auth" style="width:100%;text-align:center;border-radius:18px">سجّل دخول لتعلّق على الكود</a>`;
+    } else if (bannedMe) {
+      form.style.display = 'block';
+      form.innerHTML = `<p style="color:var(--danger);font-size:13px;text-align:center">حسابك مغلق مؤقتًا ولا يمكنك التعليق.</p>`;
+    } else {
+      form.style.display = 'block';
+      form.innerHTML = `
+        <div style="display:flex;gap:10px;align-items:flex-end">
+          <textarea id="commentInput" placeholder="اكتب تعليقك..." style="flex:1;min-height:46px;max-height:120px;padding:12px 14px;border-radius:18px;border:1px solid var(--border);background:#fff;color:var(--text);font-family:'Cairo',sans-serif;font-size:14px;resize:none"></textarea>
+          <button class="icon-btn primary" onclick="submitComment(this)" style="width:46px;height:46px;flex-shrink:0;border-radius:18px">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+        <p id="commentMsg" style="margin-top:8px;font-size:12.5px;text-align:center"></p>`;
+    }
+  }
+
+  window.deleteComment = async function (id) {
+    if (!confirm('حذف التعليق؟')) return;
+    try {
+      await api('/api/comments', { method: 'DELETE', body: JSON.stringify({ id }) });
+      await renderInteraction();
+    } catch (e) { alert(e.message); }
+  };
+  window.submitComment = async function (btn) {
+    const input = document.getElementById('commentInput');
+    const text = input.value.trim();
+    if (!text) return;
+    btn.disabled = true;
+    const msg = document.getElementById('commentMsg');
+    const check = await checkProfanity(text);
+    if (!check.ok) {
+      msg.style.color = 'var(--danger)';
+      msg.textContent = '⚠️ ' + check.warning;
+      btn.disabled = false;
+      return;
+    }
+    try {
+      await api('/api/comments', { method: 'POST', body: JSON.stringify({ code: filename, text }) });
+      input.value = '';
+      msg.style.color = 'var(--gold-2)';
+      msg.textContent = '✓ تم نشر التعليق';
+      setTimeout(() => renderInteraction(), 600);
+    } catch (e) {
+      msg.style.color = 'var(--danger)';
+      msg.textContent = e.message;
+      btn.disabled = false;
+    }
+  };
+  window.doReportPrompt = async function () {
+    const me = await loadMe();
+    if (!me) return alert('سجّل دخول أولاً');
+    if (me.ban) return alert('حسابك مغلق ولا يمكنك البلاغ');
+    const text = prompt('اكتب سبب البلاغ عن هذا الكود:');
+    if (!text || !text.trim()) return;
+    const check = await checkProfanity(text);
+    if (!check.ok) return alert('⚠️ ' + check.warning);
+    try {
+      await submitReport(text.trim());
+      alert('✓ تم إرسال البلاغ للإدارة');
+    } catch (e) { alert(e.message); }
+  };
+  await renderInteraction();
+  window.__filename = filename;
+
+  actions.innerHTML = `
+    <button class="btn primary" id="copyBtn" onclick="copyCode()">
+      <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      نسخ
+    </button>
+    <a class="btn" href="${ghRaw}" target="_blank">Raw</a>
+    <a class="btn" href="/submit?fork=${encodeURIComponent(filename)}">🍴 Fork</a>
+    ${previewable ? `<button class="btn" id="previewBtn" onclick="togglePreview()">▶ تشغيل / معاينة</button>` : ''}
+    ${canDirectDelete ? `<button class="btn danger" onclick="directDelete('${esc(filename)}')">حذف</button>` : (canRequestDelete ? `<button class="btn danger" onclick="requestDelete()">طلب حذف</button>` : '')}
+  `;
+
+  try {
+    const r = await fetch(rawUrl);
+    const t = await r.text();
+    window.__codeText = t;
+    const codeEl = document.getElementById('code');
+    const skeleton = document.getElementById('code-skeleton');
+    if (skeleton) skeleton.style.display = 'none';
+    codeEl.style.display = 'block';
+    codeEl.textContent = t;
+    const HL = { js:'javascript', mjs:'javascript', cjs:'javascript', ts:'typescript', py:'python',
+      html:'xml', htm:'xml', svg:'xml', md:'markdown', sh:'bash', yml:'yaml', rs:'rust',
+      cs:'csharp', cpp:'cpp', c:'c', kt:'kotlin', rb:'ruby', txt:'plaintext' };
+    const langKey = String(meta.language || ext || 'plaintext').toLowerCase();
+    const hlLang = HL[langKey] || langKey;
+    codeEl.className = 'hljs';
+    if (window.hljs) {
+      try {
+        const out = hljs.getLanguage(hlLang) ? hljs.highlight(t, { language: hlLang }) : hljs.highlightAuto(t);
+        codeEl.innerHTML = out.value;
+      } catch { codeEl.textContent = t; }
+    }
+    
+    let htmlLines = codeEl.innerHTML.split(/\r?\n/);
+    if (htmlLines[htmlLines.length - 1].trim() === '') htmlLines.pop(); 
+    codeEl.innerHTML = htmlLines.map(line => `<span class="ln"></span>${line}`).join('\n');
+    
+  } catch (e) {
+    document.getElementById('code').textContent = 'تعذّر تحميل الكود';
+  }
+})();
+
+async function copyCode() {
+  const btn = document.getElementById('copyBtn');
+  const originalHtml = btn.innerHTML;
+
+  try { 
+    await navigator.clipboard.writeText(window.__codeText || ''); 
+    btn.innerHTML = `
+      <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      تم النسخ
+    `;
+    
+    setTimeout(() => {
+      btn.innerHTML = originalHtml;
+    }, 2000);
+
+  } catch { 
+    btn.innerHTML = 'تعذر النسخ ❌'; 
+    setTimeout(() => {
+      btn.innerHTML = originalHtml;
+    }, 2000);
+  }
+}
+
+function buildPreviewDoc(text, ext) {
+  const e = String(ext || '').toLowerCase();
+  if (e === 'css') return `<!doctype html><meta charset="utf-8"><style>${text}</style>
+    <body style="font-family:system-ui;padding:16px">
+      <h1>عنوان تجريبي</h1><p>فقرة نصية لمعاينة تنسيقات CSS.</p>
+      <button>زر</button> <a href="#">رابط</a>
+      <div class="box card container" style="margin-top:12px">.box / .card / .container</div>
+    </body>`;
+  if (e === 'svg') return `<!doctype html><meta charset="utf-8"><body style="margin:0;display:grid;place-items:center;height:100vh">${text}</body>`;
+  if (e === 'md' || e === 'markdown') return `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;padding:16px;white-space:pre-wrap">${text.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</body>`;
+  return text; // html
+}
+
+function togglePreview() {
+  const wrap = document.getElementById('preview-wrap');
+  const btn = document.getElementById('previewBtn');
+  const open = wrap.style.display === 'none';
+  wrap.style.display = open ? 'block' : 'none';
+  btn.textContent = open ? '■ إيقاف المعاينة' : '▶ تشغيل / معاينة';
+  const frame = document.getElementById('preview');
+  if (open) {
+    const name = window.__filename || '';
+    const ext = name.includes('.') ? name.split('.').pop() : 'html';
+    frame.srcdoc = buildPreviewDoc(window.__codeText || '', ext);
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else {
+    frame.srcdoc = '';
+  }
+}
+
+async function requestDelete() {
+  const reason = prompt('سبب طلب الحذف (اختياري):') || '';
+  if (reason === null) return;
+  const filename = window.__filename || '';
+  try {
+    await api('/api/delete-request', { method:'POST', body: JSON.stringify({ filename, reason }) });
+    alert('تم إرسال طلب الحذف للإدارة ✓');
+  } catch (e) { alert(e.message); }
+}
+
+async function directDelete(filename) {
+  if (!confirm('حذف الكود نهائياً؟ لا يمكن التراجع.')) return;
+  try {
+    await api('/api/delete-code', { method:'POST', body: JSON.stringify({ filename }) });
+    alert('تم حذف الكود ✓');
+    location.href = '/';
+  } catch (e) { alert(e.message); }
+}
+</script>
+</body>
+</html>

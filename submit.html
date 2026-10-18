@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إضافة كود | Add Code · ARAB code</title>
+<meta name="description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files.">
+<meta name="keywords" content="أكواد, مطورين عرب, برمجة, مشاركة كود, HTML, CSS, JavaScript, Python, Arab developers, code sharing, programming, snippets">
+<link rel="canonical" href="https://www.arab-code.cv/submit">
+<link rel="alternate" hreflang="ar" href="https://www.arab-code.cv/submit">
+<link rel="alternate" hreflang="en" href="https://www.arab-code.cv/submit">
+<link rel="alternate" hreflang="x-default" href="https://www.arab-code.cv/submit">
+<meta property="og:type" content="website"><meta property="og:site_name" content="ARAB code">
+<meta property="og:locale" content="ar_AR"><meta property="og:locale:alternate" content="en_US">
+<meta property="og:title" content="إضافة كود | Add Code · ARAB code"><meta property="og:description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files.">
+<meta property="og:url" content="https://www.arab-code.cv/submit"><meta property="og:image" content="https://www.arab-code.cv/assets/brand/logo.png">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="إضافة كود | Add Code · ARAB code"><meta name="twitter:description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files."><meta name="twitter:image" content="https://www.arab-code.cv/assets/brand/logo.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.ed-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px;direction:ltr}
+.ed-group{display:inline-flex;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:var(--panel)}
+.ed-group button{border:0;background:none;padding:6px 14px;font:inherit;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer}
+.ed-group button.active{background:var(--gold);color:#201a08}
+.ed-count{margin-inline-start:auto;font-size:12px;color:var(--gold-dim)}
+.ed-host{height:420px;border-radius:14px;overflow:hidden;border:1px solid var(--border);direction:ltr;text-align:left}
+.ed-host .cm-editor{height:100%}
+.ed-actions{margin-top:8px;display:flex;justify-content:flex-start}
+.ed-preview{margin-top:10px}
+.ed-preview iframe{width:100%;height:360px;border:1px solid var(--border);border-radius:14px;background:#fff;margin-top:8px}
+@media(max-width:600px){.ed-host{height:340px}}
+</style>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="48x48" href="https://www.arab-code.cv/assets/brand/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://www.arab-code.cv/assets/brand/apple-touch-icon.png">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="brand"><span class="dot"></span> ARAB code</a>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+<main>
+  <form class="form" id="form" style="max-width:640px">
+    <h2 id="form-title">إضافة كود</h2>
+    <p class="sub">راح يُراجَع من الإدارة قبل النشر</p>
+    <div id="msg" class="msg"></div>
+    <div class="field"><label>العنوان</label><input name="title" required maxlength="120"/></div>
+    <div class="field"><label>وصف قصير</label><input name="description" maxlength="300"/></div>
+    <div class="field"><label>اللغة</label>
+      <select name="language">
+        <option value="js">JavaScript</option>
+        <option value="html">HTML</option>
+        <option value="css">CSS</option>
+        <option value="py">Python</option>
+        <option value="php">PHP</option>
+        <option value="java">Java</option>
+        <option value="cpp">C++</option>
+        <option value="cs">C#</option>
+        <option value="ts">TypeScript</option>
+        <option value="go">Go</option>
+        <option value="rs">Rust</option>
+        <option value="txt">أخرى</option>
+      </select>
+    </div>
+    <div class="field"><label>الكود</label>
+      <div class="ed-bar">
+        <div class="ed-group"><button type="button" class="ed-mode active" data-mode="unified">موحّد</button><button type="button" class="ed-mode" data-mode="split">منفصل</button></div>
+        <div class="ed-group"><button type="button" class="ed-tab active" data-tab="html">HTML</button><button type="button" class="ed-tab" data-tab="css" style="display:none">CSS</button><button type="button" class="ed-tab" data-tab="js" style="display:none">JS</button></div>
+        <span id="lineCount" class="ed-count">0 سطر</span>
+      </div>
+      <div id="editorHost" class="ed-host"></div>
+      <div class="ed-actions"><button type="button" class="btn" id="previewBtn">👁 معاينة</button></div>
+      <div id="previewBox" class="ed-preview" style="display:none"><button type="button" class="btn" id="previewClose">إغلاق المعاينة ✕</button><iframe id="previewFrame" sandbox="allow-scripts" title="معاينة"></iframe></div>
+    </div>
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAAFDSVkFD-ysdHC_H" data-theme="dark" style="margin:10px 0"></div>
+    <button type="submit" class="btn primary submit">إرسال للمراجعة</button>
+  </form>
+</main>
+
+<footer class="footer">
+  <div class="footer-decoration"></div>
+  <div class="footer-content">
+    <div class="footer-rights">
+      <span>© 2026 Code ARAB</span>
+      <span class="bmg">— BMG</span>
+    </div>
+  </div>
+</footer>
+<script src="/app.js"></script>
+<script type="module" src="/submit.js"></script>
+<script src="/ts.js"></script><script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=tsInit" async defer></script>
+<script>
+(async () => {
+  await renderNav();
+  const me = await loadMe();
+  if (!me) { location.href = '/auth?mode=login'; return; }
+
+
+  const fork = new URLSearchParams(location.search).get('fork');
+  if (fork) {
+    document.getElementById('form-title').textContent = 'Fork: ' + fork;
+    try {
+      const { codes } = await api('/api/list');
+      const meta = codes.find(c => c.filename === fork);
+      if (meta) {
+        document.querySelector('[name=title]').value = 'Fork of ' + meta.title;
+        document.querySelector('[name=description]').value = meta.description || '';
+        const langSel = document.querySelector('[name=language]');
+        if (meta.language) [...langSel.options].forEach(o => { if (o.value === meta.language) o.selected = true; });
+      }
+      const r = await fetch('/api/raw?file=' + encodeURIComponent(fork));
+      if (r.ok) { const t = await r.text(); const put = () => window.setEditorCode(t); window.setEditorCode ? put() : window.addEventListener('editor-ready', put, { once: true }); }
+    } catch (e) { console.error(e); }
+  }
+})();
+
+document.getElementById('form').onsubmit = async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('msg'); msg.className='msg'; msg.textContent='';
+  const body = Object.fromEntries(new FormData(e.target).entries());
+  if (!window.getEditorCode) { msg.className='msg err'; msg.textContent='المحرر لم يكتمل تحميله'; return; }
+  body.code = window.getEditorCode();
+  if (window.isSplitMode && window.isSplitMode()) body.language = 'html';
+  if (!body.code.trim()) { msg.className='msg err'; msg.textContent='اكتب الكود أولاً'; return; }
+  body.turnstile_token = (document.querySelector('[name=cf-turnstile-response]') || {}).value || '';
+  try {
+    const r = await api('/api/submit', { method:'POST', body: JSON.stringify(body) });
+    if (r.published) { msg.className='msg ok'; msg.textContent='✓ تم نشر الكود مباشرة.'; setTimeout(()=>{ location.href = r.url; }, 900); }
+    else { msg.className='msg ok'; msg.textContent='✓ تم الإرسال. سيراجعه الأدمن.'; e.target.reset(); window.setEditorCode(''); }
+  } catch (err) { msg.className='msg err'; msg.textContent=err.message; if (window.turnstile) try { turnstile.reset(); } catch (_) {} }
+};
+</script>
+</body>
+</html>

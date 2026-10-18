@@ -1,0 +1,1187 @@
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>جدول المواعيد الشقي | Venom Designs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --p1:#7c3aed;
+    --p2:#ec4899;
+    --p3:#f59e0b;
+    --p4:#06b6d4;
+    --p5:#22c55e;
+    --ink:#1b1035;
+    --muted:#6b6485;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    font-family:'Cairo',system-ui,-apple-system,'Segoe UI',sans-serif;
+    color:var(--ink);
+    background-color:#faf7ff;
+    background-image:
+      radial-gradient(900px 500px at 8% -8%, #ffe0f5 0%, transparent 60%),
+      radial-gradient(820px 460px at 100% 0%, #d5f6ff 0%, transparent 58%),
+      radial-gradient(900px 620px at 50% 118%, #fff2cc 0%, transparent 62%);
+    background-attachment:fixed;
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ===== Decorative blobs ===== */
+  .blobs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;animation:floaty 16s ease-in-out infinite;}
+  .blob.b1{width:320px;height:320px;background:#f0abfc;top:-80px;inset-inline-start:-60px;}
+  .blob.b2{width:280px;height:280px;background:#7dd3fc;top:20%;inset-inline-end:-70px;animation-delay:-4s;}
+  .blob.b3{width:300px;height:300px;background:#fcd34d;bottom:-90px;inset-inline-start:30%;animation-delay:-8s;opacity:.45;}
+  @keyframes floaty{
+    0%,100%{transform:translate3d(0,0,0) scale(1);}
+    50%{transform:translate3d(0,-28px,0) scale(1.08);}
+  }
+  @media (prefers-reduced-motion:reduce){.blob{animation:none;}}
+
+  /* ===== Screens ===== */
+  .screen{display:none;position:relative;z-index:1;}
+  .screen.active{display:block;}
+  #setupScreen{padding:20px;}
+  #setupScreen.active{display:grid;place-items:center;min-height:100vh;}
+
+  /* ===== Setup card ===== */
+  .setup-card{
+    width:100%;max-width:540px;
+    background:rgba(255,255,255,.88);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border:2px solid #fff;
+    border-radius:32px;
+    padding:34px 28px 26px;
+    box-shadow:0 34px 70px -30px rgba(88,28,135,.55);
+    position:relative;overflow:hidden;
+    animation:pop .5s cubic-bezier(.2,.9,.3,1.4);
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(24px) scale(.96);}to{opacity:1;transform:none;}}
+  .setup-card::before{
+    content:'';position:absolute;inset-inline:0;top:0;height:9px;
+    background:linear-gradient(90deg,#7c3aed,#ec4899,#f59e0b,#06b6d4,#22c55e);
+  }
+  .brand{text-align:center;margin-bottom:22px;}
+  .brand-badge{
+    width:74px;height:74px;margin:0 auto 12px;border-radius:24px;
+    display:grid;place-items:center;font-size:2rem;
+    background:linear-gradient(140deg,#7c3aed,#ec4899 60%,#f59e0b);
+    box-shadow:0 18px 34px -14px rgba(236,72,153,.85);
+    animation:wobble 3.5s ease-in-out infinite;
+  }
+  @keyframes wobble{0%,100%{transform:rotate(-4deg);}50%{transform:rotate(4deg);}}
+  .brand-title{
+    margin:0;font-size:1.75rem;font-weight:900;line-height:1.3;
+    background:linear-gradient(110deg,#7c3aed,#ec4899 50%,#f59e0b);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .brand-tag{
+    margin:8px 0 0;font-weight:800;font-size:.95rem;color:#8b5cf6;
+    background:#f5f0ff;display:inline-block;padding:6px 14px;border-radius:999px;
+  }
+
+  .field{display:block;margin-bottom:16px;}
+  .field > span{display:block;font-weight:800;font-size:.9rem;margin-bottom:8px;color:#3b2a63;}
+  .field input,.field select{
+    width:100%;padding:14px 16px;border-radius:16px;border:2px solid #ece6fb;
+    background:#fff;font-family:inherit;font-size:1rem;color:var(--ink);
+    transition:border-color .2s, box-shadow .2s;outline:none;
+  }
+  .field input::placeholder{color:#b3aacb;}
+  .field input:focus,.field select:focus{
+    border-color:#a855f7;box-shadow:0 0 0 5px rgba(168,85,247,.16);
+  }
+
+  /* ===== Buttons ===== */
+  .btn{
+    font-family:inherit;font-weight:800;border:none;border-radius:999px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    transition:transform .15s ease, box-shadow .2s ease, filter .2s ease;
+    font-size:.95rem;padding:12px 20px;line-height:1.2;
+  }
+  .btn:active{transform:translateY(1px) scale(.985);}
+  .btn-primary{
+    background:linear-gradient(120deg,#7c3aed,#ec4899 55%,#f59e0b);color:#fff;
+    box-shadow:0 16px 30px -14px rgba(124,58,237,.9);
+  }
+  .btn-primary:hover{filter:brightness(1.08);transform:translateY(-2px);}
+  .btn-lg{width:100%;padding:16px 22px;font-size:1.05rem;border-radius:18px;margin-top:6px;}
+  .btn-ghost{
+    background:#f4efff;color:#5b3fa8;border:2px solid #e6dbff;
+  }
+  .btn-ghost:hover{background:#ebe2ff;transform:translateY(-2px);}
+  .btn-mini{padding:9px 14px;font-size:.84rem;background:#fff;border:2px solid #ebe2ff;color:#5b3fa8;}
+  .btn-mini:hover{background:#f7f3ff;transform:translateY(-2px);}
+  .btn-mini.danger{color:#be123c;border-color:#ffd9e2;background:#fff5f7;}
+  .btn-mini.danger:hover{background:#ffe8ee;}
+
+  .setup-foot{
+    margin-top:20px;text-align:center;font-size:.8rem;font-weight:800;color:#a397c4;
+  }
+  .setup-foot b{color:#7c3aed;}
+
+  /* ===== App header ===== */
+  .app-header{
+    background:rgba(255,255,255,.8);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:2px solid #fff;
+    padding:14px 16px 12px;
+    box-shadow:0 16px 40px -34px rgba(76,29,149,.9);
+  }
+  .hdr-inner{
+    max-width:1120px;margin:0 auto;display:flex;align-items:center;
+    justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .logo{display:flex;align-items:center;gap:12px;}
+  .logo-mark{
+    width:50px;height:50px;border-radius:16px;display:grid;place-items:center;font-size:1.5rem;
+    background:linear-gradient(140deg,#7c3aed,#ec4899 60%,#f59e0b);
+    box-shadow:0 14px 26px -12px rgba(236,72,153,.9);
+    flex:none;
+  }
+  .logo h1{
+    margin:0;font-size:1.18rem;font-weight:900;line-height:1.25;
+    background:linear-gradient(110deg,#7c3aed,#ec4899 55%,#f59e0b);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .logo p{margin:2px 0 0;font-size:.74rem;font-weight:800;color:#a78bfa;}
+
+  .user-chip{
+    display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #f0e9ff;
+    border-radius:999px;padding:7px 12px 7px 8px;box-shadow:0 12px 24px -18px rgba(88,28,135,.9);
+  }
+  .avatar{
+    width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;
+    background:linear-gradient(140deg,#06b6d4,#22c55e);color:#fff;font-weight:900;font-size:1rem;
+  }
+  .u-info{display:flex;flex-direction:column;line-height:1.15;max-width:190px;}
+  .u-info strong{font-size:.86rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .u-info span{font-size:.7rem;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .icon-btn{
+    border:none;background:#f4efff;width:34px;height:34px;border-radius:50%;
+    cursor:pointer;font-size:.9rem;display:grid;place-items:center;transition:.2s;
+  }
+  .icon-btn:hover{background:#e9ddff;transform:rotate(-10deg);}
+
+  /* ===== Tabs ===== */
+  .tabs{
+    max-width:1120px;margin:14px auto 0;display:flex;gap:8px;overflow-x:auto;
+    padding:6px;background:rgba(244,239,255,.8);border-radius:999px;border:2px solid #fff;
+    scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    border:none;background:transparent;font-family:inherit;font-weight:800;
+    padding:11px 18px;border-radius:999px;cursor:pointer;color:#5b4a86;
+    white-space:nowrap;transition:.25s;font-size:.9rem;
+  }
+  .tab:hover{background:#fff;color:#7c3aed;}
+  .tab.active{
+    background:linear-gradient(120deg,#7c3aed,#ec4899);color:#fff;
+    box-shadow:0 14px 24px -14px rgba(236,72,153,.95);
+  }
+
+  /* ===== Layout ===== */
+  .container{max-width:1120px;margin:0 auto;padding:20px 16px 60px;}
+  .panel{display:none;animation:fadeUp .35s ease;}
+  .panel.active{display:block;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* ===== Stats ===== */
+  .stats-row{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:12px;margin-bottom:20px;
+  }
+  .stat-card{
+    background:#fff;border:2px solid #fff;border-radius:22px;padding:14px 16px;
+    display:flex;align-items:center;gap:12px;
+    box-shadow:0 20px 34px -26px rgba(88,28,135,.9);
+    transition:transform .2s;
+  }
+  .stat-card:hover{transform:translateY(-3px);}
+  .s-ico{
+    width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:1.25rem;flex:none;
+    background:linear-gradient(140deg,#f5f0ff,#e6f9ff);
+  }
+  .stat-card b{display:block;font-size:1.3rem;font-weight:900;line-height:1;}
+  .stat-card span{font-size:.76rem;font-weight:700;color:var(--muted);}
+  .stat-card:nth-child(1) b{color:#7c3aed;}
+  .stat-card:nth-child(2) b{color:#ec4899;}
+  .stat-card:nth-child(3) b{color:#f59e0b;}
+
+  /* ===== Card ===== */
+  .card{
+    position:relative;background:rgba(255,255,255,.94);border:2px solid #fff;
+    border-radius:28px;padding:20px;margin-bottom:22px;overflow:hidden;
+    box-shadow:0 30px 60px -34px rgba(88,28,135,.6);
+  }
+  .watermark{
+    position:absolute;bottom:8px;inset-inline-end:-10px;font-size:5rem;font-weight:900;
+    color:#7c3aed;opacity:.05;transform:rotate(-16deg);pointer-events:none;
+    white-space:nowrap;letter-spacing:4px;z-index:0;user-select:none;
+  }
+  .card-head,.toolbar,.add-form,.table-wrap,.toggle-row,.quick-chips,.ex-off{position:relative;z-index:1;}
+  .card-head{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:12px;flex-wrap:wrap;margin-bottom:16px;
+  }
+  .card-head h2{
+    margin:0;font-size:1.28rem;font-weight:900;
+    background:linear-gradient(115deg,#7c3aed,#ec4899);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .who{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;}
+  .who-item{
+    background:#f5f0ff;border-radius:999px;padding:4px 11px;
+    font-size:.74rem;font-weight:800;color:#5b3fa8;
+  }
+  .head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .venom-badge{
+    display:inline-flex;align-items:center;gap:6px;
+    background:linear-gradient(120deg,#1e1b4b,#7c3aed 60%,#ec4899);
+    color:#fff;font-weight:900;font-size:.75rem;padding:8px 14px;border-radius:999px;
+    letter-spacing:.6px;box-shadow:0 12px 22px -12px rgba(124,58,237,.95);white-space:nowrap;
+  }
+  .venom-badge::before{content:'🐍';font-size:.9rem;}
+
+  /* ===== Toolbar ===== */
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+  .hint{font-size:.76rem;font-weight:700;color:#a397c4;}
+
+  /* ===== Tables ===== */
+  .table-wrap{
+    overflow:auto;border-radius:20px;border:2px solid #f0e9ff;background:#fff;
+    -webkit-overflow-scrolling:touch;
+  }
+  .grid-table{width:100%;border-collapse:separate;border-spacing:0;}
+  .list-table{min-width:520px;font-size:.9rem;}
+  .school-table{min-width:680px;font-size:.86rem;}
+
+  .grid-table th,.grid-table td{
+    border-bottom:1px solid #f4efff;border-inline-start:1px solid #f8f4ff;
+    padding:0;vertical-align:middle;
+  }
+  .grid-table thead th{
+    color:#fff;font-weight:900;font-size:.82rem;padding:10px 8px;text-align:center;
+    position:relative;
+  }
+  .grid-table thead th.corner{
+    background:linear-gradient(140deg,#3b0764,#7c3aed);
+    font-size:.78rem;text-align:center;padding:10px 12px;
+    position:sticky;right:0;z-index:5;white-space:nowrap;
+  }
+  .period-th{min-width:118px;}
+  .p-label{
+    font-size:.82rem;font-weight:900;outline:none;border-radius:6px;padding:2px 4px;
+  }
+  .p-time{font-size:.7rem;font-weight:700;opacity:.92;outline:none;margin-top:2px;padding:1px 4px;border-radius:6px;}
+  .p-label:hover,.p-time:hover{background:rgba(255,255,255,.22);}
+  .p-label:focus,.p-time:focus{background:rgba(255,255,255,.35);}
+
+  .grid-table tbody th.day-th{
+    background:linear-gradient(120deg,#fdf1ff,#eef7ff);
+    font-weight:900;font-size:.86rem;text-align:center;padding:12px 10px;
+    color:#4c1d95;position:sticky;right:0;z-index:4;white-space:nowrap;
+    border-inline-end:2px solid #ede4ff;
+  }
+  .cell-in{
+    min-height:54px;padding:10px 8px;outline:none;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-weight:700;font-size:.84rem;transition:background .2s, box-shadow .2s;
+    word-break:break-word;line-height:1.35;
+  }
+  .cell-in:focus{background:#fffbeb;box-shadow:inset 0 0 0 2px #f59e0b;}
+
+  .list-table thead th{
+    background:linear-gradient(120deg,#7c3aed,#a855f7);
+    color:#fff;font-weight:900;font-size:.82rem;padding:12px 14px;text-align:start;
+  }
+  .list-table td{padding:12px 14px;text-align:start;font-weight:700;font-size:.86rem;}
+  .list-table tbody tr:hover td{background:#fdfbff;}
+
+  .day-group td{
+    background:linear-gradient(90deg,#f6f0ff,#eef9ff 70%,#fff8e6);
+    padding:9px 14px;border-top:2px solid #efe7ff;
+  }
+  .day-pill{
+    display:inline-block;background:linear-gradient(120deg,#7c3aed,#ec4899);
+    color:#fff;font-weight:900;font-size:.78rem;padding:5px 14px;border-radius:999px;
+    box-shadow:0 8px 16px -10px rgba(236,72,153,.95);
+  }
+  .cnt{font-size:.72rem;font-weight:800;color:#9b8ec4;margin-inline-start:8px;}
+  .empty-row td{
+    color:#b3aacb;font-weight:700;font-size:.8rem;text-align:center;
+    background:#fdfbff;padding:14px;
+  }
+  .time-cell{font-weight:900;color:#7c3aed;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .subj-cell{font-weight:900;color:#1b1035;}
+  .dot{
+    display:inline-block;width:9px;height:9px;border-radius:50%;margin-inline-end:8px;
+    vertical-align:middle;
+  }
+  .del-btn{
+    border:none;background:#fff5f7;color:#e11d48;width:30px;height:30px;border-radius:10px;
+    cursor:pointer;font-weight:900;font-size:.8rem;transition:.2s;
+  }
+  .del-btn:hover{background:#ffe0e8;transform:scale(1.08);}
+
+  .wm-row td{
+    text-align:center;padding:11px!important;font-weight:900;font-size:.78rem;
+    letter-spacing:1.6px;color:#fff;
+    background:linear-gradient(90deg,#7c3aed,#ec4899 50%,#f59e0b);
+    text-shadow:0 1px 3px rgba(0,0,0,.25);
+  }
+
+  /* ===== Add forms ===== */
+  .add-form{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;
+    margin:0 0 18px;padding:14px;border-radius:22px;
+    background:linear-gradient(120deg,#faf5ff,#eef9ff);
+    border:2px dashed #ddd0ff;
+  }
+  .add-form input,.add-form select{
+    width:100%;padding:12px 14px;border-radius:14px;border:2px solid #ece6fb;
+    background:#fff;font-family:inherit;font-size:.9rem;font-weight:700;color:var(--ink);
+    outline:none;transition:.2s;
+  }
+  .add-form input:focus,.add-form select:focus{border-color:#a855f7;box-shadow:0 0 0 4px rgba(168,85,247,.14);}
+  .add-form .btn{width:100%;}
+
+  /* ===== Toggle switch ===== */
+  .toggle-row{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    background:linear-gradient(120deg,#fff7ed,#f0fdfa);
+    border:2px solid #fde8d0;border-radius:22px;padding:14px 16px;margin-bottom:16px;
+  }
+  .toggle-row b{font-size:.94rem;font-weight:900;}
+  .toggle-row p{margin:4px 0 0;font-size:.78rem;font-weight:700;color:var(--muted);}
+  .switch{position:relative;display:inline-block;width:62px;height:34px;flex:none;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{
+    position:absolute;inset:0;cursor:pointer;border-radius:999px;
+    background:#e2d9f3;transition:.3s;
+  }
+  .slider::before{
+    content:'';position:absolute;height:26px;width:26px;border-radius:50%;background:#fff;
+    top:4px;inset-inline-start:4px;transition:.3s;box-shadow:0 4px 10px rgba(0,0,0,.2);
+  }
+  .switch input:checked + .slider{background:linear-gradient(120deg,#7c3aed,#ec4899);}
+  .switch input:checked + .slider::before{transform:translateX(-28px);}
+  html[dir="rtl"] .switch input:checked + .slider::before{transform:translateX(-28px);}
+
+  .ex-body{display:none;}
+  .card.ex-on .ex-body{display:block;}
+  .ex-off{display:block;}
+  .card.ex-on .ex-off{display:none;}
+
+  .ex-off{
+    text-align:center;padding:30px 16px;border-radius:22px;
+    background:repeating-linear-gradient(45deg,#fdfbff,#fdfbff 14px,#f8f3ff 14px,#f8f3ff 28px);
+    border:2px dashed #ddd0ff;
+  }
+  .ex-off h3{margin:0 0 6px;font-size:1.05rem;font-weight:900;color:#5b3fa8;}
+  .ex-off p{margin:0 0 14px;font-size:.84rem;font-weight:700;color:var(--muted);}
+
+  .quick-chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;}
+  .chip{
+    border:2px solid #e9ddff;background:#fff;color:#5b3fa8;font-family:inherit;
+    font-weight:800;font-size:.78rem;padding:7px 13px;border-radius:999px;cursor:pointer;transition:.2s;
+  }
+  .chip:hover{background:linear-gradient(120deg,#7c3aed,#ec4899);color:#fff;border-color:transparent;transform:translateY(-2px);}
+
+  /* ===== Footer ===== */
+  .site-foot{
+    text-align:center;padding:26px 16px 34px;font-weight:900;font-size:.82rem;color:#a397c4;
+  }
+  .site-foot b{
+    background:linear-gradient(110deg,#7c3aed,#ec4899);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+
+  /* ===== Toast ===== */
+  #toast{
+    position:fixed;bottom:22px;inset-inline-start:50%;transform:translate(50%,140%);
+    background:linear-gradient(120deg,#1e1b4b,#7c3aed);
+    color:#fff;font-weight:800;font-size:.88rem;padding:13px 22px;border-radius:999px;
+    box-shadow:0 22px 40px -18px rgba(30,27,75,.9);z-index:999;transition:transform .4s cubic-bezier(.2,.9,.3,1.3);
+    max-width:90vw;text-align:center;
+  }
+  #toast.show{transform:translate(50%,0);}
+
+  /* ===== Responsive ===== */
+  @media (max-width:720px){
+    .logo h1{font-size:1rem;}
+    .logo p{font-size:.68rem;}
+    .u-info{max-width:110px;}
+    .card{padding:15px;border-radius:24px;}
+    .card-head h2{font-size:1.1rem;}
+    .watermark{font-size:3.2rem;}
+    .add-form .btn{grid-column:1/-1;}
+  }
+  @media (max-width:420px){
+    .avatar{width:34px;height:34px;font-size:.9rem;}
+    .tab{padding:10px 14px;font-size:.82rem;}
+    .stat-card{padding:12px;}
+  }
+
+  /* ===== Print ===== */
+  @media print{
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    body{background:#fff!important;background-image:none!important;}
+    .blobs,.app-header,.site-foot,.no-print{display:none!important;}
+    .screen{display:none!important;}
+    #appScreen{display:block!important;}
+    .panel{display:none!important;}
+    .panel.print-active{display:block!important;}
+    .container{padding:0!important;max-width:100%!important;margin:0!important;}
+    .card{
+      box-shadow:none!important;border:1.5px solid #e5e0f5!important;
+      margin:0 0 12px!important;page-break-inside:avoid;border-radius:14px!important;
+    }
+    .watermark{opacity:.07!important;}
+    .table-wrap{overflow:visible!important;border-radius:10px!important;}
+    .grid-table{min-width:0!important;}
+    .school-table{font-size:10px;}
+    .list-table{min-width:0!important;font-size:11px;}
+    .cell-in{min-height:38px;font-size:10px;}
+    .grid-table thead th.corner,.grid-table tbody th.day-th{position:static!important;}
+    .card-head h2{
+      background:none!important;-webkit-text-fill-color:#4c1d95!important;color:#4c1d95!important;
+    }
+    .logo h1,.site-foot b{
+      background:none!important;-webkit-text-fill-color:#7c3aed!important;color:#7c3aed!important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="blobs" aria-hidden="true">
+  <span class="blob b1"></span>
+  <span class="blob b2"></span>
+  <span class="blob b3"></span>
+</div>
+
+<!-- ============ SETUP SCREEN ============ -->
+<section id="setupScreen" class="screen active">
+  <div class="setup-card">
+    <div class="brand">
+      <div class="brand-badge">🐍</div>
+      <h1 class="brand-title">جدول المواعيد الشقي</h1>
+      <p class="brand-tag">#هنقرفك بس عشان مصلحتك</p>
+    </div>
+
+    <form id="setupForm" autocomplete="off">
+      <label class="field">
+        <span>👤 الاسم بالكامل</span>
+        <input type="text" id="inName" placeholder="اكتب اسمك الثلاثي هنا" required>
+      </label>
+      <label class="field">
+        <span>🎓 السنة الدراسية</span>
+        <input type="text" id="inGrade" placeholder="مثال: الصف الثالث الثانوي / الفرقة الأولى" required>
+      </label>
+      <label class="field">
+        <span>🏫 اسم المدرسة / الجامعة</span>
+        <input type="text" id="inSchool" placeholder="مثال: مدرسة النيل الثانوية" required>
+      </label>
+      <button type="submit" class="btn btn-primary btn-lg">يلا نبدأ 🚀</button>
+    </form>
+
+    <div class="setup-foot">By <b>Venom Designs</b> • صنع بكل حب وقهوة ☕</div>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<section id="appScreen" class="screen">
+
+  <header class="app-header no-print">
+    <div class="hdr-inner">
+      <div class="logo">
+        <span class="logo-mark">🐍</span>
+        <div>
+          <h1>جدول المواعيد الشقي</h1>
+          <p>#هنقرفك بس عشان مصلحتك</p>
+        </div>
+      </div>
+      <div class="user-chip">
+        <div class="avatar" id="avatar">؟</div>
+        <div class="u-info">
+          <strong id="uName">—</strong>
+          <span id="uMeta">—</span>
+        </div>
+        <button class="icon-btn" id="editProfileBtn" title="تعديل البيانات">✏️</button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="school">🏫 جدول المدرسة</button>
+      <button class="tab" data-tab="lessons">📚 جدول الدروس</button>
+      <button class="tab" data-tab="exercises">🏋️ التمارين</button>
+    </nav>
+  </header>
+
+  <main class="container">
+
+    <!-- Stats -->
+    <div class="stats-row no-print">
+      <div class="stat-card">
+        <span class="s-ico">🏫</span>
+        <div><b id="statPeriods">7</b><span>حصة في اليوم</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="s-ico">📚</span>
+        <div><b id="statLessons">0</b><span>درس في الأسبوع</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="s-ico">🏋️</span>
+        <div><b id="statEx">0</b><span>تمرين مسجل</span></div>
+      </div>
+    </div>
+
+    <!-- ===== PANEL: SCHOOL ===== -->
+    <section class="panel active" id="panel-school">
+      <div class="card" id="card-school">
+        <div class="watermark" aria-hidden="true">Venom Designs</div>
+        <div class="card-head">
+          <div>
+            <h2>🏫 جدول المدرسة</h2>
+            <p class="who" id="whoSchool"></p>
+          </div>
+          <div class="head-actions">
+            <button class="btn btn-ghost no-print" data-print="school">🖨️ طباعة</button>
+            <div class="venom-badge">Venom Designs</div>
+          </div>
+        </div>
+
+        <div class="toolbar no-print">
+          <button class="btn btn-mini" id="addPeriod">➕ إضافة حصة</button>
+          <button class="btn btn-mini" id="removePeriod">➖ حذف آخر حصة</button>
+          <button class="btn btn-mini danger" id="clearSchool">🗑️ تفريغ الجدول</button>
+          <span class="hint">اضغط على أي خانة واكتب مادتك مباشرة ✍️</span>
+        </div>
+
+        <div class="table-wrap" id="schoolTableWrap"></div>
+      </div>
+    </section>
+
+    <!-- ===== PANEL: LESSONS ===== -->
+    <section class="panel" id="panel-lessons">
+      <div class="card" id="card-lessons">
+        <div class="watermark" aria-hidden="true">Venom Designs</div>
+        <div class="card-head">
+          <div>
+            <h2>📚 جدول الدروس</h2>
+            <p class="who" id="whoLessons"></p>
+          </div>
+          <div class="head-actions">
+            <button class="btn btn-ghost no-print" data-print="lessons">🖨️ طباعة</button>
+            <div class="venom-badge">Venom Designs</div>
+          </div>
+        </div>
+
+        <form class="add-form no-print" id="lessonForm" autocomplete="off">
+          <select id="lDay" aria-label="اليوم"></select>
+          <input type="time" id="lTime" aria-label="الوقت">
+          <input type="text" id="lSubject" placeholder="اسم الدرس (مثال: رياضيات)" required>
+          <input type="text" id="lTeacher" placeholder="اسم المدرس">
+          <input type="text" id="lPlace" placeholder="المكان / السنتر">
+          <button type="submit" class="btn btn-primary">➕ إضافة درس</button>
+        </form>
+
+        <div class="table-wrap" id="lessonsWrap"></div>
+      </div>
+    </section>
+
+    <!-- ===== PANEL: EXERCISES ===== -->
+    <section class="panel" id="panel-exercises">
+      <div class="card" id="card-exercises">
+        <div class="watermark" aria-hidden="true">Venom Designs</div>
+        <div class="card-head">
+          <div>
+            <h2>🏋️ التمارين الرياضية</h2>
+            <p class="who" id="whoEx"></p>
+          </div>
+          <div class="head-actions">
+            <button class="btn btn-ghost no-print" data-print="exercises">🖨️ طباعة</button>
+            <div class="venom-badge">Venom Designs</div>
+          </div>
+        </div>
+
+        <div class="toggle-row no-print">
+          <div>
+            <b>قسم التمارين (اختياري تمامًا)</b>
+            <p>لو بتحب رياضة أو جيم، فعّل القسم وابدأ تسجل تمارينك 💪 ولو مش عايزه سيبه مقفول.</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="exToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="ex-off" id="exOff">
+          <h3>القسم مقفول 🙈</h3>
+          <p>فعّل المفتاح اللي فوق لو حابب تضيف جدول التمارين.</p>
+          <button class="btn btn-primary" id="exEnableBtn">فعّل قسم التمارين 💪</button>
+        </div>
+
+        <div class="ex-body">
+          <form class="add-form no-print" id="exForm" autocomplete="off">
+            <select id="eDay" aria-label="اليوم"></select>
+            <input type="time" id="eTime" aria-label="الوقت">
+            <input type="text" id="eName" placeholder="نوع التمرين (مثال: جيم / جري)" required>
+            <input type="text" id="ePlace" placeholder="المكان (النادي / البيت)">
+            <input type="text" id="eNote" placeholder="ملاحظات">
+            <button type="submit" class="btn btn-primary">➕ إضافة تمرين</button>
+          </form>
+
+          <div class="quick-chips no-print">
+            <button class="chip" data-quick="جيم وكارديو">🏋️ جيم</button>
+            <button class="chip" data-quick="جري">🏃 جري</button>
+            <button class="chip" data-quick="سباحة">🏊 سباحة</button>
+            <button class="chip" data-quick="كرة قدم">⚽ كرة قدم</button>
+            <button class="chip" data-quick="يوغا وتمدد">🧘 يوغا</button>
+          </div>
+
+          <div class="table-wrap" id="exWrap"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-foot no-print">
+    صُنع بواسطة <b>Venom Designs</b> © <span id="year"></span> — كل جدول بيطلع من هنا عليه اسمنا 🐍
+  </footer>
+</section>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ================= Constants ================= */
+  const STORE_KEY = 'venom_shaghy_schedule_v1';
+  const DAYS_SCHOOL = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس'];
+  const DAYS_WEEK = ['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
+  const DEFAULT_PERIODS = [
+    { label:'الحصة الأولى',  time:'07:00' },
+    { label:'الحصة الثانية', time:'08:00' },
+    { label:'الحصة الثالثة', time:'09:00' },
+    { label:'الحصة الرابعة', time:'10:00' },
+    { label:'الحصة الخامسة', time:'11:00' },
+    { label:'الحصة السادسة', time:'12:00' },
+    { label:'الحصة السابعة', time:'01:00' }
+  ];
+
+  /* ================= State ================= */
+  function defaultState(){
+    return {
+      profile: { name:'', grade:'', school:'' },
+      periods: DEFAULT_PERIODS.map(p => ({ label:p.label, time:p.time })),
+      school: {},
+      lessons: [],
+      exercises: { enabled:false, items: [] }
+    };
+  }
+  let state = defaultState();
+
+  /* ================= Utils ================= */
+  const $  = (id) => document.getElementById(id);
+
+  function esc(s){
+    return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+  function uid(){ return Math.random().toString(36).slice(2,10); }
+  function hashHue(str){
+    let h = 0;
+    str = String(str || '');
+    for (let i = 0; i < str.length; i++){ h = (h * 31 + str.charCodeAt(i)) % 360; }
+    return h;
+  }
+  function fmtTime(t){
+    if (!t) return '';
+    const m = /^(\d{1,2}):(\d{2})/.exec(t);
+    if (!m) return t;
+    let h = parseInt(m[1], 10);
+    const min = m[2];
+    const suffix = h >= 12 ? 'م' : 'ص';
+    h = h % 12; if (h === 0) h = 12;
+    return h + ':' + min + ' ' + suffix;
+  }
+  function save(){
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){}
+  }
+  function load(){
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const base = defaultState();
+      state = {
+        profile: Object.assign(base.profile, parsed.profile || {}),
+        periods: Array.isArray(parsed.periods) && parsed.periods.length ? parsed.periods : base.periods,
+        school: parsed.school && typeof parsed.school === 'object' ? parsed.school : {},
+        lessons: Array.isArray(parsed.lessons) ? parsed.lessons : [],
+        exercises: {
+          enabled: !!(parsed.exercises && parsed.exercises.enabled),
+          items: (parsed.exercises && Array.isArray(parsed.exercises.items)) ? parsed.exercises.items : []
+        }
+      };
+    } catch(e){ state = defaultState(); }
+  }
+
+  let toastTimer = null;
+  function toast(msg){
+    const el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2300);
+  }
+
+  function dayOptions(selected){
+    return DAYS_WEEK.map(d =>
+      '<option value="' + d + '"' + (d === selected ? ' selected' : '') + '>' + d + '</option>'
+    ).join('');
+  }
+
+  /* ================= Profile rendering ================= */
+  function whoHTML(){
+    const p = state.profile;
+    return '<span class="who-item">👤 ' + esc(p.name) + '</span>' +
+           '<span class="who-item">🎓 ' + esc(p.grade) + '</span>' +
+           '<span class="who-item">🏫 ' + esc(p.school) + '</span>';
+  }
+
+  function renderProfile(){
+    const p = state.profile;
+    $('uName').textContent = p.name || '—';
+    $('uMeta').textContent = (p.grade || '—') + ' • ' + (p.school || '—');
+    $('avatar').textContent = (p.name || '؟').trim().charAt(0) || '؟';
+    $('whoSchool').innerHTML = whoHTML();
+    $('whoLessons').innerHTML = whoHTML();
+    $('whoEx').innerHTML = whoHTML();
+  }
+
+  function renderStats(){
+    $('statPeriods').textContent = state.periods.length;
+    $('statLessons').textContent = state.lessons.length;
+    $('statEx').textContent = state.exercises.items.length;
+  }
+
+  /* ================= School table ================= */
+  function paintCell(el){
+    const val = el.textContent.trim();
+    const td = el.closest('td');
+    if (!td) return;
+    if (val){
+      const h = hashHue(val);
+      td.style.background = 'hsl(' + h + ' 92% 94%)';
+      td.style.borderInlineStart = '4px solid hsl(' + h + ' 85% 58%)';
+      el.style.color = 'hsl(' + h + ' 62% 24%)';
+    } else {
+      td.style.background = '';
+      td.style.borderInlineStart = '';
+      el.style.color = '';
+    }
+  }
+
+  function renderSchool(){
+    const wrap = $('schoolTableWrap');
+    const periods = state.periods;
+    const totalCols = periods.length + 1;
+
+    let head = '<tr>';
+    head += '<th class="corner">اليوم \\ الحصة</th>';
+    periods.forEach((p, i) => {
+      const h = (i * 47 + 265) % 360;
+      head += '<th class="period-th" style="background:linear-gradient(135deg,hsl(' + h + ' 80% 54%),hsl(' + ((h + 38) % 360) + ' 86% 60%))">' +
+                '<div class="p-label" contenteditable="true" data-field="label" data-period="' + i + '">' + esc(p.label) + '</div>' +
+                '<div class="p-time" contenteditable="true" data-field="time" data-period="' + i + '">' + esc(p.time) + '</div>' +
+              '</th>';
+    });
+    head += '</tr>';
+
+    let body = '';
+    DAYS_SCHOOL.forEach((day, di) => {
+      body += '<tr><th class="day-th">' + day + '</th>';
+      periods.forEach((p, pi) => {
+        const key = di + '-' + pi;
+        const val = state.school[key] || '';
+        let style = '';
+        if (val){
+          const h = hashHue(val);
+          style = ' style="background:hsl(' + h + ' 92% 94%);border-inline-start:4px solid hsl(' + h + ' 85% 58%)"';
+        }
+        const color = val ? ' style="color:hsl(' + hashHue(val) + ' 62% 24%)"' : '';
+        body += '<td' + style + '>' +
+                  '<div class="cell-in" contenteditable="true" spellcheck="false" data-key="' + key + '"' + color + '>' + esc(val) + '</div>' +
+                '</td>';
+      });
+      body += '</tr>';
+    });
+
+    wrap.innerHTML =
+      '<table class="grid-table school-table">' +
+        '<thead>' + head + '</thead>' +
+        '<tbody>' + body + '</tbody>' +
+        '<tfoot><tr><td class="wm-row" colspan="' + totalCols + '">🐍 VENOM DESIGNS 🐍</td></tr></tfoot>' +
+      '</table>';
+  }
+
+  /* ================= Lessons table ================= */
+  function renderLessons(){
+    const wrap = $('lessonsWrap');
+    const cols = 5;
+    let rows = '';
+
+    DAYS_WEEK.forEach(day => {
+      const items = state.lessons
+        .filter(i => i.day === day)
+        .sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
+
+      rows += '<tr class="day-group"><td colspan="' + cols + '">' +
+                '<span class="day-pill">' + day + '</span>' +
+                '<span class="cnt">' + items.length + ' درس</span>' +
+              '</td></tr>';
+
+      if (!items.length){
+        rows += '<tr class="empty-row"><td colspan="' + cols + '">فاضي! ضيف دروسك 🎒</td></tr>';
+      } else {
+        items.forEach(it => {
+          const h = hashHue(it.subject || 'x');
+          rows += '<tr>' +
+            '<td class="time-cell">' + (fmtTime(it.time) || '—') + '</td>' +
+            '<td class="subj-cell"><span class="dot" style="background:hsl(' + h + ' 85% 60%)"></span>' + esc(it.subject) + '</td>' +
+            '<td>' + (esc(it.teacher) || '—') + '</td>' +
+            '<td>' + (esc(it.place) || '—') + '</td>' +
+            '<td class="col-del no-print"><button class="del-btn" data-del-lesson="' + it.id + '" title="حذف">✕</button></td>' +
+          '</tr>';
+        });
+      }
+    });
+
+    wrap.innerHTML =
+      '<table class="grid-table list-table">' +
+        '<thead><tr>' +
+          '<th>الوقت</th><th>الدرس</th><th>المدرس</th><th>المكان</th>' +
+          '<th class="col-del no-print">حذف</th>' +
+        '</tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+        '<tfoot><tr><td class="wm-row" colspan="' + cols + '">🐍 VENOM DESIGNS 🐍</td></tr></tfoot>' +
+      '</table>';
+  }
+
+  /* ================= Exercises table ================= */
+  function renderExercises(){
+    const card = $('card-exercises');
+    const enabled = state.exercises.enabled;
+    card.classList.toggle('ex-on', enabled);
+    $('exToggle').checked = enabled;
+
+    const cols = 5;
+    const wrap = $('exWrap');
+    if (!enabled){
+      wrap.innerHTML = '';
+      return;
+    }
+
+    let rows = '';
+    DAYS_WEEK.forEach(day => {
+      const items = state.exercises.items
+        .filter(i => i.day === day)
+        .sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
+
+      rows += '<tr class="day-group"><td colspan="' + cols + '">' +
+                '<span class="day-pill">' + day + '</span>' +
+                '<span class="cnt">' + items.length + ' تمرين</span>' +
+              '</td></tr>';
+
+      if (!items.length){
+        rows += '<tr class="empty-row"><td colspan="' + cols + '">يوم راحة 💤</td></tr>';
+      } else {
+        items.forEach(it => {
+          const h = hashHue(it.name || 'x');
+          rows += '<tr>' +
+            '<td class="time-cell">' + (fmtTime(it.time) || '—') + '</td>' +
+            '<td class="subj-cell"><span class="dot" style="background:hsl(' + h + ' 85% 60%)"></span>' + esc(it.name) + '</td>' +
+            '<td>' + (esc(it.place) || '—') + '</td>' +
+            '<td>' + (esc(it.note) || '—') + '</td>' +
+            '<td class="col-del no-print"><button class="del-btn" data-del-ex="' + it.id + '" title="حذف">✕</button></td>' +
+          '</tr>';
+        });
+      }
+    });
+
+    wrap.innerHTML =
+      '<table class="grid-table list-table">' +
+        '<thead><tr>' +
+          '<th>الوقت</th><th>التمرين</th><th>المكان</th><th>ملاحظات</th>' +
+          '<th class="col-del no-print">حذف</th>' +
+        '</tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+        '<tfoot><tr><td class="wm-row" colspan="' + cols + '">🐍 VENOM DESIGNS 🐍</td></tr></tfoot>' +
+      '</table>';
+  }
+
+  /* ================= Render all ================= */
+  function renderAll(){
+    renderProfile();
+    renderSchool();
+    renderLessons();
+    renderExercises();
+    renderStats();
+  }
+
+  /* ================= Screens ================= */
+  function showSetup(){
+    $('setupScreen').classList.add('active');
+    $('appScreen').classList.remove('active');
+    $('inName').value = state.profile.name || '';
+    $('inGrade').value = state.profile.grade || '';
+    $('inSchool').value = state.profile.school || '';
+  }
+  function showApp(){
+    $('setupScreen').classList.remove('active');
+    $('appScreen').classList.add('active');
+    renderAll();
+  }
+  function switchTab(name){
+    document.querySelectorAll('.tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.panel').forEach(p =>
+      p.classList.toggle('active', p.id === 'panel-' + name));
+  }
+
+  /* ================= Events ================= */
+  // Setup form
+  $('setupForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = $('inName').value.trim();
+    const grade = $('inGrade').value.trim();
+    const school = $('inSchool').value.trim();
+    if (!name || !grade || !school){
+      toast('كمّل البيانات كلها 🙏');
+      return;
+    }
+    state.profile = { name: name, grade: grade, school: school };
+    save();
+    showApp();
+    switchTab('school');
+    toast('أهلاً ' + name.split(' ')[0] + ' 👋 يلا نظّم يومك');
+  });
+
+  // Edit profile
+  $('editProfileBtn').addEventListener('click', function(){
+    showSetup();
+    toast('عدّل بياناتك ثم اضغط يلا نبدأ ✏️');
+  });
+
+  // Tabs
+  $('tabs').addEventListener('click', function(e){
+    const btn = e.target.closest('.tab');
+    if (!btn) return;
+    switchTab(btn.dataset.tab);
+  });
+
+  // Print
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-print]');
+    if (!btn) return;
+    const name = btn.dataset.print;
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('print-active'));
+    const panel = $('panel-' + name);
+    if (panel) panel.classList.add('print-active');
+    window.print();
+    setTimeout(() => { if (panel) panel.classList.remove('print-active'); }, 800);
+  });
+
+  // ===== School table editing (delegation) =====
+  const schoolWrap = $('schoolTableWrap');
+
+  schoolWrap.addEventListener('input', function(e){
+    const el = e.target.closest('[contenteditable]');
+    if (!el) return;
+
+    if (el.dataset.key !== undefined && el.dataset.key !== ''){
+      const key = el.dataset.key;
+      const val = el.textContent.trim();
+      if (val) state.school[key] = val;
+      else delete state.school[key];
+      paintCell(el);
+      save();
+    } else if (el.dataset.field){
+      const idx = parseInt(el.dataset.period, 10);
+      if (state.periods[idx]){
+        state.periods[idx][el.dataset.field] = el.textContent.trim();
+        save();
+      }
+    }
+  });
+
+  // ===== School toolbar =====
+  $('addPeriod').addEventListener('click', function(){
+    if (state.periods.length >= 12){
+      toast('الجدول بقى مليان أوي 😅');
+      return;
+    }
+    const n = state.periods.length + 1;
+    state.periods.push({ label: 'الحصة ' + n, time: '' });
+    save(); renderSchool(); renderStats();
+    toast('تمت إضافة حصة جديدة ➕');
+  });
+
+  $('removePeriod').addEventListener('click', function(){
+    if (state.periods.length <= 1){
+      toast('لازم تفضل حصة واحدة على الأقل 😌');
+      return;
+    }
+    state.periods.pop();
+    save(); renderSchool(); renderStats();
+    toast('تم حذف آخر حصة ➖');
+  });
+
+  $('clearSchool').addEventListener('click', function(){
+    if (!confirm('متأكد إنك عايز تفرّغ جدول المدرسة كله؟')) return;
+    state.school = {};
+    save(); renderSchool();
+    toast('تم تفريغ جدول المدرسة 🗑️');
+  });
+
+  // ===== Lessons =====
+  $('lDay').innerHTML = dayOptions('السبت');
+
+  $('lessonForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const subject = $('lSubject').value.trim();
+    if (!subject){
+      toast('اكتب اسم الدرس الأول 😅');
+      return;
+    }
+    state.lessons.push({
+      id: uid(),
+      day: $('lDay').value,
+      time: $('lTime').value,
+      subject: subject,
+      teacher: $('lTeacher').value.trim(),
+      place: $('lPlace').value.trim()
+    });
+    save(); renderLessons(); renderStats();
+    $('lSubject').value = '';
+    $('lTeacher').value = '';
+    $('lPlace').value = '';
+    $('lTime').value = '';
+    toast('تمت إضافة الدرس ✅');
+  });
+
+  // ===== Exercises =====
+  $('eDay').innerHTML = dayOptions('السبت');
+
+  $('exToggle').addEventListener('change', function(){
+    state.exercises.enabled = this.checked;
+    save(); renderExercises();
+    toast(this.checked ? 'قسم التمارين اتفعّل 💪' : 'قسم التمارين اتقفل 🙈');
+  });
+
+  $('exEnableBtn').addEventListener('click', function(){
+    state.exercises.enabled = true;
+    save(); renderExercises();
+    toast('قسم التمارين اتفعّل 💪');
+  });
+
+  $('exForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = $('eName').value.trim();
+    if (!name){
+      toast('اكتب نوع التمرين الأول 💪');
+      return;
+    }
+    state.exercises.items.push({
+      id: uid(),
+      day: $('eDay').value,
+      time: $('eTime').value,
+      name: name,
+      place: $('ePlace').value.trim(),
+      note: $('eNote').value.trim()
+    });
+    save(); renderExercises(); renderStats();
+    $('eName').value = '';
+    $('ePlace').value = '';
+    $('eNote').value = '';
+    $('eTime').value = '';
+    toast('تمت إضافة التمرين ✅');
+  });
+
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', function(){
+      if (!state.exercises.enabled){
+        state.exercises.enabled = true;
+        save(); renderExercises();
+      }
+      $('eName').value = this.dataset.quick;
+      $('eName').focus();
+    });
+  });
+
+  // ===== Delete (delegation) =====
+  document.addEventListener('click', function(e){
+    const l = e.target.closest('[data-del-lesson]');
+    if (l){
+      const id = l.dataset.delLesson;
+      state.lessons = state.lessons.filter(i => i.id !== id);
+      save(); renderLessons(); renderStats();
+      toast('تم حذف الدرس 🗑️');
+      return;
+    }
+    const x = e.target.closest('[data-del-ex]');
+    if (x){
+      const id = x.dataset.delEx;
+      state.exercises.items = state.exercises.items.filter(i => i.id !== id);
+      save(); renderExercises(); renderStats();
+      toast('تم حذف التمرين 🗑️');
+    }
+  });
+
+  // ===== Contenteditable helpers =====
+  document.addEventListener('keydown', function(e){
+    if (e.target && e.target.isContentEditable && e.key === 'Enter'){
+      e.preventDefault();
+      e.target.blur();
+    }
+  });
+  document.addEventListener('paste', function(e){
+    if (e.target && e.target.isContentEditable){
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text');
+      try { document.execCommand('insertText', false, text); } catch(err){}
+    }
+  });
+
+  /* ================= Init ================= */
+  $('year').textContent = new Date().getFullYear();
+  load();
+
+  if (state.profile && state.profile.name){
+    showApp();
+  } else {
+    showSetup();
+  }
+
+  window.addEventListener('beforeprint', function(){
+    if (!$('appScreen').classList.contains('active')){
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('print-active'));
+    }
+  });
+})();
+</script>
+</body>
+</html>

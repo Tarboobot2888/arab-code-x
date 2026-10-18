@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>الملفات الجاهزة | Ready Files · ARAB code</title>
+<meta name="description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files.">
+<meta name="keywords" content="أكواد, مطورين عرب, برمجة, مشاركة كود, HTML, CSS, JavaScript, Python, Arab developers, code sharing, programming, snippets">
+<link rel="canonical" href="https://www.arab-code.cv/zip">
+<link rel="alternate" hreflang="ar" href="https://www.arab-code.cv/zip">
+<link rel="alternate" hreflang="en" href="https://www.arab-code.cv/zip">
+<link rel="alternate" hreflang="x-default" href="https://www.arab-code.cv/zip">
+<meta property="og:type" content="website"><meta property="og:site_name" content="ARAB code">
+<meta property="og:locale" content="ar_AR"><meta property="og:locale:alternate" content="en_US">
+<meta property="og:title" content="الملفات الجاهزة | Ready Files · ARAB code"><meta property="og:description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files.">
+<meta property="og:url" content="https://www.arab-code.cv/zip"><meta property="og:image" content="https://www.arab-code.cv/assets/brand/logo.png">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="الملفات الجاهزة | Ready Files · ARAB code"><meta name="twitter:description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files."><meta name="twitter:image" content="https://www.arab-code.cv/assets/brand/logo.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.brand .dot{background:url(/assets/brand/logo.png) center/cover no-repeat!important}
+.zip-thumb{height:130px;border-radius:10px;margin:-4px -4px 10px;background:var(--bg-2,#111) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:42px;border:1px solid var(--border)}
+.zip-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px}
+.zip-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:24px 0 16px}
+.zip-head input{flex:1;min-width:200px}
+.zip-box{max-width:820px;margin:24px auto}
+.zip-box .readme-body{line-height:1.9}
+</style>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="48x48" href="https://www.arab-code.cv/assets/brand/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://www.arab-code.cv/assets/brand/apple-touch-icon.png">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="brand"><span class="dot"></span> ARAB code</a>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+<main class="container">
+  <div class="zip-head">
+    <h2 style="margin:0">📦 الملفات الجاهزة</h2>
+    <input id="q" type="text" placeholder="ابحث عن ملف..." autocomplete="off">
+    <a class="btn primary" href="/zip/new">+ نشر ملف</a>
+  </div>
+  <div id="list" class="grid"></div>
+</main>
+<footer class="footer"><div class="footer-decoration"></div><div class="footer-content"><div class="footer-rights"><span>© 2026 Code ARAB</span><span class="bmg">— BMG</span></div></div></footer>
+<script src="/app.js"></script>
+<script>
+function fmtSize(n){if(!n)return"";const u=["B","KB","MB","GB"];let i=0;while(n>=1024&&i<3){n/=1024;i++}return n.toFixed(i?1:0)+" "+u[i]}
+function fmtDate(d){try{return new Date(d).toLocaleDateString("ar")}catch{return""}}
+async function gate(){await renderNav();const me=await loadMe();if(!me){location.href="/auth?mode=login";return null}return me}
+</script>
+<script>
+function zipCard(z){
+  const th=z.thumb?`style="background-image:url('${esc(z.thumb)}')"`:'';
+  return `<article class="code-card" onclick="location.href='/zip/${encodeURIComponent(z.slug)}'">
+    <div><div class="zip-thumb" ${th}>${z.thumb?'':'📦'}</div>
+      <h3 class="card-title">${esc(z.title)}</h3>
+      <p class="card-desc">${esc(z.description||'لا يوجد وصف')}</p>
+      <div class="zip-meta"><span>${fmtSize(z.size)}</span>${z.version?`<span>v${esc(z.version)}</span>`:''}<span>${fmtDate(z.created_at)}</span></div>
+    </div>
+    <div class="card-footer">${authorLink(z)}<span class="lang-badge">${esc(z.type||'ZIP')}</span></div>
+  </article>`;
+}
+let T;
+async function load(q=''){
+  const box=document.getElementById('list');
+  try{const {zips}=await api('/api/zips?q='+encodeURIComponent(q));
+    box.innerHTML=zips.length?zips.map(zipCard).join(''):'<p style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px">لا توجد ملفات بعد</p>';
+  }catch(e){box.innerHTML=`<p style="color:var(--danger)">${esc(e.message)}</p>`}
+}
+(async()=>{if(!(await gate()))return;load();
+  document.getElementById('q').oninput=e=>{clearTimeout(T);T=setTimeout(()=>load(e.target.value.trim()),250)};})();
+</script>
+</body></html>

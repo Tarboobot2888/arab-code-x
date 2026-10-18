@@ -1,0 +1,14 @@
+{
+  "montetopdev": {
+    "banned": false,
+    "reason": "لقد راجعنا أمان حسابك",
+    "banned_at": "2026-08-21T10:56:18.201Z",
+    "unbanned_at": "2026-08-21T11:02:04.523Z"
+  },
+  "azazazazazazazaz": {
+    "banned": true,
+    "reason": "ليس مطور و ينشر أشياء ليس لها علاقه ب البرمجه",
+    "banned_at": "2026-09-25T18:52:27.243Z",
+    "unbanned_at": null
+  }
+}

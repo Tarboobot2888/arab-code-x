@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>❖ Vanitas — Omar</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{--p:#8A2BE2;--c:#00C7B7;--d:#050508;--cd:#0a0a12;--t:#e2e8f0;--td:#64748b;--g:rgba(138,43,226,.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--d);color:var(--t);overflow-x:hidden}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--p);border-radius:3px}
+nav{position:fixed;top:0;left:0;right:0;z-index:999;padding:1rem 4%;display:flex;justify-content:space-between;align-items:center;background:rgba(5,5,8,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--g)}
+.logo{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:900;color:var(--p);text-shadow:0 0 25px rgba(138,43,226,.6);letter-spacing:3px}
+.nav-links{display:flex;gap:2.5rem;list-style:none}
+.nav-links a{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.95rem;color:var(--td);text-decoration:none;letter-spacing:2px;text-transform:uppercase;transition:.3s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:2px;background:linear-gradient(90deg,var(--p),var(--c));transition:.3s}
+.nav-links a:hover{color:var(--t)}.nav-links a:hover::after{width:100%}
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:7rem 2rem 3rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(138,43,226,.08) 0%,transparent 60%)}
+.hero-img-wrap{position:relative;width:260px;height:260px;margin-bottom:2.5rem}
+.hero-img-wrap::before{content:'';position:absolute;inset:-5px;border-radius:50%;background:conic-gradient(var(--p),var(--c),var(--p));animation:s 5s linear infinite;filter:blur(10px);opacity:.5}
+.hero-img-wrap::after{content:'';position:absolute;inset:-2px;border-radius:50%;border:2px solid transparent;background:linear-gradient(var(--d),var(--d)) padding-box,conic-gradient(var(--p),var(--c),var(--p)) border-box;animation:s 8s linear infinite reverse}
+@keyframes s{to{transform:rotate(360deg)}}
+.hero-img{position:relative;width:100%;height:100%;border-radius:50%;object-fit:cover;border:3px solid var(--d);z-index:2}
+.hero h1{font-family:'Orbitron',sans-serif;font-size:clamp(2.8rem,7vw,5.5rem);font-weight:900;background:linear-gradient(135deg,var(--p),var(--c),#a855f7);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:g 4s ease infinite;letter-spacing:5px}
+@keyframes g{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hero .sub{font-family:'Rajdhani',sans-serif;font-size:clamp(1rem,2.5vw,1.4rem);color:var(--td);letter-spacing:6px;text-transform:uppercase;margin:.8rem 0 1.5rem;font-weight:600}
+.hero .quote{font-size:1.15rem;font-style:italic;color:var(--c);text-shadow:0 0 20px rgba(0,199,183,.3);margin-bottom:2.5rem}
+.hero-badges{display:flex;flex-wrap:wrap;gap:.8rem;justify-content:center}
+.badge{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.3rem;background:var(--g);border:1px solid rgba(138,43,226,.25);border-radius:50px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.9rem;color:var(--t);text-decoration:none;transition:.3s;backdrop-filter:blur(10px)}
+.badge:hover{border-color:var(--p);box-shadow:0 0 25px rgba(138,43,226,.3);transform:translateY(-3px)}
+.badge i{font-size:1rem}
+.scroll{position:absolute;bottom:2rem;animation:b 2s infinite;color:var(--p);font-size:1.5rem}
+@keyframes b{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+section{max-width:1200px;margin:0 auto;padding:5rem 2rem;position:relative;z-index:1}
+.sec-head{text-align:center;margin-bottom:3rem}
+.sec-tag{font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700;color:var(--c);letter-spacing:4px;text-transform:uppercase}
+.sec-title{font-family:'Orbitron',sans-serif;font-size:clamp(1.6rem,4vw,2.5rem);font-weight:700;color:var(--t);display:inline-block;position:relative;margin-top:.5rem}
+.sec-title::after{content:'';position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:50px;height:3px;background:linear-gradient(90deg,var(--p),var(--c));border-radius:2px}
+.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem}
+.a-card{background:var(--cd);border:1px solid var(--g);border-radius:16px;padding:1.6rem;transition:.4s;position:relative;overflow:hidden}
+.a-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),var(--c),transparent);opacity:0;transition:.4s}
+.a-card:hover{border-color:rgba(138,43,226,.4);transform:translateY(-6px);box-shadow:0 20px 40px rgba(138,43,226,.12)}
+.a-card:hover::before{opacity:1}
+.a-card i{font-size:1.8rem;background:linear-gradient(135deg,var(--p),var(--c));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.8rem;display:block}
+.a-card h3{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;letter-spacing:1px;margin-bottom:.4rem}
+.a-card p{font-size:.85rem;color:var(--td);line-height:1.6}
+.tech-wrap{display:flex;flex-direction:column;gap:1.5rem}
+.t-cat{background:var(--cd);border:1px solid var(--g);border-radius:16px;padding:1.8rem}
+.t-cat h3{font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700;color:var(--c);letter-spacing:3px;text-transform:uppercase;margin-bottom:1rem}
+.t-grid{display:flex;flex-wrap:wrap;gap:.7rem}
+.t-item{padding:.5rem 1rem;background:rgba(138,43,226,.08);border:1px solid rgba(138,43,226,.2);border-radius:8px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.9rem;color:var(--t);text-decoration:none;transition:.3s}
+.t-item:hover{background:rgba(138,43,226,.2);border-color:var(--p);box-shadow:0 0 15px rgba(138,43,226,.2);transform:translateY(-2px)}
+.skills{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.8rem}
+.s-row{display:flex;align-items:center;gap:1rem;padding:.7rem 1.2rem;background:var(--cd);border:1px solid var(--g);border-radius:12px}
+.s-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.9rem;min-width:120px}
+.s-bar{flex:1;height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}
+.s-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--p),var(--c));animation:f 1.5s ease-out forwards;transform-origin:left;transform:scaleX(0)}
+@keyframes f{to{transform:scaleX(1)}}
+.s-lvl{font-family:'Orbitron',sans-serif;font-size:.7rem;font-weight:700;color:var(--c);min-width:70px;text-align:right}
+.arch{background:var(--cd);border:1px solid var(--g);border-radius:20px;padding:3rem 2rem;text-align:center;position:relative;overflow:hidden}
+.arch::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(138,43,226,.06),transparent 60%);animation:p 5s ease-in-out infinite}
+@keyframes p{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.15);opacity:1}}
+.arch-flow{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0}
+.a-node{background:linear-gradient(135deg,rgba(138,43,226,.12),rgba(0,199,183,.06));border:1px solid rgba(138,43,226,.25);border-radius:12px;padding:1rem 2.5rem;min-width:300px;margin:.2rem 0;backdrop-filter:blur(5px)}
+.a-node h4{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;margin-bottom:.2rem}
+.a-node p{font-size:.8rem;color:var(--td)}
+.a-arr{font-size:1.4rem;color:var(--c);text-shadow:0 0 10px rgba(0,199,183,.4);animation:a 2s ease-in-out infinite}
+@keyframes a{0%,100%{opacity:.4}50%{opacity:1}}
+.v-hero{text-align:center;padding:3rem 2rem;background:linear-gradient(135deg,rgba(138,43,226,.1),rgba(0,199,183,.04));border:1px solid var(--g);border-radius:20px;margin-bottom:2.5rem;position:relative}
+.v-hero h3{font-family:'Orbitron',sans-serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:900;color:var(--p);text-shadow:0 0 30px rgba(138,43,226,.4);letter-spacing:5px}
+.v-hero .sub{font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--c);letter-spacing:4px;margin-top:.5rem;font-weight:600}
+.v-hero p{color:var(--td);margin-top:1rem;max-width:650px;margin-left:auto;margin-right:auto;line-height:1.8;font-size:.95rem}
+.sys-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1rem}
+.sys-card{background:var(--cd);border:1px solid var(--g);border-radius:14px;padding:1.4rem;transition:.4s;position:relative;overflow:hidden}
+.sys-card::after{content:'';position:absolute;top:0;right:0;width:50px;height:50px;background:linear-gradient(135deg,rgba(138,43,226,.1),transparent);border-radius:0 0 0 50px}
+.sys-card:hover{border-color:var(--p);transform:translateY(-4px);box-shadow:0 15px 35px rgba(138,43,226,.12)}
+.sys-card h4{font-family:'Orbitron',sans-serif;font-size:.82rem;font-weight:700;display:flex;align-items:center;gap:.6rem;margin-bottom:.4rem}
+.sys-card h4 i{color:var(--p);font-size:1.1rem}
+.sys-card p{font-size:.85rem;color:var(--td);line-height:1.6}
+.vid-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:1.5rem}
+.vid-card{background:var(--cd);border:1px solid var(--g);border-radius:20px;overflow:hidden;transition:.4s;position:relative}
+.vid-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--p),var(--c));z-index:2}
+.vid-card:hover{box-shadow:0 25px 50px rgba(138,43,226,.2);transform:translateY(-5px);border-color:var(--p)}
+.vid-wrap{position:relative;width:100%;padding-top:56.25%;background:var(--d)}
+.vid-wrap video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+.vid-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,5,8,.5);cursor:pointer;z-index:3;transition:.3s}
+.vid-card.playing .vid-overlay{opacity:0;pointer-events:none}
+.play{width:65px;height:65px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--c));display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(138,43,226,.5);transition:.3s}
+.play:hover{transform:scale(1.1);box-shadow:0 0 45px rgba(138,43,226,.7)}
+.play i{color:#fff;font-size:1.4rem;margin-left:3px}
+.vid-info{padding:1.5rem}
+.vid-info h3{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.4rem}
+.vid-info p{font-size:.88rem;color:var(--td);line-height:1.6}
+.vid-tag{display:inline-block;padding:.25rem .8rem;background:rgba(138,43,226,.12);border:1px solid rgba(138,43,226,.25);border-radius:20px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.75rem;color:var(--p);margin-top:.7rem}
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem}
+.gal-item{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--g);transition:.4s;cursor:pointer}
+.gal-item img{width:100%;height:200px;object-fit:cover;transition:.5s}
+.gal-item:hover{border-color:var(--p);box-shadow:0 20px 40px rgba(138,43,226,.18)}
+.gal-item:hover img{transform:scale(1.08)}
+.gal-over{position:absolute;bottom:0;left:0;right:0;padding:1.2rem 1rem .8rem;background:linear-gradient(transparent,rgba(5,5,8,.95))}
+.gal-over h4{font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700}
+.nex{background:linear-gradient(135deg,rgba(0,199,183,.08),rgba(138,43,226,.04));border:1px solid rgba(0,199,183,.15);border-radius:20px;padding:3rem;text-align:center;position:relative;overflow:hidden}
+.nex::before{content:'';position:absolute;top:-80px;right:-80px;width:250px;height:250px;background:radial-gradient(circle,rgba(0,199,183,.08),transparent);border-radius:50%}
+.nex h3{font-family:'Orbitron',sans-serif;font-size:clamp(2rem,4vw,3rem);font-weight:900;color:var(--c);text-shadow:0 0 20px rgba(0,199,183,.25);letter-spacing:4px;position:relative;z-index:1}
+.nex p{color:var(--td);margin:1rem auto 0;max-width:550px;line-height:1.8;position:relative;z-index:1;font-size:.95rem}
+.nex-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin-top:2rem;position:relative;z-index:1}
+.nex-a{padding:.8rem 1.5rem;background:rgba(0,199,183,.08);border:1px solid rgba(0,199,183,.2);border-radius:10px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.9rem;color:var(--c);text-decoration:none;transition:.3s}
+.nex-a:hover{background:rgba(0,199,183,.15);border-color:var(--c);box-shadow:0 0 20px rgba(0,199,183,.15);transform:translateY(-2px)}
+.gh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:1.2rem}
+.gh-card{background:var(--cd);border:1px solid var(--g);border-radius:16px;overflow:hidden;transition:.4s}
+.gh-card:hover{border-color:var(--p);box-shadow:0 15px 30px rgba(138,43,226,.12)}
+.gh-card img{width:100%;display:block}
+.phil{background:var(--cd);border:1px solid var(--g);border-radius:20px;padding:3rem;text-align:center}
+.phil-flow{display:flex;flex-direction:column;align-items:center;gap:.3rem;font-family:'Inter',monospace;font-size:1rem;color:var(--td);margin:2rem 0}
+.phil-flow .st{color:var(--t);font-weight:600;padding:.4rem 1.2rem;background:rgba(138,43,226,.1);border:1px solid rgba(138,43,226,.2);border-radius:8px;font-size:.95rem}
+.phil-flow .ar{color:var(--c);font-size:1.3rem}
+.phil-q{font-size:1.15rem;font-style:italic;color:var(--c);text-shadow:0 0 15px rgba(0,199,183,.25)}
+.con-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem}
+.con-btn{padding:1rem 2rem;background:var(--cd);border:1px solid var(--g);border-radius:12px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;color:var(--t);text-decoration:none;transition:.3s;display:inline-flex;align-items:center;gap:.6rem}
+.con-btn:hover{border-color:var(--p);box-shadow:0 0 25px rgba(138,43,226,.25);transform:translateY(-3px)}
+.con-btn i{font-size:1.1rem;color:var(--p)}
+footer{text-align:center;padding:4rem 2rem 2rem;border-top:1px solid var(--g);position:relative}
+footer h4{font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:900;color:var(--p);text-shadow:0 0 20px rgba(138,43,226,.35);letter-spacing:4px;margin-bottom:.5rem}
+footer .sub{font-family:'Rajdhani',sans-serif;color:var(--td);letter-spacing:3px;font-weight:600}
+footer .qt{color:var(--c);font-style:italic;margin-top:1rem;text-shadow:0 0 10px rgba(0,199,183,.2)}
+.fade{opacity:0;transform:translateY(40px);transition:.8s ease}
+.fade.show{opacity:1;transform:translateY(0)}
+@media(max-width:768px){.nav-links{display:none}.hero-img-wrap{width:200px;height:200px}.vid-grid{grid-template-columns:1fr}.a-node{min-width:220px;padding:.8rem 1.5rem}section{padding:3rem 1rem}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">❖ VANITAS</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#tech">Tech</a></li>
+    <li><a href="#vanitas">Vanitas</a></li>
+    <li><a href="#videos">Videos</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#nexora">NEXORA</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-img-wrap">
+    <img src="https://i.postimg.cc/pXXcfjRk/Test.png" alt="Vanitas" class="hero-img">
+  </div>
+  <h1>❖ 𝑽𝒂𝒏𝒊𝒕𝒂𝒔</h1>
+  <p class="sub">Software Developer • AI • Bots • Automation • Web</p>
+  <p class="quote">"Building systems, not just commands."</p>
+  <div class="hero-badges">
+    <a href="https://github.com/sovereignempirex-ux" class="badge"><i class="fab fa-github"></i> GitHub</a>
+    <a href="https://nexora-yx2o.vercel.app" class="badge"><i class="fas fa-globe"></i> NEXORA</a>
+    <a href="https://discord.gg/HC2wSQpru" class="badge"><i class="fab fa-discord"></i> Discord</a>
+    <a href="https://wa.me/201283073813" class="badge"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+    <a href="https://whatsapp.com/channel/0029Vb8glFqJkK7EdMYrao0K" class="badge"><i class="fas fa-bullhorn"></i> Channel</a>
+  </div>
+  <div class="scroll"><i class="fas fa-chevron-down"></i></div>
+</section>
+
+<section id="about">
+  <div class="sec-head fade">
+    <p class="sec-tag">Who I Am</p>
+    <h2 class="sec-title">About Me</h2>
+  </div>
+  <div class="about-grid">
+    <div class="a-card fade"><i class="fas fa-cogs"></i><h3>Software Development</h3><p>Full-stack applications & system design with clean architecture.</p></div>
+    <div class="a-card fade"><i class="fas fa-brain"></i><h3>Artificial Intelligence</h3><p>AI integrations & intelligent automation for adaptive systems.</p></div>
+    <div class="a-card fade"><i class="fas fa-robot"></i><h3>Automation</h3><p>Workflow automation & bot systems for efficiency.</p></div>
+    <div class="a-card fade"><i class="fas fa-server"></i><h3>Backend Development</h3><p>APIs, microservices & server architecture.</p></div>
+    <div class="a-card fade"><i class="fas fa-globe"></i><h3>Web Development</h3><p>Modern web apps & responsive interfaces.</p></div>
+    <div class="a-card fade"><i class="fas fa-link"></i><h3>APIs</h3><p>RESTful APIs & third-party integrations.</p></div>
+    <div class="a-card fade"><i class="fas fa-robot"></i><h3>Bots</h3><p>WhatsApp, Discord & automation bots.</p></div>
+    <div class="a-card fade"><i class="fas fa-database"></i><h3>Databases</h3><p>SQL & NoSQL data architecture.</p></div>
+    <div class="a-card fade"><i class="fas fa-sitemap"></i><h3>System Architecture</h3><p>Scalable & maintainable system design.</p></div>
+    <div class="a-card fade"><i class="fas fa-tools"></i><h3>Developer Tools</h3><p>CLI tools, compilers & dev utilities.</p></div>
+  </div>
+</section>
+
+<section id="tech">
+  <div class="sec-head fade">
+    <p class="sec-tag">My Arsenal</p>
+    <h2 class="sec-title">Tech Stack</h2>
+  </div>
+  <div class="tech-wrap fade">
+    <div class="t-cat"><h3><i class="fas fa-code"></i> Languages</h3><div class="t-grid">
+      <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" class="t-item"><i class="fab fa-js" style="color:#F7DF1E"></i> JavaScript</a>
+      <a href="https://www.python.org/" class="t-item"><i class="fab fa-python" style="color:#3776AB"></i> Python</a>
+      <a href="https://www.gnu.org/software/bash/" class="t-item"><i class="fas fa-terminal" style="color:#4EAA25"></i> Bash</a>
+      <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" class="t-item"><i class="fab fa-html5" style="color:#E34F26"></i> HTML</a>
+      <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" class="t-item"><i class="fab fa-css3-alt" style="color:#1572B6"></i> CSS</a>
+    </div></div>
+    <div class="t-cat"><h3><i class="fas fa-server"></i> Backend & Runtime</h3><div class="t-grid">
+      <a href="https://nodejs.org/" class="t-item"><i class="fab fa-node-js" style="color:#339933"></i> Node.js</a>
+      <a href="https://expressjs.com/" class="t-item"><i class="fas fa-bolt" style="color:#fff"></i> Express.js</a>
+      <a href="https://github.com/WhiskeySockets/Baileys" class="t-item"><i class="fab fa-whatsapp" style="color:#25D366"></i> Baileys</a>
+      <a href="https://axios-http.com/" class="t-item"><i class="fas fa-paper-plane" style="color:#5A29E4"></i> Axios</a>
+      <a href="https://restfulapi.net/" class="t-item"><i class="fas fa-plug" style="color:#FF6C37"></i> REST APIs</a>
+    </div></div>
+    <div class="t-cat"><h3><i class="fas fa-film"></i> Media & Processing</h3><div class="t-grid">
+      <a href="https://ffmpeg.org/" class="t-item"><i class="fas fa-video" style="color:#007808"></i> FFmpeg</a>
+    </div></div>
+    <div class="t-cat"><h3><i class="fas fa-database"></i> Databases</h3><div class="t-grid">
+      <a href="https://www.sqlite.org/" class="t-item"><i class="fas fa-cube" style="color:#003B57"></i> SQLite</a>
+      <a href="https://www.mongodb.com/" class="t-item"><i class="fas fa-leaf" style="color:#47A248"></i> MongoDB</a>
+      <a href="https://firebase.google.com/" class="t-item"><i class="fas fa-fire" style="color:#FFCA28"></i> Firebase</a>
+    </div></div>
+    <div class="t-cat"><h3><i class="fas fa-toolbox"></i> DevOps & Tools</h3><div class="t-grid">
+      <a href="https://git-scm.com/" class="t-item"><i class="fab fa-git-alt" style="color:#F05032"></i> Git</a>
+      <a href="https://github.com/" class="t-item"><i class="fab fa-github" style="color:#fff"></i> GitHub</a>
+      <a href="https://www.linux.org/" class="t-item"><i class="fab fa-linux" style="color:#FCC624"></i> Linux</a>
+      <a href="https://termux.dev/" class="t-item"><i class="fab fa-android" style="color:#3DDC84"></i> Termux</a>
+      <a href="https://code.visualstudio.com/" class="t-item"><i class="fas fa-code" style="color:#007ACC"></i> VS Code</a>
+    </div></div>
+    <div class="t-cat"><h3><i class="fas fa-rocket"></i> Deployment</h3><div class="t-grid">
+      <a href="https://vercel.com/" class="t-item"><i class="fas fa-triangle" style="color:#fff"></i> Vercel</a>
+      <a href="https://www.netlify.com/" class="t-item"><i class="fas fa-cloud" style="color:#00C7B7"></i> Netlify</a>
+    </div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head fade">
+    <p class="sec-tag">Proficiency</p>
+    <h2 class="sec-title">Skill Levels</h2>
+  </div>
+  <div class="skills fade">
+    <div class="s-row"><span class="s-name">JavaScript</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Python</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Node.js</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Express.js</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Bash</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">REST APIs</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">MongoDB</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">SQLite</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Firebase</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">HTML/CSS</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Git</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Linux</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Termux</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">FFmpeg</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Axios</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">VS Code</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Vercel</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Netlify</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">Baileys</span><div class="s-bar"><div class="s-fill" style="width:100%"></div></div><span class="s-lvl">Advanced</span></div>
+    <div class="s-row"><span class="s-name">WhatsApp Bots</span><div class="s-bar"><div class="s-fill" style="width:75%"></div></div><span class="s-lvl">Intermediate</span></div>
+    <div class="s-row"><span class="s-name">GitHub</span><div class="s-bar"><div class="s-fill" style="width:75%"></div></div><span class="s-lvl">Intermediate</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head fade">
+    <p class="sec-tag">How I Build</p>
+    <h2 class="sec-title">System Architecture</h2>
+  </div>
+  <div class="arch fade">
+    <div class="arch-flow">
+      <div class="a-node"><h4><i class="fas fa-user"></i> USER</h4><p>Input & Interaction</p></div>
+      <div class="a-arr"><i class="fas fa-chevron-down"></i></div>
+      <div class="a-node"><h4><i class="fas fa-envelope"></i> REQUEST HANDLER</h4><p>Validation · Rate Limiting · Auth</p></div>
+      <div class="a-arr"><i class="fas fa-chevron-down"></i></div>
+      <div class="a-node"><h4><i class="fas fa-route"></i> ROUTER / CONTROLLER / AI</h4><p>Route Mapping · Business Logic · AI</p></div>
+      <div class="a-arr"><i class="fas fa-chevron-down"></i></div>
+      <div class="a-node"><h4><i class="fas fa-cog"></i> SERVICE LAYER</h4><p>Core Logic · Processing · Validation</p></div>
+      <div class="a-arr"><i class="fas fa-chevron-down"></i></div>
+      <div class="a-node"><h4><i class="fas fa-database"></i> API / DATABASE / EXTERNAL</h4><p>REST · MongoDB · SQLite · Firebase</p></div>
+      <div class="a-arr"><i class="fas fa-chevron-down"></i></div>
+      <div class="a-node"><h4><i class="fas fa-reply"></i> RESPONSE / OUTPUT</h4><p>Formatted Data · Media · Status</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="vanitas">
+  <div class="sec-head fade">
+    <p class="sec-tag">Flagship Project</p>
+    <h2 class="sec-title">❖ Vanitas</h2>
+  </div>
+  <div class="v-hero fade">
+    <h3>❖ 𝑽𝒂𝒏𝒊𝒕𝒂𝒔</h3>
+    <p class="sub">WhatsApp Bot System · AI-Powered · Modular · Scalable</p>
+    <p>A premium WhatsApp Bot System with modular plugin architecture. A complete automation platform for power users, groups, and communities.</p>
+  </div>
+  <div class="sys-grid">
+    <div class="sys-card fade"><h4><i class="fas fa-brain"></i> AI Integration</h4><p>Intelligent responses, context-aware conversations, AI-powered assistance.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-download"></i> Downloaders</h4><p>Multi-platform media downloading with quality selection & format conversion.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-film"></i> Media Processing</h4><p>FFmpeg-powered audio/video processing, compression, format manipulation.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-users"></i> Group Management</h4><p>Advanced group controls, moderation tools, member management.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-shield-alt"></i> Administration</h4><p>Owner-level controls, system monitoring, administrative commands.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-gamepad"></i> Games</h4><p>Interactive games and entertainment modules for group engagement.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-search"></i> Search</h4><p>Multi-source search across web, media, and databases.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-plug"></i> APIs</h4><p>Third-party API integrations for extended functionality.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-cogs"></i> Automation</h4><p>Scheduled tasks, auto-responses, workflow automation.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-puzzle-piece"></i> Plugin System</h4><p>Modular plugin architecture for easy extension & customization.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-bug"></i> Error Handling</h4><p>Robust error catching, logging, graceful failure recovery.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-scroll"></i> Logging</h4><p>Comprehensive activity logging and system monitoring.</p></div>
+    <div class="sys-card fade"><h4><i class="fas fa-rocket"></i> Performance</h4><p>Optimized execution, caching, and resource management.</p></div>
+  </div>
+</section>
+
+<section id="videos" style="background:linear-gradient(180deg,transparent,rgba(138,43,226,.03),transparent);padding:4rem 2rem">
+  <div class="sec-head fade">
+    <p class="sec-tag">In Action</p>
+    <h2 class="sec-title">Video Showcase</h2>
+  </div>
+  <div class="vid-grid">
+    <div class="vid-card fade">
+      <div class="vid-wrap">
+        <video id="v1" src="https://files.catbox.moe/nd2sh1.mp4" preload="metadata" muted loop playsinline></video>
+        <div class="vid-overlay" onclick="playV('v1',this)">
+          <div class="play"><i class="fas fa-play"></i></div>
+        </div>
+      </div>
+      <div class="vid-info">
+        <h3>Vanitas Bot Demo</h3>
+        <p>Real-time command processing and interactive responses in action.</p>
+        <span class="vid-tag"><i class="fab fa-whatsapp"></i> WhatsApp Bot</span>
+      </div>
+    </div>
+    <div class="vid-card fade">
+      <div class="vid-wrap">
+        <video id="v2" src="https://files.catbox.moe/uuwol3.mp4" preload="metadata" muted loop playsinline></video>
+        <div class="vid-overlay" onclick="playV('v2',this)">
+          <div class="play"><i class="fas fa-play"></i></div>
+        </div>
+      </div>
+      <div class="vid-info">
+        <h3>System Features</h3>
+        <p>Advanced features and capabilities of the Vanitas platform.</p>
+        <span class="vid-tag"><i class="fas fa-star"></i> Feature Demo</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="sec-head fade">
+    <p class="sec-tag">Screenshots</p>
+    <h2 class="sec-title">Project Gallery</h2>
+  </div>
+  <div class="gal-grid">
+    <div class="gal-item fade" onclick="window.open('https://i.postimg.cc/pXXcfjRk/Test.png','_blank')">
+      <img src="https://i.postimg.cc/pXXcfjRk/Test.png" alt="Vanitas Main">
+      <div class="gal-over"><h4><i class="fas fa-image"></i> Vanitas Main Interface</h4></div>
+    </div>
+    <div class="gal-item fade" onclick="window.open('https://i.postimg.cc/5NNKBzbs/marriage.png','_blank')">
+      <img src="https://i.postimg.cc/5NNKBzbs/marriage.png" alt="Marriage">
+      <div class="gal-over"><h4><i class="fas fa-image"></i> Marriage System</h4></div>
+    </div>
+    <div class="gal-item fade" onclick="window.open('https://i.postimg.cc/SNN169kT/orders.png','_blank')">
+      <img src="https://i.postimg.cc/SNN169kT/orders.png" alt="Orders">
+      <div class="gal-over"><h4><i class="fas fa-image"></i> Orders Management</h4></div>
+    </div>
+    <div class="gal-item fade" onclick="window.open('https://i.postimg.cc/jdd3HftH/tlaq.png','_blank')">
+      <img src="https://i.postimg.cc/jdd3HftH/tlaq.png" alt="Features">
+      <div class="gal-over"><h4><i class="fas fa-image"></i> System Features</h4></div>
+    </div>
+    <div class="gal-item fade" onclick="window.open('https://i.postimg.cc/gJ4z7h58/1786961431578.png','_blank')">
+      <img src="https://i.postimg.cc/gJ4z7h58/1786961431578.png" alt="Dashboard">
+      <div class="gal-over"><h4><i class="fas fa-image"></i> Dashboard Overview</h4></div>
+    </div>
+    <div class="gal-item fade" onclick="window.open('https://i.postimg.cc/fRwhGycv/1786961609859.png','_blank')">
+      <img src="https://i.postimg.cc/fRwhGycv/1786961609859.png" alt="Controls">
+      <div class="gal-over"><h4><i class="fas fa-image"></i> Advanced Controls</h4></div>
+    </div>
+  </div>
+</section>
+
+<section id="nexora">
+  <div class="sec-head fade">
+    <p class="sec-tag">Web Platform</p>
+    <h2 class="sec-title">NEXORA</h2>
+  </div>
+  <div class="nex fade">
+    <h3>NEXORA</h3>
+    <p>The digital hub for my projects, community, and development ecosystem. Built with modern web technologies and deployed across multiple platforms.</p>
+    <div class="nex-links">
+      <a href="https://nexora-yx2o.vercel.app" class="nex-a"><i class="fas fa-globe"></i> Main — nexora-yx2o.vercel.app</a>
+      <a href="https://nexorasy.netlify.app" class="nex-a"><i class="fas fa-globe"></i> Secondary — nexorasy.netlify.app</a>
+      <a href="https://discord.gg/HC2wSQpru" class="nex-a"><i class="fab fa-discord"></i> Discord</a>
+      <a href="https://whatsapp.com/channel/0029Vb8glFqJkK7EdMYrao0K" class="nex-a"><i class="fab fa-whatsapp"></i> WhatsApp Channel</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head fade">
+    <p class="sec-tag">GitHub</p>
+    <h2 class="sec-title">GitHub Showcase</h2>
+  </div>
+  <div class="gh-grid fade">
+    <div class="gh-card">
+      <a href="https://github.com/sovereignempirex-ux"><img src="https://github-readme-stats.vercel.app/api?username=sovereignempirex-ux&show_icons=true&theme=radical&hide_border=true&bg_color=0D1117&title_color=8A2BE2&icon_color=00C7B7&text_color=C9D1D9&border_radius=12" alt="Stats"></a>
+    </div>
+    <div class="gh-card">
+      <a href="https://github.com/sovereignempirex-ux"><img src="https://github-readme-stats.vercel.app/api/top-langs/?username=sovereignempirex-ux&layout=compact&theme=radical&hide_border=true&bg_color=0D1117&title_color=8A2BE2&text_color=C9D1D9&border_radius=12" alt="Langs"></a>
+    </div>
+    <div class="gh-card" style="grid-column:1/-1">
+      <a href="https://github.com/sovereignempirex-ux"><img src="https://github-readme-streak-stats.herokuapp.com/?user=sovereignempirex-ux&theme=radical&hide_border=true&background=0D1117&stroke=8A2BE2&ring=8A2BE2&fire=00C7B7&currStreakLabel=8A2BE2&sideLabels=C9D1D9&currStreakNum=00C7B7&sideNums=C9D1D9&dates=8B949E&border_radius=12" alt="Streak" style="width:100%"></a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head fade">
+    <p class="sec-tag">Mindset</p>
+    <h2 class="sec-title">Developer Philosophy</h2>
+  </div>
+  <div class="phil fade">
+    <div class="phil-flow">
+      <div class="st"><i class="fas fa-lightbulb"></i> Idea</div>
+      <div class="ar"><i class="fas fa-arrow-down"></i></div>
+      <div class="st"><i class="fas fa-code"></i> Code</div>
+      <div class="ar"><i class="fas fa-arrow-down"></i></div>
+      <div class="st"><i class="fas fa-vial"></i> Test</div>
+      <div class="ar"><i class="fas fa-arrow-down"></i></div>
+      <div class="st"><i class="fas fa-exclamation-triangle"></i> Error</div>
+      <div class="ar"><i class="fas fa-arrow-down"></i></div>
+      <div class="st"><i class="fas fa-wrench"></i> Debug</div>
+      <div class="ar"><i class="fas fa-arrow-down"></i></div>
+      <div class="st"><i class="fas fa-bolt"></i> Optimize</div>
+      <div class="ar"><i class="fas fa-arrow-down"></i></div>
+      <div class="st"><i class="fas fa-rocket"></i> Deploy</div>
+      <div class="ar"><i class="fas fa-arrow-down"></i></div>
+      <div class="st"><i class="fas fa-sync"></i> Improve</div>
+      <div class="ar"><i class="fas fa-arrow-down"></i></div>
+      <div class="st"><i class="fas fa-redo"></i> Repeat</div>
+    </div>
+    <p class="phil-q">"Every error is another thing to learn from."</p>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="sec-head fade">
+    <p class="sec-tag">Let's Talk</p>
+    <h2 class="sec-title">Connect With Me</h2>
+  </div>
+  <div class="con-grid fade">
+    <a href="https://github.com/sovereignempirex-ux" class="con-btn"><i class="fab fa-github"></i> GitHub</a>
+    <a href="https://nexora-yx2o.vercel.app" class="con-btn"><i class="fas fa-globe"></i> NEXORA Main</a>
+    <a href="https://nexorasy.netlify.app" class="con-btn"><i class="fas fa-globe"></i> NEXORA Secondary</a>
+    <a href="https://discord.gg/HC2wSQpru" class="con-btn"><i class="fab fa-discord"></i> Discord</a>
+    <a href="https://wa.me/201283073813" class="con-btn"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+    <a href="https://whatsapp.com/channel/0029Vb8glFqJkK7EdMYrao0K" class="con-btn"><i class="fas fa-bullhorn"></i> Channel</a>
+    <a href="mailto:sovereign.empirex@gmail.com" class="con-btn"><i class="fas fa-envelope"></i> Email</a>
+  </div>
+</section>
+
+<footer>
+  <h4>❖ 𝑽𝒂𝒏𝒊𝒕𝒂𝒔</h4>
+  <p class="sub">Software Developer • AI • Bots • Automation • Web</p>
+  <p class="qt">"Building systems, not just commands."</p>
+</footer>
+
+<script>
+const obs=new IntersectionObserver((e)=>{e.forEach(i=>{if(i.isIntersecting){i.target.classList.add('show');obs.unobserve(i.target)}})},{threshold:.1})
+document.querySelectorAll('.fade').forEach(el=>obs.observe(el))
+function playV(id,overlay){const v=document.getElementById(id);v.muted=false;v.play();overlay.parentElement.parentElement.classList.add('playing')}
+document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth'})})})
+</script>
+
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>الأكثر إعجابًا | Most Liked · ARAB code</title>
+<meta name="description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files.">
+<meta name="keywords" content="أكواد, مطورين عرب, برمجة, مشاركة كود, HTML, CSS, JavaScript, Python, Arab developers, code sharing, programming, snippets">
+<link rel="canonical" href="https://www.arab-code.cv/popular">
+<link rel="alternate" hreflang="ar" href="https://www.arab-code.cv/popular">
+<link rel="alternate" hreflang="en" href="https://www.arab-code.cv/popular">
+<link rel="alternate" hreflang="x-default" href="https://www.arab-code.cv/popular">
+<meta property="og:type" content="website"><meta property="og:site_name" content="ARAB code">
+<meta property="og:locale" content="ar_AR"><meta property="og:locale:alternate" content="en_US">
+<meta property="og:title" content="الأكثر إعجابًا | Most Liked · ARAB code"><meta property="og:description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files.">
+<meta property="og:url" content="https://www.arab-code.cv/popular"><meta property="og:image" content="https://www.arab-code.cv/assets/brand/logo.png">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="الأكثر إعجابًا | Most Liked · ARAB code"><meta name="twitter:description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files."><meta name="twitter:image" content="https://www.arab-code.cv/assets/brand/logo.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .brand .dot{background:url('/assets/brand/logo.png') center/cover no-repeat !important;box-shadow:0 0 14px rgba(240,180,0,.35)}
+  .hero .sphere{width:120px;height:120px;background:url('/assets/brand/logo.png') center/cover no-repeat;box-shadow:0 12px 34px rgba(0,0,0,.15);animation:none}
+  .stats-bar{display:flex;justify-content:center;gap:26px;flex-wrap:wrap;margin-top:16px;font-size:13px;color:var(--muted)}
+  .stats-bar b{color:var(--gold-2);font-size:17px;display:block}
+</style>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="48x48" href="https://www.arab-code.cv/assets/brand/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://www.arab-code.cv/assets/brand/apple-touch-icon.png">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="brand"><span class="dot"></span> ARAB code</a>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+
+<header class="hero">
+  <div class="sphere"></div>
+  <h1>🔥 الأكثر إعجابًا</h1>
+  <p class="tag">أكواد اختارها المجتمع بالاعجاب</p>
+  <div class="stats-bar" id="stats"></div>
+</header>
+
+<main class="container">
+  <div id="codes" class="grid"></div>
+  <p id="empty" style="text-align:center;color:var(--muted);display:none;margin-top:40px">لا توجد أكواد بإعجابات بعد. كن أول من يضع إعجابًا!</p>
+</main>
+
+<script src="/app.js"></script>
+<script>
+async function fetchAndRenderCodes() {
+  // Top liked codes
+  try {
+    const topResp = await api(`/api/likes?top=1&_t=${Date.now()}`);
+    const codes = topResp.codes || [];
+    const box = document.getElementById('codes');
+    if (!codes || !codes.length) {
+      document.getElementById('empty').style.display = 'block';
+      box.innerHTML = '';
+      return;
+    }
+    document.getElementById('empty').style.display = 'none';
+    // Merge with full metadata from /api/list (top response may lack author fields)
+    let listResp;
+    try { listResp = await api('/api/list'); } catch { listResp = { codes: [] }; }
+    const byName = new Map((listResp.codes || []).map((c) => [c.filename, c]));
+    // Fetch like totals for every code
+    const totals = {};
+    await Promise.all(codes.map(async (c) => {
+      const name = c.filename || c.code;
+      try { totals[name] = (await api('/api/likes?code=' + encodeURIComponent(name))).total || 0; }
+      catch { totals[name] = 0; }
+    }));
+    const merged = codes.map((c) => {
+      const full = byName.get(c.filename || c.code) || {};
+      return { filename: c.filename || c.code, ...full, ...c };
+    });
+    box.innerHTML = merged.map((c) => codeCard(c, { likes: totals[c.filename] || 0 })).join('');
+    const devs = new Set(codes.map(c => (c.author || '').toLowerCase()).filter(Boolean));
+    const totalLikes = Object.values(totals).reduce((a, b) => a + (b || 0), 0);
+    document.getElementById('stats').innerHTML =
+      `<div><b>${codes.length}</b> كود بمُتصدّرة</div><div><b>${totalLikes}</b> إجمالي الإعجابات</div><div><b>${devs.size}</b> مطوّر</div>`;
+  } catch (e) {
+    console.error('Error fetching codes:', e);
+  }
+}
+
+(async () => {
+  await renderNav();
+  await fetchAndRenderCodes();
+  const me = await loadMe();
+  await renderBanOverlay(me);
+  setInterval(fetchAndRenderCodes, 60000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ملف مستخدم · ARAB code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<style>
+  .brand .dot{background:url('/assets/brand/logo.png') center/cover no-repeat !important}
+</style>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="48x48" href="https://www.arab-code.cv/assets/brand/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://www.arab-code.cv/assets/brand/apple-touch-icon.png">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="brand"><span class="dot"></span> ARAB code</a>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+
+<main class="container">
+  <div id="profile"></div>
+  <div id="editor-wrap"></div>
+  <div id="account-wrap"></div>
+  <div id="readme"></div>
+  <h3 style="color:var(--gold-2);margin:20px 0 10px">الأكواد المنشورة</h3>
+  <div id="codes" class="grid"></div>
+  <p id="empty" style="color:var(--muted);text-align:center;display:none;margin-top:20px">لا توجد أكواد بعد.</p>
+  <div id="side-wrap" style="margin-top:22px"></div>
+</main>
+
+<footer class="footer">
+  <div class="footer-decoration"></div>
+  <div class="footer-content">
+    <div class="footer-rights">
+      <span>© 2026 Code ARAB</span>
+      <span class="bmg">— BMG</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/app.js"></script>
+<script>
+let ME = null, USER = null;
+
+function showUserSkeleton(container, count = 6) {
+  if (!container) return;
+  container.className = 'skeleton-grid';
+  container.innerHTML = Array.from({ length: count }, () => `
+    <div class="skeleton-card" aria-hidden="true">
+      <div class="skeleton-line skeleton-title"></div>
+      <div class="skeleton-line skeleton-text"></div>
+      <div class="skeleton-line skeleton-text" style="width:70%"></div>
+      <div class="skeleton-footer">
+        <div class="skeleton-line skeleton-badge"></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div class="skeleton-line skeleton-badge" style="width:60px"></div>
+          <div class="skeleton-line skeleton-avatar-sm"></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function revealUserCards(container) {
+  if (!container) return;
+  container.className = 'grid';
+  [...container.children].forEach((card, index) => {
+    card.classList.add('reveal-item');
+    card.style.setProperty('--i', index);
+  });
+}
+
+function mdToHtml(md) {
+  try {
+    const raw = window.marked ? marked.parse(md, { breaks: true, gfm: true }) : esc(md).replace(/\n/g, '<br>');
+    return window.DOMPurify ? DOMPurify.sanitize(raw, { ADD_ATTR: ['target'] }) : raw;
+  } catch { return esc(md); }
+}
+
+function renderProfile(user, count) {
+  const badge = isVerified(user) ? verifiedBadge(user.is_admin ? 'حساب الإدارة الموثّق' : 'حساب موثّق') : '';
+  const banner = user.banner_url ? `style="background-image:url('${esc(user.banner_url)}')"` : '';
+  const links = (user.links || []).map(l =>
+    `<a class="btn sm" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.icon || '🔗')} ${esc(l.label)}</a>`
+  ).join('');
+  const self = ME && ME.username.toLowerCase() === user.username.toLowerCase();
+  const actions = self ? `
+    <div class="profile-actions">
+      <label class="btn sm primary" style="cursor:pointer">تغيير الصورة<input id="avatar-file" type="file" accept="image/*" hidden></label>
+      ${user.avatar_url ? '<button class="btn sm ghost" onclick="removeAvatar()">إزالة الصورة</button>' : ''}
+      <button class="btn sm" onclick="toggleEditor()">تعديل الملف الشخصي</button>
+      <button class="btn sm ghost" onclick="toggleAccount()">⚙️ إعدادات الحساب</button>
+    </div>` : '';
+
+  return `<section class="profile-card">
+    <div class="profile-banner" ${banner}></div>
+    <div class="profile-body">
+      ${avatarNode({ username: user.username, avatar_url: user.avatar_url }, 'xl')}
+      <div class="profile-name"><h2>${esc(user.display_name || user.username)}</h2>${badge}${user.is_admin ? '<span class="lang-badge">الإدارة</span>' : ''}</div>
+      <p class="profile-handle">@${esc(user.username)}${user.location ? ' · ' + esc(user.location) : ''}</p>
+      <div class="profile-stats">
+        <span><b>${count}</b> كود منشور</span>
+        <span>عضو منذ <b>${new Date(user.created_at).toLocaleDateString('ar')}</b></span>
+        ${user.website ? `<span><a href="${esc(user.website)}" target="_blank" rel="noopener">${esc(user.website.replace(/^https:\/\//, ''))}</a></span>` : ''}
+      </div>
+      ${links ? `<div class="profile-links">${links}</div>` : ''}
+      ${actions}
+    </div>
+  </section>`;
+}
+
+function renderReadme(user) {
+  const self = ME && ME.username.toLowerCase() === user.username.toLowerCase();
+  const body = user.bio
+    ? `<div class="readme-body">${mdToHtml(user.bio)}</div>`
+    : `<p class="readme-empty">${self ? 'لم تكتب ملف README بعد — اضغط "تعديل الملف الشخصي" وابدأ.' : 'لا يوجد README لهذا المطوّر.'}</p>`;
+  return `<section class="readme">
+    <div class="readme-head"><span>📄 ${esc(user.username)}/README.md</span>${self ? '<button class="btn sm ghost" onclick="toggleEditor()">تعديل</button>' : ''}</div>
+    ${body}
+  </section>`;
+}
+
+function linkRow(l = {}) {
+  return `<div class="link-row">
+    <input class="lk-icon" style="max-width:70px" placeholder="🔗" value="${esc(l.icon || '')}">
+    <input class="lk-label" placeholder="اسم الزر (مثال: GitHub)" value="${esc(l.label || '')}">
+    <input class="lk-url" placeholder="https://..." value="${esc(l.url || '')}">
+    <button class="btn sm danger" onclick="this.parentElement.remove()">حذف</button>
+  </div>`;
+}
+
+function renderEditor(user) {
+  return `<section class="editor" id="editor" style="display:none">
+    <h3 style="margin:0;color:var(--gold-2)">تعديل الملف الشخصي</h3>
+    <label>الاسم المعروض</label>
+    <input id="ed-name" value="${esc(user.display_name || user.username)}" maxlength="40">
+    <label>النبذة / الموقع الجغرافي</label>
+    <input id="ed-loc" value="${esc(user.location || '')}" maxlength="60" placeholder="مثال: السودان · مطوّر بوتات">
+    <label>الموقع الشخصي (https)</label>
+    <input id="ed-web" value="${esc(user.website || '')}" placeholder="https://example.com">
+    <label>رابط صورة الغلاف (https · اختياري)</label>
+    <input id="ed-banner" value="${esc(user.banner_url || '')}" placeholder="https://...jpg">
+    <label>الأزرار / الروابط</label>
+    <div id="links-box">${(user.links || []).map(linkRow).join('')}</div>
+    <button class="btn sm" onclick="addLink()">+ إضافة زر</button>
+    <label>README.md (يدعم Markdown)</label>
+    <textarea id="ed-bio" placeholder="# مرحباً 👋&#10;أنا مطوّر بوتات واتساب...&#10;&#10;- **لغتي:** JavaScript&#10;- [قناتي](https://...)">${esc(user.bio || '')}</textarea>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn primary" onclick="saveProfile(this)">حفظ</button>
+      <button class="btn ghost" onclick="toggleEditor()">إلغاء</button>
+    </div>
+    <p id="ed-msg" style="font-size:13px;margin:10px 0 0"></p>
+  </section>`;
+}
+
+
+let SETTINGS = {};
+
+function renderAccount(user) {
+  const rows = [];
+  if (SETTINGS.username_change_enabled !== false) rows.push(`
+    <div class="switch-row" style="align-items:flex-start;flex-direction:column;gap:10px">
+      <div><div class="t">تغيير اسم المستخدم</div>
+      <div class="d">اسمك الحالي: <b>@${esc(user.username)}</b> — أكوادك وطلباتك تنتقل معك تلقائياً.</div></div>
+      <input id="ac-username" placeholder="اليوزر الجديد (إنجليزي/أرقام)" style="direction:ltr;text-align:left">
+      <input id="ac-username-pass" type="password" placeholder="كلمة السر للتأكيد">
+      <button class="btn sm primary" onclick="doChangeUsername(this)">حفظ اليوزر</button>
+    </div>`);
+  if (SETTINGS.email_change_enabled !== false) rows.push(`
+    <div class="switch-row" style="align-items:flex-start;flex-direction:column;gap:10px">
+      <div><div class="t">تغيير البريد الإلكتروني</div>
+      <div class="d">بريدك الحالي: <b dir="ltr">${esc(user.email || '')}</b> — سنرسل رسالة تأكيد إلى البريد الجديد ولن يتغيّر شيء قبل تأكيدها.</div></div>
+      <input id="ac-email" type="email" placeholder="البريد الجديد" style="direction:ltr;text-align:left">
+      <input id="ac-email-pass" type="password" placeholder="كلمة السر للتأكيد">
+      <button class="btn sm primary" onclick="doChangeEmail(this)">إرسال التأكيد</button>
+    </div>`);
+  if (SETTINGS.account_delete_enabled !== false && !user.is_admin) rows.push(`
+    <div class="switch-row" style="align-items:flex-start;flex-direction:column;gap:10px">
+      <div><div class="t" style="color:var(--danger)">حذف الحساب نهائياً</div>
+      <div class="d">لا يمكن التراجع عن هذه الخطوة.</div></div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)">
+        <input type="checkbox" id="ac-del-codes"> احذف أيضاً كل أكوادي المنشورة
+      </label>
+      <input id="ac-del-pass" type="password" placeholder="كلمة السر للتأكيد">
+      <button class="btn sm danger" onclick="doDeleteAccount(this)">حذف حسابي</button>
+    </div>`);
+  if (!rows.length) return '';
+  return `<section class="editor" id="account-box" style="display:none">
+    <h3 style="margin:0 0 10px;color:var(--gold-2)">⚙️ إعدادات الحساب</h3>
+    ${rows.join('')}
+    <p id="ac-msg" style="font-size:13px;margin:10px 0 0"></p>
+  </section>`;
+}
+
+function toggleAccount() {
+  const b = document.getElementById('account-box');
+  if (!b) return;
+  b.style.display = b.style.display === 'none' ? 'block' : 'none';
+  if (b.style.display === 'block') b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function acMsg(t, ok) {
+  const m = document.getElementById('ac-msg');
+  if (!m) return alert(t);
+  m.style.color = ok ? 'var(--gold-2)' : 'var(--danger)';
+  m.textContent = t;
+}
+
+async function doChangeUsername(btn) {
+  const username = document.getElementById('ac-username').value.trim();
+  const password = document.getElementById('ac-username-pass').value;
+  if (!username || !password) return acMsg('اكتب اليوزر الجديد وكلمة السر', false);
+  btn.disabled = true;
+  try {
+    const r = await api('/api/change-username', { method: 'POST', body: JSON.stringify({ username, password }) });
+    acMsg('تم التغيير ✓', true);
+    setTimeout(() => location.href = '/u/' + encodeURIComponent(r.username), 700);
+  } catch (e) { acMsg(e.message, false); btn.disabled = false; }
+}
+
+async function doChangeEmail(btn) {
+  const email = document.getElementById('ac-email').value.trim();
+  const password = document.getElementById('ac-email-pass').value;
+  if (!email || !password) return acMsg('اكتب البريد الجديد وكلمة السر', false);
+  btn.disabled = true;
+  try {
+    await api('/api/change-email', { method: 'POST', body: JSON.stringify({ email, password }) });
+    acMsg('أرسلنا رسالة تأكيد إلى بريدك الجديد ✓', true);
+  } catch (e) { acMsg(e.message, false); }
+  btn.disabled = false;
+}
+
+async function doDeleteAccount(btn) {
+  const password = document.getElementById('ac-del-pass').value;
+  if (!password) return acMsg('اكتب كلمة السر للتأكيد', false);
+  if (!confirm('هل أنت متأكد من حذف حسابك نهائياً؟')) return;
+  btn.disabled = true;
+  try {
+    await api('/api/delete-account', { method: 'POST', body: JSON.stringify({
+      password, delete_codes: document.getElementById('ac-del-codes').checked,
+    }) });
+    alert('تم حذف حسابك. نأسف لمغادرتك 💛');
+    location.href = '/';
+  } catch (e) { acMsg(e.message, false); btn.disabled = false; }
+}
+
+function addLink() { document.getElementById('links-box').insertAdjacentHTML('beforeend', linkRow()); }
+function toggleEditor() {
+  const e = document.getElementById('editor');
+  if (!e) return;
+  e.style.display = e.style.display === 'none' ? 'block' : 'none';
+  if (e.style.display === 'block') e.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function saveProfile(btn) {
+  const msg = document.getElementById('ed-msg');
+  const links = [...document.querySelectorAll('#links-box .link-row')].map(r => ({
+    icon: r.querySelector('.lk-icon').value.trim(),
+    label: r.querySelector('.lk-label').value.trim(),
+    url: r.querySelector('.lk-url').value.trim(),
+  })).filter(l => l.label && l.url);
+  btn.disabled = true;
+  try {
+    await api('/api/update-profile', { method: 'POST', body: JSON.stringify({
+      display_name: document.getElementById('ed-name').value.trim(),
+      location: document.getElementById('ed-loc').value.trim(),
+      website: document.getElementById('ed-web').value.trim(),
+      banner_url: document.getElementById('ed-banner').value.trim(),
+      bio: document.getElementById('ed-bio').value,
+      links,
+    }) });
+    msg.style.color = 'green'; msg.textContent = 'تم الحفظ ✓';
+    setTimeout(() => location.reload(), 500);
+  } catch (e) { msg.style.color = 'var(--danger)'; msg.textContent = e.message; btn.disabled = false; }
+}
+
+(async () => {
+  showUserSkeleton(document.getElementById('codes'));
+  await renderNav();
+  ME = await loadMe();
+  try { SETTINGS = (await api('/api/public-settings')).settings || {}; } catch { SETTINGS = {}; }
+  const parts = location.pathname.split('/').filter(Boolean);
+  const q = new URLSearchParams(location.search);
+  const username = decodeURIComponent(parts[0] === 'u' ? (parts[1] || '') : (q.get('username') || q.get('u') || q.get('x') || ''));
+  if (!username) { location.href = '/'; return; }
+
+  let data;
+  try {
+    data = await api('/api/user?username=' + encodeURIComponent(username) + '&_t=' + Date.now());
+  } catch (e) {
+    document.getElementById('profile').innerHTML = `<p style="color:var(--danger);text-align:center">${esc(e.message)}</p>`;
+    return;
+  }
+
+  const { user, codes, count, is_self, pending } = data;
+  USER = user;
+  document.getElementById('profile').innerHTML = renderProfile(user, count);
+  if (is_self) {
+    document.getElementById('editor-wrap').innerHTML = renderEditor(user);
+    document.getElementById('account-wrap').innerHTML = renderAccount(user);
+    document.getElementById('avatar-file')?.addEventListener('change', onAvatarPick);
+    
+    // Auto-open settings if tab=settings is in URL
+    if (new URLSearchParams(location.search).get('tab') === 'settings') {
+      setTimeout(() => {
+        toggleAccount();
+      }, 300);
+    }
+  }
+  document.getElementById('readme').innerHTML = renderReadme(user);
+
+  let allUserCodes = codes || [];
+
+  async function renderUserPage() {
+    const box = document.getElementById('codes');
+    const pagBox = document.getElementById('pagination');
+    if (!box) return;
+
+    if (!allUserCodes.length) {
+      box.innerHTML = '';
+      if (pagBox) pagBox.innerHTML = '';
+      const emptyEl = document.getElementById('empty');
+      if (emptyEl) emptyEl.style.display = 'block';
+      return;
+    }
+    document.getElementById('empty').style.display = 'none';
+    
+    box.innerHTML = allUserCodes.map(c => codeCard(c)).join('');
+    revealUserCards(box);
+    if (pagBox) pagBox.innerHTML = '';
+  }
+
+  await renderUserPage();
+
+  if (is_self) {
+    const pendingHtml = pending && pending.length
+      ? pending.map(p => `<div class="side-item"><span>${esc(p.title)}</span><span class="lang-tag">قيد المراجعة</span></div>`).join('')
+      : '<p style="color:var(--muted);font-size:12px;margin:6px 0">لا شيء في المراجعة.</p>';
+    document.getElementById('side-wrap').innerHTML = `<div class="side"><h4>قيد المراجعة</h4>${pendingHtml}</div>`;
+  }
+})();
+
+async function onAvatarPick(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { alert('حجم الصورة أكبر من 3 ميغا'); return; }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const up = await api('/api/upload-avatar', { method: 'POST', body: JSON.stringify({ data_url: reader.result, filename: file.name }) });
+      await api('/api/update-profile', { method: 'POST', body: JSON.stringify({ avatar_url: up.url }) });
+      location.reload();
+    } catch (err) { alert(err.message); }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function removeAvatar() {
+  if (!confirm('إزالة صورة البروفايل؟')) return;
+  try {
+    await api('/api/update-profile', { method: 'POST', body: JSON.stringify({ avatar_url: null }) });
+    location.reload();
+  } catch (e) { alert(e.message); }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#04060f">
+<title>الأرض 3D | نموذج تفاعلي</title>
+<style>
+  /* ============================================================
+     المتغيرات العامة
+     ============================================================ */
+  :root{
+    --bg-0:#03050c;
+    --bg-1:#070d1c;
+    --accent:#4ea8ff;
+    --accent-2:#6ef2c0;
+    --accent-3:#ffb45e;
+    --panel:rgba(9,16,32,.68);
+    --panel-solid:#0a1224;
+    --border:rgba(110,170,255,.20);
+    --border-strong:rgba(110,170,255,.45);
+    --text:#e9f2ff;
+    --muted:#8ba3c7;
+    --danger:#ff6b6b;
+    --radius:16px;
+    --shadow:0 18px 50px rgba(0,0,0,.55);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+  html,body{
+    width:100%;height:100%;
+    overflow:hidden;
+    background:radial-gradient(ellipse at 50% 40%, #0a1430 0%, var(--bg-1) 45%, var(--bg-0) 100%);
+    color:var(--text);
+    font-family:"Segoe UI", "Tahoma", system-ui, -apple-system, sans-serif;
+    font-size:15px;
+    user-select:none;
+  }
+
+  /* ============================================================
+     حاوية المشهد
+     ============================================================ */
+  #app{position:fixed;inset:0;overflow:hidden}
+  #app canvas{display:block;width:100%;height:100%;outline:none;cursor:grab}
+  #app canvas:active{cursor:grabbing}
+
+  /* وهج خلفي خفيف */
+  #glowBg{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(circle at 22% 18%, rgba(78,168,255,.13), transparent 42%),
+      radial-gradient(circle at 78% 82%, rgba(110,242,192,.08), transparent 46%);
+    mix-blend-mode:screen;
+  }
+
+  /* ============================================================
+     شاشة التحميل
+     ============================================================ */
+  #loader{
+    position:fixed;inset:0;z-index:100;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at center, #08101f 0%, #03050c 100%);
+    transition:opacity .7s ease, visibility .7s ease;
+  }
+  #loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+
+  .loader-inner{
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+    padding:0 24px;text-align:center;max-width:460px;
+  }
+
+  .planet-loader{
+    width:96px;height:96px;border-radius:50%;
+    background:
+      radial-gradient(circle at 32% 30%, #7ec8ff 0%, #2a6fd6 35%, #0d2a63 70%, #05132e 100%);
+    box-shadow:0 0 42px rgba(78,168,255,.55), inset -14px -10px 34px rgba(0,0,0,.75);
+    position:relative;
+    animation:spinPlanet 3.4s linear infinite;
+  }
+  .planet-loader::after{
+    content:"";position:absolute;inset:-14px;border-radius:50%;
+    border:1px solid rgba(110,180,255,.35);
+    border-top-color:rgba(110,242,192,.85);
+    animation:spinRing 1.6s linear infinite;
+  }
+  @keyframes spinPlanet{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  @keyframes spinRing{from{transform:rotate(0)}to{transform:rotate(-360deg)}}
+
+  .loader-inner h1{font-size:20px;font-weight:600;letter-spacing:.4px}
+  #loadStatus{font-size:13px;color:var(--muted);min-height:18px}
+
+  .bar{
+    width:260px;height:5px;border-radius:99px;
+    background:rgba(120,170,255,.14);overflow:hidden;position:relative;
+  }
+  .bar i{
+    display:block;height:100%;width:0%;border-radius:99px;
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition:width .25s ease;
+    box-shadow:0 0 14px rgba(78,168,255,.85);
+  }
+  #loadPct{font-size:12px;color:var(--muted);letter-spacing:1px;font-variant-numeric:tabular-nums}
+
+  /* ============================================================
+     الشريط العلوي
+     ============================================================ */
+  #topbar{
+    position:fixed;top:0;left:0;right:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px;pointer-events:none;
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;
+    background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid var(--border);border-radius:var(--radius);
+    padding:10px 16px;box-shadow:var(--shadow);pointer-events:auto;
+  }
+  .brand .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--accent-2);
+    box-shadow:0 0 12px var(--accent-2);
+    animation:pulseDot 2.2s ease-in-out infinite;
+  }
+  @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+  .brand strong{display:block;font-size:14px;font-weight:600;line-height:1.25}
+  .brand small{display:block;font-size:11px;color:var(--muted);line-height:1.3}
+
+  .stats{
+    display:flex;gap:8px;pointer-events:auto;
+  }
+  .stats span{
+    display:flex;align-items:center;gap:6px;
+    background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid var(--border);border-radius:12px;
+    padding:8px 13px;font-size:11px;color:var(--muted);
+    letter-spacing:.3px;
+  }
+  .stats b{
+    color:var(--accent);font-weight:600;font-size:13px;
+    font-variant-numeric:tabular-nums;min-width:26px;text-align:center;
+  }
+  .stats span:last-child b{color:var(--accent-2)}
+
+  /* ============================================================
+     لوحة التحكم
+     ============================================================ */
+  #panel{
+    position:fixed;top:88px;right:20px;z-index:30;
+    width:290px;max-height:calc(100vh - 130px);
+    background:var(--panel);backdrop-filter:blur(16px);
+    border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    display:flex;flex-direction:column;
+    overflow:hidden;
+    transition:transform .38s cubic-bezier(.4,0,.2,1), opacity .3s;
+  }
+  #panel.collapsed{
+    transform:translateX(calc(100% + 34px));
+    opacity:0;pointer-events:none;
+  }
+
+  .panel-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-bottom:1px solid var(--border);
+    background:rgba(255,255,255,.02);
+  }
+  .panel-head h2{font-size:13px;font-weight:600;letter-spacing:.4px;display:flex;align-items:center;gap:8px}
+  .panel-head h2::before{
+    content:"";width:3px;height:14px;border-radius:2px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2));
+  }
+
+  .panel-body{
+    padding:8px 16px 18px;overflow-y:auto;flex:1;
+  }
+  .panel-body::-webkit-scrollbar{width:5px}
+  .panel-body::-webkit-scrollbar-thumb{background:rgba(110,170,255,.3);border-radius:9px}
+  .panel-body::-webkit-scrollbar-track{background:transparent}
+
+  .group{margin-top:14px}
+  .group-title{
+    font-size:10.5px;text-transform:uppercase;letter-spacing:1.6px;
+    color:var(--muted);margin-bottom:10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .group-title::after{content:"";flex:1;height:1px;background:var(--border)}
+
+  /* السلايدر */
+  .row{margin-bottom:14px}
+  .row-top{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:7px;font-size:12.5px;color:#c6d8f2;
+  }
+  .row-top b{
+    color:var(--accent);font-weight:600;font-size:11.5px;
+    font-variant-numeric:tabular-nums;
+    background:rgba(78,168,255,.10);
+    padding:2px 8px;border-radius:7px;border:1px solid rgba(78,168,255,.18);
+  }
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:4px;border-radius:99px;
+    background:rgba(120,170,255,.16);
+    outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:15px;height:15px;border-radius:50%;
+    background:linear-gradient(145deg,#8fd0ff,var(--accent));
+    border:2px solid #0a1830;
+    box-shadow:0 0 10px rgba(78,168,255,.85);
+    transition:transform .16s ease;
+  }
+  input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.22)}
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border-radius:50%;
+    background:linear-gradient(145deg,#8fd0ff,var(--accent));
+    border:2px solid #0a1830;box-shadow:0 0 10px rgba(78,168,255,.85);
+    cursor:pointer;
+  }
+
+  /* مفاتيح التبديل */
+  .toggle{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:9px 2px;font-size:13px;color:#c6d8f2;cursor:pointer;
+    border-bottom:1px solid rgba(110,170,255,.07);
+  }
+  .toggle:last-child{border-bottom:none}
+  .toggle:hover{color:#fff}
+
+  .switch{
+    position:relative;width:40px;height:22px;flex-shrink:0;
+    border-radius:99px;background:rgba(120,170,255,.16);
+    border:1px solid rgba(110,170,255,.20);
+    transition:background .25s, border-color .25s;
+  }
+  .switch::after{
+    content:"";position:absolute;top:2px;left:2px;
+    width:16px;height:16px;border-radius:50%;
+    background:#8ba3c7;
+    transition:transform .25s cubic-bezier(.4,0,.2,1), background .25s;
+  }
+  .toggle input{display:none}
+  .toggle input:checked + .switch{
+    background:rgba(78,168,255,.32);border-color:var(--border-strong);
+  }
+  .toggle input:checked + .switch::after{
+    transform:translateX(18px);
+    background:linear-gradient(145deg,#8fd0ff,var(--accent-2));
+    box-shadow:0 0 10px rgba(110,242,192,.8);
+  }
+  /* في RTL نقلب اتجاه الحركة */
+  html[dir="rtl"] .switch::after{left:auto;right:2px}
+  html[dir="rtl"] .toggle input:checked + .switch::after{transform:translateX(-18px)}
+
+  /* الأزرار */
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    padding:10px 8px;font-size:12px;font-family:inherit;font-weight:500;
+    color:#cfe1fa;background:rgba(110,170,255,.08);
+    border:1px solid var(--border);border-radius:11px;
+    cursor:pointer;transition:all .2s ease;
+  }
+  .btn:hover{
+    background:rgba(78,168,255,.20);
+    border-color:var(--border-strong);
+    color:#fff;transform:translateY(-1px);
+  }
+  .btn:active{transform:translateY(0) scale(.98)}
+  .btn.primary{
+    background:linear-gradient(135deg,rgba(78,168,255,.28),rgba(110,242,192,.20));
+    border-color:var(--border-strong);color:#fff;
+  }
+  .btn.wide{grid-column:1 / -1}
+
+  /* زر إظهار اللوحة */
+  #panelToggle{
+    position:fixed;top:88px;right:20px;z-index:29;
+    width:44px;height:44px;border-radius:13px;
+    background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid var(--border);box-shadow:var(--shadow);
+    display:none;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--accent);font-size:18px;
+    transition:transform .2s;
+  }
+  #panelToggle:hover{transform:scale(1.06)}
+  #panelToggle.show{display:flex}
+
+  /* ============================================================
+     شريط التلميحات السفلي
+     ============================================================ */
+  #hint{
+    position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+    z-index:20;pointer-events:none;
+    background:var(--panel);backdrop-filter:blur(14px);
+    border:1px solid var(--border);border-radius:99px;
+    padding:9px 20px;font-size:12px;color:var(--muted);
+    white-space:nowrap;box-shadow:var(--shadow);
+    transition:opacity .5s;
+  }
+  #hint b{color:var(--accent);font-weight:500}
+  #hint.fade{opacity:0}
+
+  /* ============================================================
+     إشعار صغير (Toast)
+     ============================================================ */
+  #toast{
+    position:fixed;bottom:76px;left:50%;transform:translate(-50%,18px);
+    z-index:60;pointer-events:none;opacity:0;
+    background:rgba(10,20,40,.92);backdrop-filter:blur(14px);
+    border:1px solid var(--border-strong);border-radius:12px;
+    padding:10px 20px;font-size:13px;color:var(--text);
+    box-shadow:var(--shadow);
+    transition:opacity .3s, transform .3s;
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* ============================================================
+     الاستجابة للشاشات الصغيرة
+     ============================================================ */
+  @media (max-width: 860px){
+    #panel{
+      top:auto;bottom:0;right:0;left:0;width:100%;
+      max-height:60vh;border-radius:20px 20px 0 0;
+      border-bottom:none;
+    }
+    #panel.collapsed{transform:translateY(calc(100% + 20px))}
+    #panelToggle{top:auto;bottom:20px;right:20px;display:flex}
+    #panelToggle.show{display:flex}
+    #hint{display:none}
+    .brand small{display:none}
+    .stats span{padding:7px 10px}
+  }
+  @media (max-width: 460px){
+    .brand{padding:8px 12px}
+    .brand strong{font-size:12.5px}
+    .stats span{font-size:10px;padding:6px 9px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= المشهد ================= -->
+<div id="app"></div>
+<div id="glowBg"></div>
+
+<!-- ================= شاشة التحميل ================= -->
+<div id="loader">
+  <div class="loader-inner">
+    <div class="planet-loader"></div>
+    <h1>جارٍ بناء كوكب الأرض…</h1>
+    <p id="loadStatus">تهيئة المشهد</p>
+    <div class="bar"><i id="loadBar"></i></div>
+    <span id="loadPct">0%</span>
+  </div>
+</div>
+
+<!-- ================= الشريط العلوي ================= -->
+<header id="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <div>
+      <strong>الأرض ثلاثية الأبعاد</strong>
+      <small>محاكاة تفاعلية · Three.js</small>
+    </div>
+  </div>
+  <div class="stats">
+    <span>FPS <b id="fps">--</b></span>
+    <span>مسافة <b id="dist">0</b></span>
+  </div>
+</header>
+
+<!-- ================= زر إظهار اللوحة ================= -->
+<div id="panelToggle" title="إظهار لوحة التحكم">⚙</div>
+
+<!-- ================= لوحة التحكم ================= -->
+<aside id="panel">
+  <div class="panel-head">
+    <h2>لوحة التحكم</h2>
+    <div class="btn" id="collapseBtn" style="padding:5px 11px;font-size:14px;border-radius:9px">✕</div>
+  </div>
+
+  <div class="panel-body">
+
+    <!-- الحركة -->
+    <div class="group">
+      <div class="group-title">الحركة والدوران</div>
+
+      <div class="row">
+        <div class="row-top"><span>سرعة دوران الأرض</span><b id="vSpin">1.0</b></div>
+        <input type="range" id="spin" min="0" max="5" step="0.1" value="1">
+      </div>
+
+      <div class="row">
+        <div class="row-top"><span>سرعة السحاب</span><b id="vCloud">1.0</b></div>
+        <input type="range" id="cloud" min="0" max="4" step="0.1" value="1">
+      </div>
+
+      <div class="row">
+        <div class="row-top"><span>سرعة دوران الكاميرا</span><b id="vAuto">0.0</b></div>
+        <input type="range" id="auto" min="0" max="3" step="0.1" value="0">
+      </div>
+
+      <div class="row">
+        <div class="row-top"><span>سرعة القمر</span><b id="vMoon">1.0</b></div>
+        <input type="range" id="moonSpeed" min="0" max="4" step="0.1" value="1">
+      </div>
+    </div>
+
+    <!-- العرض -->
+    <div class="group">
+      <div class="group-title">عناصر المشهد</div>
+
+      <label class="toggle">
+        <span>الغلاف الجوي (الوهج)</span>
+        <input type="checkbox" id="tAtmo" checked><i class="switch"></i>
+      </label>
+
+      <label class="toggle">
+        <span>طبقة السحاب</span>
+        <input type="checkbox" id="tClouds" checked><i class="switch"></i>
+      </label>
+
+      <label class="toggle">
+        <span>النجوم</span>
+        <input type="checkbox" id="tStars" checked><i class="switch"></i>
+      </label>
+
+      <label class="toggle">
+        <span>القمر</span>
+        <input type="checkbox" id="tMoon" checked><i class="switch"></i>
+      </label>
+
+      <label class="toggle">
+        <span>الشمس (النجم البعيد)</span>
+        <input type="checkbox" id="tSun" checked><i class="switch"></i>
+      </label>
+
+      <label class="toggle">
+        <span>الخطوط الشبكية</span>
+        <input type="checkbox" id="tGrid"><i class="switch"></i>
+      </label>
+    </div>
+
+    <!-- الإضاءة -->
+    <div class="group">
+      <div class="group-title">الإضاءة والمؤثرات</div>
+
+      <div class="row">
+        <div class="row-top"><span>قوة إضاءة الشمس</span><b id="vLight">1.6</b></div>
+        <input type="range" id="light" min="0" max="4" step="0.1" value="1.6">
+      </div>
+
+      <div class="row">
+        <div class="row-top"><span>الإضاءة المحيطة</span><b id="vAmb">0.18</b></div>
+        <input type="range" id="ambient" min="0" max="1" step="0.02" value="0.18">
+      </div>
+
+      <div class="row">
+        <div class="row-top"><span>لمعان المحيطات</span><b id="vShine">45</b></div>
+        <input type="range" id="shine" min="0" max="120" step="1" value="45">
+      </div>
+
+      <div class="row">
+        <div class="row-top"><span>كثافة الغلاف الجوي</span><b id="vGlow">1.0</b></div>
+        <input type="range" id="glow" min="0" max="3" step="0.05" value="1">
+      </div>
+    </div>
+
+    <!-- أدوات -->
+    <div class="group">
+      <div class="group-title">أدوات</div>
+      <div class="btns">
+        <button class="btn" id="btnReset">↺ إعادة الضبط</button>
+        <button class="btn" id="btnRandom">🎲 كوكب جديد</button>
+        <button class="btn wide primary" id="btnShot">📸 حفظ صورة PNG</button>
+        <button class="btn wide" id="btnFull">⛶ ملء الشاشة</button>
+      </div>
+    </div>
+
+  </div>
+</aside>
+
+<!-- ================= تلميح ================= -->
+<div id="hint">
+  <b>اسحب</b> للدوران &nbsp;·&nbsp; <b>عجلة الفأرة</b> للتقريب &nbsp;·&nbsp; <b>نقرة مزدوجة</b> لإعادة الضبط
+</div>
+
+<!-- ================= إشعار ================= -->
+<div id="toast"></div>
+
+<!-- ================= مكتبة Three.js ================= -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+"use strict";
+
+/* ================================================================
+   0) أدوات مساعدة عامة
+   ================================================================ */
+const $ = (sel) => document.querySelector(sel);
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const smoothstep = (e0, e1, x) => {
+  const t = clamp((x - e0) / (e1 - e0), 0, 1);
+  return t * t * (3 - 2 * t);
+};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
+const rand = (a, b) => a + Math.random() * (b - a);
+
+/* إشعار صغير */
+let toastTimer = null;
+function toast(msg) {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
+}
+
+/* ================================================================
+   1) محرّك ضوضاء (Value Noise 3D + fBm)
+   ================================================================ */
+
+/* دالة تجزئة سريعة تُعيد قيمة بين 0 و 1 */
+function hash3(i, j, k) {
+  let n = Math.imul(i, 374761393) + Math.imul(j, 668265263) + Math.imul(k, 1274126177);
+  n = Math.imul(n ^ (n >>> 13), 1274126177);
+  n ^= n >>> 16;
+  return (n >>> 0) / 4294967295;
+}
+
+/* ضوضاء ثلاثية الأبعاد مع استيفاء ناعم */
+function noise3(x, y, z) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+  const xf = x - xi, yf = y - yi, zf = z - zi;
+
+  const u = xf * xf * (3 - 2 * xf);
+  const v = yf * yf * (3 - 2 * yf);
+  const w = zf * zf * (3 - 2 * zf);
+
+  const n000 = hash3(xi,     yi,     zi);
+  const n100 = hash3(xi + 1, yi,     zi);
+  const n010 = hash3(xi,     yi + 1, zi);
+  const n110 = hash3(xi + 1, yi + 1, zi);
+  const n001 = hash3(xi,     yi,     zi + 1);
+  const n101 = hash3(xi + 1, yi,     zi + 1);
+  const n011 = hash3(xi,     yi + 1, zi + 1);
+  const n111 = hash3(xi + 1, yi + 1, zi + 1);
+
+  const x00 = n000 + (n100 - n000) * u;
+  const x10 = n010 + (n110 - n010) * u;
+  const x01 = n001 + (n101 - n001) * u;
+  const x11 = n011 + (n111 - n011) * u;
+
+  const y0 = x00 + (x10 - x00) * v;
+  const y1 = x01 + (x11 - x01) * v;
+
+  return y0 + (y1 - y0) * w;
+}
+
+/* ضوضاء متعددة الطبقات (fractal Brownian motion) */
+function fbm(x, y, z, oct, lac, gain) {
+  oct = oct || 5; lac = lac || 2.0; gain = gain || 0.5;
+  let amp = 0.5, freq = 1, sum = 0, norm = 0;
+  for (let i = 0; i < oct; i++) {
+    sum += amp * noise3(x * freq, y * freq, z * freq);
+    norm += amp;
+    amp *= gain;
+    freq *= lac;
+  }
+  return sum / norm;
+}
+
+/* ================================================================
+   2) توليد خرائط الكوكب إجرائياً
+   ================================================================ */
+
+/* إعدادات الكوكب — قابلة للتغيير عبر زر "كوكب جديد" */
+const planetCfg = {
+  seed: Math.random() * 500,
+  seaLevel: 0.085,       // منسوب سطح البحر
+  landScale: 1.35,       // حجم القارات
+  roughness: 1.0,        // خشونة التضاريس
+  iceEdge: 0.74,         // حد الجليد القطبي
+  cloudCover: 0.50       // كثافة السحاب
+};
+
+/* توليد خرائط الأرض (لون + ارتفاع + لمعان) */
+async function buildEarthMaps(W, H, onProgress) {
+  const colorCv = document.createElement("canvas");
+  colorCv.width = W; colorCv.height = H;
+  const cctx = colorCv.getContext("2d");
+  const cImg = cctx.createImageData(W, H);
+  const cpx = cImg.data;
+
+  const heightCv = document.createElement("canvas");
+  heightCv.width = W; heightCv.height = H;
+  const hctx = heightCv.getContext("2d");
+  const hImg = hctx.createImageData(W, H);
+  const hpx = hImg.data;
+
+  const specCv = document.createElement("canvas");
+  specCv.width = W; specCv.height = H;
+  const sctx = specCv.getContext("2d");
+  const sImg = sctx.createImageData(W, H);
+  const spx = sImg.data;
+
+  const S = planetCfg.seed;
+  const latStep = Math.PI / H;
+
+  for (let y = 0; y < H; y++) {
+    const lat = Math.PI / 2 - (y + 0.5) * latStep;  // +90° .. -90°
+    const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+    const latAbs = Math.abs(lat) / (Math.PI / 2);
+
+    for (let x = 0; x < W; x++) {
+      const lon = ((x + 0.5) / W) * Math.PI * 2 - Math.PI;
+
+      /* نقطة على سطح الكرة — تضمن عدم وجود خطوط وصل */
+      const nx = cosLat * Math.cos(lon);
+      const ny = sinLat;
+      const nz = cosLat * Math.sin(lon);
+
+      /* --- تشويه المجال لإنتاج سواحل عضوية --- */
+      const wx = noise3(nx * 2.1 + S + 51.3, ny * 2.1 + S + 37.7, nz * 2.1 + S + 11.1) - 0.5;
+      const wy = noise3(nx * 2.1 + S + 91.3, ny * 2.1 + S + 77.7, nz * 2.1 + S + 31.1) - 0.5;
+      const wz = noise3(nx * 2.1 + S + 19.3, ny * 2.1 + S + 23.7, nz * 2.1 + S + 67.1) - 0.5;
+
+      const px = nx + wx * 0.30;
+      const py = ny + wy * 0.30;
+      const pz = nz + wz * 0.30;
+
+      /* --- كتلة القارات الكبرى --- */
+      const continent = fbm(
+        px * 0.85 + S + 3.3,
+        py * 0.85 + S + 7.7,
+        pz * 0.85 + S + 1.1,
+        2, 2.0, 0.5
+      );
+
+      /* --- تفاصيل التضاريس --- */
+      const base = fbm(
+        px * planetCfg.landScale + S + 21.7,
+        py * planetCfg.landScale + S + 13.1,
+        pz * planetCfg.landScale + S + 5.9,
+        5, 2.0, 0.5
+      );
+
+      let e = (base - 0.5) * 2.4 * planetCfg.roughness;
+      e += (continent - 0.5) * 0.95;
+
+      const sea = planetCfg.seaLevel;
+
+      /* --- تفاصيل دقيقة لتكسير اللون --- */
+      const det = noise3(nx * 22 + S, ny * 22 + S, nz * 22 + S);
+
+      let r, g, b, spec;
+
+      if (e < sea) {
+        /* ============ محيط ============ */
+        const depth = clamp((sea - e) / 0.75, 0, 1);
+        const d2 = depth * depth;
+
+        r = lerp(30, 3, d2);
+        g = lerp(96, 16, d2);
+        b = lerp(162, 58, d2);
+
+        /* تدرجات خفيفة في الأعماق */
+        const tint = (det - 0.5) * 14;
+        r += tint * 0.4; g += tint * 0.7; b += tint;
+
+        spec = 240;
+      } else {
+        /* ============ يابسة ============ */
+        const h = clamp((e - sea) / 0.62, 0, 1);
+
+        if (h < 0.055) {
+          /* شاطئ */
+          const t = h / 0.055;
+          r = lerp(216, 168, t);
+          g = lerp(200, 170, t);
+          b = lerp(150, 118, t);
+        } else if (h < 0.26) {
+          /* سهول خضراء */
+          const t = (h - 0.055) / 0.205;
+          r = lerp(86, 58, t);
+          g = lerp(132, 104, t);
+          b = lerp(62, 54, t);
+        } else if (h < 0.55) {
+          /* غابات وهضاب */
+          const t = (h - 0.26) / 0.29;
+          r = lerp(58, 112, t);
+          g = lerp(104, 100, t);
+          b = lerp(54, 68, t);
+        } else {
+          /* جبال وصخور */
+          const t = clamp((h - 0.55) / 0.45, 0, 1);
+          r = lerp(112, 158, t);
+          g = lerp(100, 148, t);
+          b = lerp(68, 132, t);
+        }
+
+        /* قمم ثلجية */
+        const snow = smoothstep(0.72, 0.92, h);
+        r = lerp(r, 245, snow);
+        g = lerp(g, 249, snow);
+        b = lerp(b, 255, snow);
+
+        /* تنويع صحراوي حسب الضوضاء */
+        const dryness = fbm(px * 3.2 + S + 71, py * 3.2 + S + 17, pz * 3.2 + S + 43, 3, 2, 0.5);
+        const desert = smoothstep(0.58, 0.78, dryness) * (1 - snow) * (1 - smoothstep(0.35, 0.6, h));
+        r = lerp(r, 196, desert * 0.75);
+        g = lerp(g, 168, desert * 0.75);
+        b = lerp(b, 108, desert * 0.75);
+
+        /* تنويع دقيق */
+        const t2 = (det - 0.5) * 22;
+        r += t2; g += t2; b += t2;
+
+        spec = 18;
+      }
+
+      /* ============ الجليد القطبي ============ */
+      const iceNoise = noise3(nx * 5.5 + S, ny * 5.5 + S, nz * 5.5 + S);
+      const iceStart = planetCfg.iceEdge + (iceNoise - 0.5) * 0.16;
+      const ice = smoothstep(iceStart, iceStart + 0.15, latAbs);
+
+      if (ice > 0) {
+        r = lerp(r, 238, ice);
+        g = lerp(g, 246, ice);
+        b = lerp(b, 255, ice);
+        spec = lerp(spec, 70, ice);
+      }
+
+      /* --- كتابة البكسل --- */
+      const idx = (y * W + x) * 4;
+      cpx[idx]     = clamp(r, 0, 255);
+      cpx[idx + 1] = clamp(g, 0, 255);
+      cpx[idx + 2] = clamp(b, 0, 255);
+      cpx[idx + 3] = 255;
+
+      /* خريطة الارتفاع (Bump) */
+      const hVal = clamp((e + 0.55) / 1.55, 0, 1);
+      const hByte = Math.round(hVal * 255);
+      hpx[idx] = hpx[idx + 1] = hpx[idx + 2] = hByte;
+      hpx[idx + 3] = 255;
+
+      /* خريطة اللمعان (الماء لامع، اليابسة مطفي) */
+      const sByte = Math.round(clamp(spec, 0, 255));
+      spx[idx] = spx[idx + 1] = spx[idx + 2] = sByte;
+      spx[idx + 3] = 255;
+    }
+
+    /* تحديث دوري للواجهة */
+    if (y % 20 === 0) {
+      if (onProgress) onProgress(y / H);
+      await nextFrame();
+    }
+  }
+
+  cctx.putImageData(cImg, 0, 0);
+  hctx.putImageData(hImg, 0, 0);
+  sctx.putImageData(sImg, 0, 0);
+
+  return { colorCv, heightCv, specCv };
+}
+
+/* توليد خريطة السحاب (RGB أبيض + قناة ألفا) */
+async function buildCloudMap(W, H, onProgress) {
+  const cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d");
+  const img = ctx.createImageData(W, H);
+  const px = img.data;
+
+  const S = planetCfg.seed + 137;
+  const latStep = Math.PI / H;
+
+  for (let y = 0; y < H; y++) {
+    const lat = Math.PI / 2 - (y + 0.5) * latStep;
+    const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+
+    for (let x = 0; x < W; x++) {
+      const lon = ((x + 0.5) / W) * Math.PI * 2 - Math.PI;
+
+      const nx = cosLat * Math.cos(lon);
+      const ny = sinLat;
+      const nz = cosLat * Math.sin(lon);
+
+      /* تشويه خفيف */
+      const wx = noise3(nx * 3.4 + S, ny * 3.4 + S, nz * 3.4 + S) - 0.5;
+      const wz = noise3(nx * 3.4 + S + 61, ny * 3.4 + S + 61, nz * 3.4 + S + 61) - 0.5;
+
+      let c = fbm(
+        nx * 2.6 + wx * 0.5 + S,
+        ny * 2.6 + S,
+        nz * 2.6 + wz * 0.5 + S,
+        5, 2.15, 0.55
+      );
+
+      /* أحزمة عرضية تحاكي دوران الغلاف الجوي */
+      c += 0.055 * Math.sin(ny * Math.PI * 5.5);
+      c += 0.035 * Math.sin(ny * Math.PI * 11.0);
+
+      /* تقليل السحاب عند القطبين قليلاً */
+      c -= Math.abs(ny) * 0.05;
+
+      const th = planetCfg.cloudCover;
+      let a = smoothstep(th, th + 0.22, c);
+
+      /* تلاشي الحواف الدقيقة */
+      a = clamp(a, 0, 1);
+      a = a * a * (3 - 2 * a);
+
+      const idx = (y * W + x) * 4;
+      px[idx]     = 255;
+      px[idx + 1] = 255;
+      px[idx + 2] = 255;
+      px[idx + 3] = Math.round(a * 255);
+    }
+
+    if (y % 32 === 0) {
+      if (onProgress) onProgress(y / H);
+      await nextFrame();
+    }
+  }
+
+  ctx.putImageData(img, 0, 0);
+  return cv;
+}
+
+/* توليد خريطة القمر */
+function buildMoonMap(W, H) {
+  const cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d");
+  const img = ctx.createImageData(W, H);
+  const px = img.data;
+
+  const S = planetCfg.seed + 909;
+  const latStep = Math.PI / H;
+
+  for (let y = 0; y < H; y++) {
+    const lat = Math.PI / 2 - (y + 0.5) * latStep;
+    const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+
+    for (let x = 0; x < W; x++) {
+      const lon = ((x + 0.5) / W) * Math.PI * 2 - Math.PI;
+      const nx = cosLat * Math.cos(lon);
+      const ny = sinLat;
+      const nz = cosLat * Math.sin(lon);
+
+      const base = fbm(nx * 3.2 + S, ny * 3.2 + S, nz * 3.2 + S, 4, 2.1, 0.55);
+      const craters = fbm(nx * 11 + S, ny * 11 + S, nz * 11 + S, 3, 2.3, 0.6);
+
+      let v = 118 + (base - 0.5) * 78;
+      v += (craters - 0.5) * 40;
+      v = clamp(v, 40, 230);
+
+      /* بقع داكنة (ماريا) */
+      const maria = smoothstep(0.56, 0.72, base);
+      v = lerp(v, 62, maria * 0.72);
+
+      const idx = (y * W + x) * 4;
+      px[idx]     = v;
+      px[idx + 1] = v * 0.99;
+      px[idx + 2] = v * 0.95;
+      px[idx + 3] = 255;
+    }
+  }
+
+  ctx.putImageData(img, 0, 0);
+  return cv;
+}
+
+/* توليد بقعة ضوء دائرية (للشمس) */
+function buildGlowTexture(size) {
+  const cv = document.createElement("canvas");
+  cv.width = cv.height = size;
+  const ctx = cv.getContext("2d");
+  const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  g.addColorStop(0.00, "rgba(255,255,255,1)");
+  g.addColorStop(0.12, "rgba(255,246,214,0.95)");
+  g.addColorStop(0.30, "rgba(255,206,120,0.42)");
+  g.addColorStop(0.60, "rgba(255,168,72,0.12)");
+  g.addColorStop(1.00, "rgba(255,140,40,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  return cv;
+}
+
+/* ================================================================
+   3) إعداد المشهد ثلاثي الأبعاد
+   ================================================================ */
+
+let renderer, scene, camera;
+let earthGroup, earthMesh, cloudMesh, atmosphereMesh, moonPivot, moonMesh;
+let starField, sunSprite, sunLight, ambientLight, hemiLight, gridHelper;
+
+/* حالة الكاميرا (تحكم مداري مخصص) */
+const cam = {
+  theta: 0.75,
+  phi: 1.32,
+  radius: 3.55,
+  tTheta: 0.75,
+  tPhi: 1.32,
+  tRadius: 3.55,
+  vTheta: 0,
+  vPhi: 0,
+  dragging: false,
+  lastPinch: 0
+};
+
+const pointers = new Map();
+
+/* سرعات الدوران */
+const motion = {
+  spin: 1.0,
+  cloud: 1.0,
+  auto: 0.0,
+  moon: 1.0
+};
+
+const EARTH_RADIUS = 1;
+
+function setupRenderer() {
+  const container = $("#app");
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: false,
+    preserveDrawingBuffer: true,
+    powerPreference: "high-performance"
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.12;
+  renderer.setClearColor(0x03050c, 1);
+  container.appendChild(renderer.domElement);
+}
+
+function setupScene() {
+  scene = new THREE.Scene();
+  scene.fog = null;
+
+  camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    0.05,
+    4000
+  );
+  camera.position.set(0, 0, 3.55);
+
+  /* ---------- الإضاءة ---------- */
+  ambientLight = new THREE.AmbientLight(0x3a5a8c, 0.18);
+  scene.add(ambientLight);
+
+  hemiLight = new THREE.HemisphereLight(0x8fc4ff, 0x0a1428, 0.22);
+  scene.add(hemiLight);
+
+  sunLight = new THREE.DirectionalLight(0xfff3dd, 1.6);
+  sunLight.position.set(6, 2.2, 4.5);
+  scene.add(sunLight);
+
+  /* ضوء خلفي خافت لتفتيح الحواف */
+  const rim = new THREE.DirectionalLight(0x2a5fa8, 0.22);
+  rim.position.set(-6, -2, -5);
+  scene.add(rim);
+}
+
+/* ---------- نجوم ---------- */
+function buildStars() {
+  const COUNT = 9000;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(COUNT * 3);
+  const col = new Float32Array(COUNT * 3);
+  const sizes = new Float32Array(COUNT);
+
+  const palette = [
+    [1.00, 1.00, 1.00],
+    [0.78, 0.86, 1.00],
+    [1.00, 0.93, 0.78],
+    [1.00, 0.80, 0.68],
+    [0.86, 0.94, 1.00]
+  ];
+
+  for (let i = 0; i < COUNT; i++) {
+    /* توزيع على قشرة كروية */
+    const u = Math.random() * 2 - 1;
+    const t = Math.random() * Math.PI * 2;
+    const s = Math.sqrt(1 - u * u);
+    const R = rand(300, 900);
+
+    pos[i * 3]     = Math.cos(t) * s * R;
+    pos[i * 3 + 1] = u * R;
+    pos[i * 3 + 2] = Math.sin(t) * s * R;
+
+    const c = palette[(Math.random() * palette.length) | 0];
+    const bright = rand(0.45, 1.0);
+    col[i * 3]     = c[0] * bright;
+    col[i * 3 + 1] = c[1] * bright;
+    col[i * 3 + 2] = c[2] * bright;
+
+    sizes[i] = rand(0.7, 2.4);
+  }
+
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  geo.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+
+  const mat = new THREE.PointsMaterial({
+    size: 1.6,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.95,
+    sizeAttenuation: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    map: (() => {
+      /* بقعة دائرية ناعمة للنجوم */
+      const cv = document.createElement("canvas");
+      cv.width = cv.height = 32;
+      const ctx = cv.getContext("2d");
+      const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      g.addColorStop(0, "rgba(255,255,255,1)");
+      g.addColorStop(0.35, "rgba(255,255,255,0.55)");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 32, 32);
+      return new THREE.CanvasTexture(cv);
+    })()
+  });
+
+  starField = new THREE.Points(geo, mat);
+  scene.add(starField);
+  return starField;
+}
+
+/* ---------- شمس بعيدة ---------- */
+function buildSunSprite() {
+  const tex = new THREE.CanvasTexture(buildGlowTexture(256));
+  tex.encoding = THREE.sRGBEncoding;
+
+  const mat = new THREE.SpriteMaterial({
+    map: tex,
+    color: 0xffffff,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: false,
+    opacity: 0.9
+  });
+
+  sunSprite = new THREE.Sprite(mat);
+  const dir = sunLight.position.clone().normalize();
+  sunSprite.position.copy(dir.multiplyScalar(320));
+  sunSprite.scale.setScalar(78);
+  scene.add(sunSprite);
+  return sunSprite;
+}
+
+/* ---------- الغلاف الجوي (Shader) ---------- */
+const ATMO_VERT = `
+  varying vec3 vViewNormal;
+  varying vec3 vWorldNormal;
+
+  void main() {
+    vViewNormal  = normalize(normalMatrix * normal);
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
+    gl_Position  = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const ATMO_FRAG = `
+  uniform vec3  uColor;
+  uniform vec3  uLightDir;
+  uniform float uStrength;
+
+  varying vec3 vViewNormal;
+  varying vec3 vWorldNormal;
+
+  void main() {
+    /* وهج الحواف */
+    float rim = pow(max(0.62 - dot(vViewNormal, vec3(0.0, 0.0, 1.0)), 0.0), 3.0);
+    rim = clamp(rim, 0.0, 1.0);
+
+    /* إضاءة الجانب المواجه للشمس */
+    float lit = smoothstep(-0.42, 0.42, dot(normalize(vWorldNormal), normalize(uLightDir)));
+
+    /* مزيج: الجانب الليلي له وهج أزرق خفيف جداً */
+    float alpha = rim * mix(0.10, 1.0, lit) * uStrength;
+
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`;
+
+function buildAtmosphere() {
+  const geo = new THREE.SphereGeometry(EARTH_RADIUS * 1.185, 64, 48);
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uColor:    { value: new THREE.Color(0x5aa9ff) },
+      uLightDir: { value: sunLight.position.clone().normalize() },
+      uStrength: { value: 1.0 }
+    },
+    vertexShader: ATMO_VERT,
+    fragmentShader: ATMO_FRAG,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    transparent: true,
+    depthWrite: false
+  });
+
+  atmosphereMesh = new THREE.Mesh(geo, mat);
+  scene.add(atmosphereMesh);
+  return atmosphereMesh;
+}
+
+/* ---------- شبكة إحداثيات ---------- */
+function buildGrid() {
+  gridHelper = new THREE.Group();
+
+  const g1 = new THREE.SphereGeometry(EARTH_RADIUS * 1.002, 36, 18);
+  const m1 = new THREE.MeshBasicMaterial({
+    color: 0x3f8ee0,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.13,
+    depthWrite: false
+  });
+  gridHelper.add(new THREE.Mesh(g1, m1));
+
+  const ringGeo = new THREE.RingGeometry(EARTH_RADIUS * 1.006, EARTH_RADIUS * 1.008, 128);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0x6ef2c0,
+    transparent: true,
+    opacity: 0.24,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+  const eq = new THREE.Mesh(ringGeo, ringMat);
+  eq.rotation.x = Math.PI / 2;
+  gridHelper.add(eq);
+
+  gridHelper.visible = false;
+  scene.add(gridHelper);
+  return gridHelper;
+}
+
+/* ---------- القمر ---------- */
+function buildMoon() {
+  moonPivot = new THREE.Group();
+  moonPivot.rotation.z = THREE.MathUtils.degToRad(5.1);
+  scene.add(moonPivot);
+
+  const moonTex = new THREE.CanvasTexture(buildMoonMap(512, 256));
+  moonTex.encoding = THREE.sRGBEncoding;
+  moonTex.wrapS = THREE.RepeatWrapping;
+
+  const geo = new THREE.SphereGeometry(0.2725, 48, 32);
+  const mat = new THREE.MeshPhongMaterial({
+    map: moonTex,
+    shininess: 2,
+    specular: 0x111111,
+    bumpMap: moonTex,
+    bumpScale: 0.012
+  });
+
+  moonMesh = new THREE.Mesh(geo, mat);
+  moonMesh.position.set(4.6, 0, 0);
+  moonPivot.add(moonMesh);
+
+  return moonMesh;
+}
+
+/* ================================================================
+   4) إنشاء الأرض بعد توليد الخرائط
+   ================================================================ */
+async function createEarth(onProgress) {
+  const W = 1024, H = 512;
+
+  /* خرائط الأرض */
+  const maps = await buildEarthMaps(W, H, (p) => {
+    if (onProgress) onProgress(p * 0.62, "رسم القارات والمحيطات…");
+  });
+
+  const colorTex = new THREE.CanvasTexture(maps.colorCv);
+  colorTex.encoding = THREE.sRGBEncoding;
+  colorTex.wrapS = THREE.RepeatWrapping;
+  colorTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+  const bumpTex = new THREE.CanvasTexture(maps.heightCv);
+  bumpTex.wrapS = THREE.RepeatWrapping;
+  bumpTex.anisotropy = 4;
+
+  const specTex = new THREE.CanvasTexture(maps.specCv);
+  specTex.wrapS = THREE.RepeatWrapping;
+  specTex.anisotropy = 4;
+
+  /* خرائط السحاب */
+  const cloudCv = await buildCloudMap(1024, 512, (p) => {
+    if (onProgress) onProgress(0.62 + p * 0.20, "تكوين السحاب…");
+  });
+  const cloudTex = new THREE.CanvasTexture(cloudCv);
+  cloudTex.encoding = THREE.sRGBEncoding;
+  cloudTex.wrapS = THREE.RepeatWrapping;
+  cloudTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+  if (onProgress) onProgress(0.84, "تجميع الكوكب…");
+
+  /* ---------- مجموعة الأرض (ميل المحور) ---------- */
+  earthGroup = new THREE.Group();
+  earthGroup.rotation.z = THREE.MathUtils.degToRad(23.44);
+  scene.add(earthGroup);
+
+  /* جسم الأرض */
+  const earthGeo = new THREE.SphereGeometry(EARTH_RADIUS, 96, 64);
+  const earthMat = new THREE.MeshPhongMaterial({
+    map: colorTex,
+    bumpMap: bumpTex,
+    bumpScale: 0.022,
+    specularMap: specTex,
+    specular: new THREE.Color(0x8fb6ff),
+    shininess: 45
+  });
+  earthMesh = new THREE.Mesh(earthGeo, earthMat);
+  earthGroup.add(earthMesh);
+
+  /* طبقة السحاب */
+  const cloudGeo = new THREE.SphereGeometry(EARTH_RADIUS * 1.008, 80, 52);
+  const cloudMat = new THREE.MeshPhongMaterial({
+    map: cloudTex,
+    transparent: true,
+    opacity: 0.88,
+    depthWrite: false,
+    shininess: 0,
+    specular: 0x000000
+  });
+  cloudMesh = new THREE.Mesh(cloudGeo, cloudMat);
+  earthGroup.add(cloudMesh);
+
+  /* الغلاف الجوي */
+  buildAtmosphere();
+
+  /* الشبكة */
+  buildGrid();
+
+  /* القمر */
+  buildMoon();
+
+  /* النجوم */
+  buildStars();
+
+  /* الشمس */
+  buildSunSprite();
+
+  if (onProgress) onProgress(0.94, "تجهيز الإضاءة…");
+  await sleep(60);
+
+  if (onProgress) onProgress(1.0, "جاهز!");
+  await sleep(280);
+}
+
+/* ================================================================
+   5) التحكم بالكاميرا (سحب / تقريب / لمس)
+   ================================================================ */
+function setupControls() {
+  const el = renderer.domElement;
+
+  el.addEventListener("pointerdown", (e) => {
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    cam.dragging = true;
+    cam.vTheta = 0;
+    cam.vPhi = 0;
+    if (pointers.size === 2) cam.lastPinch = 0;
+  });
+
+  el.addEventListener("pointermove", (e) => {
+    if (!pointers.has(e.pointerId)) return;
+
+    const prev = pointers.get(e.pointerId);
+    const dx = e.clientX - prev.x;
+    const dy = e.clientY - prev.y;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointers.size === 1) {
+      /* --- سحب للدوران --- */
+      const k = 0.0052;
+      cam.tTheta -= dx * k;
+      cam.tPhi   -= dy * k;
+      cam.tPhi = clamp(cam.tPhi, 0.14, Math.PI - 0.14);
+
+      /* سرعة للقصور الذاتي */
+      cam.vTheta = -dx * 0.0016;
+      cam.vPhi   = -dy * 0.0016;
+    } else if (pointers.size === 2) {
+      /* --- قرص للتقريب --- */
+      const pts = Array.from(pointers.values());
+      const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (cam.lastPinch > 0 && d > 0) {
+        cam.tRadius = clamp(cam.tRadius * (cam.lastPinch / d), 1.55, 14);
+      }
+      cam.lastPinch = d;
+    }
+  });
+
+  const endPointer = (e) => {
+    pointers.delete(e.pointerId);
+    if (pointers.size === 0) cam.dragging = false;
+    if (pointers.size < 2) cam.lastPinch = 0;
+  };
+  el.addEventListener("pointerup", endPointer);
+  el.addEventListener("pointercancel", endPointer);
+  el.addEventListener("pointerleave", endPointer);
+
+  /* عجلة الفأرة */
+  el.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const f = 1 + clamp(e.deltaY, -120, 120) * 0.0013;
+    cam.tRadius = clamp(cam.tRadius * f, 1.55, 14);
+  }, { passive: false });
+
+  /* نقرة مزدوجة = إعادة ضبط */
+  el.addEventListener("dblclick", () => {
+    resetCamera();
+    toast("تم إعادة ضبط الكاميرا");
+  });
+
+  /* منع قائمة السياق */
+  el.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+
+function resetCamera() {
+  cam.tTheta = 0.75;
+  cam.tPhi = 1.32;
+  cam.tRadius = 3.55;
+  cam.vTheta = 0;
+  cam.vPhi = 0;
+}
+
+/* ================================================================
+   6) ربط عناصر الواجهة
+   ================================================================ */
+function setupUI() {
+  /* --- سلايدرات --- */
+  const bind = (id, valId, key, fmt, apply) => {
+    const input = $("#" + id);
+    const label = valId ? $("#" + valId) : null;
+    const update = () => {
+      const v = parseFloat(input.value);
+      if (label) label.textContent = fmt ? fmt(v) : v.toFixed(1);
+      if (apply) apply(v);
+    };
+    input.addEventListener("input", update);
+    update();
+    return input;
+  };
+
+  bind("spin", "vSpin", "spin", (v) => v.toFixed(1), (v) => { motion.spin = v; });
+  bind("cloud", "vCloud", "cloud", (v) => v.toFixed(1), (v) => { motion.cloud = v; });
+  bind("auto", "vAuto", "auto", (v) => v.toFixed(1), (v) => { motion.auto = v; });
+  bind("moonSpeed", "vMoon", "moon", (v) => v.toFixed(1), (v) => { motion.moon = v; });
+
+  bind("light", "vLight", null, (v) => v.toFixed(1), (v) => {
+    sunLight.intensity = v;
+    if (sunSprite) sunSprite.material.opacity = clamp(v / 3.2, 0.25, 0.95);
+  });
+
+  bind("ambient", "vAmb", null, (v) => v.toFixed(2), (v) => {
+    ambientLight.intensity = v;
+    hemiLight.intensity = v * 1.15;
+  });
+
+  bind("shine", "vShine", null, (v) => v.toFixed(0), (v) => {
+    if (earthMesh) earthMesh.material.shininess = v;
+  });
+
+  bind("glow", "vGlow", null, (v) => v.toFixed(2), (v) => {
+    if (atmosphereMesh) atmosphereMesh.material.uniforms.uStrength.value = v;
+  });
+
+  /* --- مفاتيح التبديل --- */
+  const toggles = [
+    ["tAtmo",   (on) => { if (atmosphereMesh) atmosphereMesh.visible = on; }],
+    ["tClouds", (on) => { if (cloudMesh) cloudMesh.visible = on; }],
+    ["tStars",  (on) => { if (starField) starField.visible = on; }],
+    ["tMoon",   (on) => { if (moonPivot) moonPivot.visible = on; }],
+    ["tSun",    (on) => { if (sunSprite) sunSprite.visible = on; }],
+    ["tGrid",   (on) => { if (gridHelper) gridHelper.visible = on; }]
+  ];
+
+  toggles.forEach(([id, fn]) => {
+    const el = $("#" + id);
+    el.addEventListener("change", () => fn(el.checked));
+    fn(el.checked);
+  });
+
+  /* --- الأزرار --- */
+  $("#btnReset").addEventListener("click", () => {
+    resetCamera();
+    toast("تم إعادة ضبط الكاميرا");
+  });
+
+  $("#btnRandom").addEventListener("click", async () => {
+    toast("جارٍ توليد كوكب جديد…");
+    await regeneratePlanet();
+  });
+
+  $("#btnShot").addEventListener("click", () => {
+    try {
+      renderer.render(scene, camera);
+      const url = renderer.domElement.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "earth-3d-" + Date.now() + ".png";
+      a.click();
+      toast("تم حفظ الصورة ✔");
+    } catch (err) {
+      toast("تعذّر حفظ الصورة");
+    }
+  });
+
+  $("#btnFull").addEventListener("click", () => {
+    const el = document.documentElement;
+    if (!document.fullscreenElement) {
+      (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)
+        .call(el).catch(() => toast("ملء الشاشة غير مدعوم"));
+    } else {
+      document.exitFullscreen();
+    }
+  });
+
+  /* --- طي اللوحة --- */
+  const panel = $("#panel");
+  const toggleBtn = $("#panelToggle");
+
+  $("#collapseBtn").addEventListener("click", () => {
+    panel.classList.add("collapsed");
+    toggleBtn.classList.add("show");
+  });
+
+  toggleBtn.addEventListener("click", () => {
+    panel.classList.remove("collapsed");
+    toggleBtn.classList.remove("show");
+  });
+
+  /* إخفاء التلميح بعد فترة */
+  setTimeout(() => {
+    const h = $("#hint");
+    if (h) h.classList.add("fade");
+  }, 9000);
+
+  /* إخفاء التلميح عند أول تفاعل */
+  renderer.domElement.addEventListener("pointerdown", () => {
+    const h = $("#hint");
+    if (h) h.classList.add("fade");
+  }, { once: true });
+}
+
+/* ================================================================
+   7) إعادة توليد الكوكب (كوكب جديد)
+   ================================================================ */
+async function regeneratePlanet() {
+  const btn = $("#btnRandom");
+  btn.disabled = true;
+  btn.style.opacity = "0.55";
+
+  /* إعدادات عشوائية جديدة */
+  planetCfg.seed = Math.random() * 500;
+  planetCfg.seaLevel = rand(0.02, 0.16);
+  planetCfg.landScale = rand(1.05, 1.85);
+  planetCfg.roughness = rand(0.85, 1.25);
+  planetCfg.iceEdge = rand(0.66, 0.82);
+  planetCfg.cloudCover = rand(0.44, 0.58);
+
+  /* توليد الخرائط */
+  const W = 1024, H = 512;
+  const maps = await buildEarthMaps(W, H, null);
+  const cloudCv = await buildCloudMap(1024, 512, null);
+
+  /* تحديث المواد */
+  const newColor = new THREE.CanvasTexture(maps.colorCv);
+  newColor.encoding = THREE.sRGBEncoding;
+  newColor.wrapS = THREE.RepeatWrapping;
+  newColor.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+  const newBump = new THREE.CanvasTexture(maps.heightCv);
+  newBump.wrapS = THREE.RepeatWrapping;
+
+  const newSpec = new THREE.CanvasTexture(maps.specCv);
+  newSpec.wrapS = THREE.RepeatWrapping;
+
+  const newCloud = new THREE.CanvasTexture(cloudCv);
+  newCloud.encoding = THREE.sRGBEncoding;
+  newCloud.wrapS = THREE.RepeatWrapping;
+  newCloud.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+  /* تحرير الذاكرة القديمة */
+  const old = earthMesh.material;
+  if (old.map) old.map.dispose();
+  if (old.bumpMap) old.bumpMap.dispose();
+  if (old.specularMap) old.specularMap.dispose();
+
+  earthMesh.material.map = newColor;
+  earthMesh.material.bumpMap = newBump;
+  earthMesh.material.specularMap = newSpec;
+  earthMesh.material.needsUpdate = true;
+
+  if (cloudMesh.material.map) cloudMesh.material.map.dispose();
+  cloudMesh.material.map = newCloud;
+  cloudMesh.material.needsUpdate = true;
+
+  btn.disabled = false;
+  btn.style.opacity = "";
+  toast("تم توليد كوكب جديد ✔");
+}
+
+/* ================================================================
+   8) حلقة الرسم
+   ================================================================ */
+let clock;
+let fpsAccum = 0, fpsFrames = 0, fpsTimer = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const dt = Math.min(clock.getDelta(), 0.1);
+
+  /* ---------- حركة الكاميرا ---------- */
+  if (!cam.dragging) {
+    /* قصور ذاتي بعد السحب */
+    if (Math.abs(cam.vTheta) > 0.00002 || Math.abs(cam.vPhi) > 0.00002) {
+      cam.tTheta += cam.vTheta;
+      cam.tPhi   += cam.vPhi;
+      cam.tPhi = clamp(cam.tPhi, 0.14, Math.PI - 0.14);
+      cam.vTheta *= 0.935;
+      cam.vPhi   *= 0.935;
+    } else {
+      cam.vTheta = 0;
+      cam.vPhi = 0;
+    }
+
+    /* دوران تلقائي */
+    if (motion.auto > 0) {
+      cam.tTheta += motion.auto * 0.00075 * (60 * dt);
+    }
+  }
+
+  /* تنعيم الحركة */
+  const ease = 1 - Math.pow(0.0008, dt);
+  cam.theta  = lerp(cam.theta,  cam.tTheta,  ease);
+  cam.phi    = lerp(cam.phi,    cam.tPhi,    ease);
+  cam.radius = lerp(cam.radius, cam.tRadius, ease);
+
+  /* تحديث موضع الكاميرا */
+  const sp = new THREE.Vector3().setFromSphericalCoords(cam.radius, cam.phi, cam.theta);
+  camera.position.copy(sp);
+  camera.lookAt(0, 0, 0);
+
+  /* ---------- دوران الأرض ---------- */
+  if (earthMesh) {
+    earthMesh.rotation.y += 0.0016 * motion.spin * (60 * dt);
+  }
+  if (cloudMesh) {
+    cloudMesh.rotation.y += 0.0016 * motion.spin * (60 * dt);
+    cloudMesh.rotation.y += 0.00035 * motion.cloud * (60 * dt);
+  }
+  if (gridHelper && gridHelper.visible) {
+    gridHelper.rotation.y = earthMesh ? earthMesh.rotation.y : 0;
+  }
+
+  /* ---------- القمر ---------- */
+  if (moonPivot && moonPivot.visible) {
+    moonPivot.rotation.y += 0.00055 * motion.moon * (60 * dt);
+    if (moonMesh) moonMesh.rotation.y += 0.0004 * (60 * dt);
+  }
+
+  /* ---------- النجوم ---------- */
+  if (starField && starField.visible) {
+    starField.rotation.y += 0.000012 * (60 * dt);
+  }
+
+  /* ---------- اتجاه الشمس في الغلاف الجوي ---------- */
+  if (atmosphereMesh) {
+    const ld = atmosphereMesh.material.uniforms.uLightDir.value;
+    ld.copy(sunLight.position).normalize();
+  }
+
+  /* ---------- الرسم ---------- */
+  renderer.render(scene, camera);
+
+  /* ---------- عدّاد الإطارات ---------- */
+  fpsFrames++;
+  fpsTimer += dt;
+  if (fpsTimer >= 0.5) {
+    const fps = Math.round(fpsFrames / fpsTimer);
+    $("#fps").textContent = fps;
+    $("#dist").textContent = cam.radius.toFixed(1);
+    fpsFrames = 0;
+    fpsTimer = 0;
+  }
+}
+
+/* ================================================================
+   9) الاستجابة لتغيّر حجم النافذة
+   ================================================================ */
+function onResize() {
+  if (!renderer || !camera) return;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(w, h);
+}
+
+/* ================================================================
+   10) شاشة التحميل
+   ================================================================ */
+function setLoading(p, status) {
+  const pct = Math.round(clamp(p, 0, 1) * 100);
+  $("#loadBar").style.width = pct + "%";
+  $("#loadPct").textContent = pct + "%";
+  if (status) $("#loadStatus").textContent = status;
+}
+
+/* ================================================================
+   11) نقطة البداية
+   ================================================================ */
+async function init() {
+  try {
+    /* التحقق من دعم WebGL */
+    const testCanvas = document.createElement("canvas");
+    const gl = testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl");
+    if (!gl) {
+      $("#loadStatus").textContent = "متصفحك لا يدعم WebGL — الرجاء استخدام متصفح حديث.";
+      return;
+    }
+
+    setLoading(0.04, "تهيئة محرك الرسم…");
+    await nextFrame();
+
+    setupRenderer();
+    setupScene();
+    setupControls();
+
+    setLoading(0.10, "توليد تضاريس الكوكب…");
+    await nextFrame();
+
+    await createEarth((p, status) => setLoading(0.10 + p * 0.85, status));
+
+    setupUI();
+
+    clock = new THREE.Clock();
+
+    /* إخفاء شاشة التحميل */
+    setLoading(1, "جاهز!");
+    await sleep(420);
+    $("#loader").classList.add("hidden");
+
+    /* بدء الرسم */
+    animate();
+
+    /* أول إشعار */
+    setTimeout(() => toast("مرحباً بك في الأرض ثلاثية الأبعاد 🌍"), 900);
+
+  } catch (err) {
+    console.error(err);
+    $("#loadStatus").textContent = "حدث خطأ أثناء التحميل: " + (err && err.message ? err.message : err);
+    $("#loadPct").textContent = "!";
+  }
+}
+
+/* ================================================================
+   12) أحداث عامة
+   ================================================================ */
+window.addEventListener("resize", onResize);
+window.addEventListener("orientationchange", () => setTimeout(onResize, 220));
+
+/* اختصارات لوحة المفاتيح */
+window.addEventListener("keydown", (e) => {
+  switch (e.key) {
+    case "r":
+    case "R":
+      resetCamera();
+      break;
+    case "h":
+    case "H":
+      const panel = $("#panel");
+      const tb = $("#panelToggle");
+      if (panel.classList.contains("collapsed")) {
+        panel.classList.remove("collapsed");
+        tb.classList.remove("show");
+      } else {
+        panel.classList.add("collapsed");
+        tb.classList.add("show");
+      }
+      break;
+    case " ":
+      e.preventDefault();
+      const spinEl = $("#spin");
+      spinEl.value = spinEl.value > 0 ? "0" : "1";
+      spinEl.dispatchEvent(new Event("input"));
+      break;
+  }
+});
+
+/* تشغيل */
+init();
+</script>
+</body>
+</html>

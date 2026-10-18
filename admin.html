@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>الإدارة · ARAB code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .tabs button{padding:8px 16px;border-radius:999px;border:1px solid var(--border);background:var(--panel);color:var(--gold-2);font-weight:700;cursor:pointer;font-size:13px}
+  .tabs button.active{background:linear-gradient(135deg,#f4c400,#e6a900);color:#2a1f00;border-color:transparent}
+  .pane{display:none}
+  .pane.active{display:block}
+  .user-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:18px;background:var(--panel);margin-bottom:8px;flex-wrap:wrap}
+  .user-row .who{display:flex;align-items:center;gap:10px;flex:1;min-width:180px}
+  .user-row .email{color:var(--muted);font-size:12px}
+  .user-row .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .user-row .role-tag{background:var(--soft);color:var(--gold-2);padding:2px 10px;border-radius:999px;font-size:11px;border:1px solid var(--border)}
+</style>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="48x48" href="https://www.arab-code.cv/assets/brand/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://www.arab-code.cv/assets/brand/apple-touch-icon.png">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="brand"><span class="dot"></span> ARAB code</a>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+<main class="container">
+  <div class="tabs">
+    <button data-tab="pending" class="active">طلبات في الانتظار</button>
+    <button data-tab="broadcast">📣 رسالة جماعية</button>
+    <button data-tab="stats">📊 الإحصائيات</button>
+    <button data-tab="settings">الإعدادات</button>
+    <button data-tab="deletes">طلبات حذف</button>
+    <button data-tab="verified">الحسابات الموثقة</button>
+    <button data-tab="users">كل الحسابات</button>
+    <button data-tab="reports">⚠ البلاغات</button>
+    <button data-tab="messages">✉ الرسائل</button>
+    <button data-tab="bans">🚫 التبنيد</button>
+  </div>
+  <div id="msg" class="msg"></div>
+
+  <section class="pane active" id="pane-pending">
+    <h3 style="color:var(--gold-2);margin:4px 0 10px">طلبات في الانتظار</h3>
+    <div id="list" class="pending-list"></div>
+    <p id="empty" style="color:var(--muted);text-align:center;display:none">لا توجد طلبات.</p>
+  </section>
+
+  <section class="pane" id="pane-broadcast">
+    <h3 style="color:var(--gold-2);margin:4px 0 6px">رسالة جماعية لكل الأعضاء</h3>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 12px">تُرسل الرسالة لكل شخص على بريده الخاص بشكل منفصل (لا أحد يرى إيميلات الآخرين)، بتصميم المنصة.</p>
+    <div class="editor">
+      <label>إلى مَن؟</label>
+      <select id="bc-target" style="width:100%;padding:11px 14px;border-radius:14px;border:1px solid var(--border);background:var(--soft);color:var(--text);margin-bottom:10px">
+        <option value="all">كل الأعضاء المفعّلين</option>
+        <option value="verified">الحسابات الموثقة فقط</option>
+        <option value="unverified">غير الموثقة فقط</option>
+        <option value="custom">إيميلات محددة (أكتبها بنفسي)</option>
+      </select>
+      <div id="bc-custom-wrap" style="display:none;margin-bottom:10px">
+        <label>الإيميلات (افصل بينها بسطر أو فاصلة — يمكن إرسالها لأي بريد حتى لو ليس عضواً)</label>
+        <textarea id="bc-emails" style="min-height:90px;direction:ltr;text-align:left" placeholder="someone@gmail.com&#10;you@example.com"></textarea>
+      </div>
+      <label>عنوان الرسالة (Subject)</label>
+      <input id="bc-subject" type="text" placeholder="مثال: تحديث جديد في منصة ARAB code" style="width:100%;padding:11px 14px;border-radius:14px;border:1px solid var(--border);background:var(--soft);color:var(--text);margin-bottom:10px">
+      <label>العنوان داخل الرسالة (اختياري)</label>
+      <input id="bc-heading" type="text" placeholder="مثال: إعلان مهم 🎉" style="width:100%;padding:11px 14px;border-radius:14px;border:1px solid var(--border);background:var(--soft);color:var(--text);margin-bottom:10px">
+      <label>نص الرسالة</label>
+      <textarea id="bc-body" style="min-height:170px" placeholder="اكتب رسالتك هنا..."></textarea>
+      <p style="color:var(--muted);font-size:12.5px;line-height:1.9;margin:10px 0 0">
+        ✨ <b>أزرار داخل الرسالة:</b> اكتب <code dir="ltr">(:النص &gt;الرابط:)</code> ليظهر زر ذهبي،
+        أو <code dir="ltr">(:النص &gt;الرابط &gt;#25d366:)</code> لتحديد لون الزر.<br>
+        مثال: <code dir="ltr">(:تصفح المنصة &gt;https://arab-web.vercel.app:)</code>
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn primary" onclick="sendBroadcast(this)">إرسال للجميع</button>
+        <button class="btn ghost" onclick="testBroadcast(this)">إرسال تجريبي لبريدي</button>
+      </div>
+      <div id="bc-progress" style="margin-top:12px;color:var(--muted);font-size:13px"></div>
+    </div>
+  </section>
+
+  <section class="pane" id="pane-reports">
+    <h3 style="color:var(--gold-2);margin:4px 0 10px">البلاغات الواردة</h3>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 12px">تصل هنا البلاغات التي يرسلها الأعضاء قبل نشر تعليق مخالف أو عند الإبلاغ عن كود. يُرسل لك بريد تنبيه لكل بلاغ جديد.</p>
+    <div id="reports-list"></div>
+    <p id="reports-empty" style="color:var(--muted);text-align:center;display:none">لا توجد بلاغات.</p>
+  </section>
+
+  <section class="pane" id="pane-messages">
+    <h3 style="color:var(--gold-2);margin:4px 0 10px">رسائل الدعم من الأعضاء</h3>
+    <div id="messages-list"></div>
+    <p id="messages-empty" style="color:var(--muted);text-align:center;display:none">لا توجد رسائل.</p>
+  </section>
+
+  <section class="pane" id="pane-bans">
+    <h3 style="color:var(--gold-2);margin:4px 0 10px">التبنيد (حظر الحسابات)</h3>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 12px">
+      تبنيد أي حساب: يُحذف/يُحظر كل أكواده المنشورة تلقائياً، وتُرسل له رسالة إيميل «تم إغلاق حسابك لأسباب أمنية» مع زر واتساب.
+      عند فك الباند تُرسل له رسالة «عادت حسابك مجددا» ويستعيد قدرته على النشر.
+    </p>
+    <div class="user-row" style="margin-bottom:14px;gap:10px">
+      <input id="ban-input" type="text" placeholder="اسم المستخدم (username)" style="flex:1;min-width:200px;padding:11px 14px;border-radius:14px;border:1px solid var(--border);background:var(--soft);color:var(--text)" />
+      <input id="ban-reason" type="text" placeholder="السبب (اختياري)" style="flex:1;min-width:180px;padding:11px 14px;border-radius:14px;border:1px solid var(--border);background:var(--soft);color:var(--text)" />
+      <button class="btn danger" onclick="doBan(true, this)">تبنيد</button>
+      <button class="btn primary" onclick="doBan(false, this)">فك التبنيد</button>
+    </div>
+    <div id="bans-list"></div>
+    <p id="bans-empty" style="color:var(--muted);text-align:center;display:none">لا توجد حسابات مبنّدة حالياً.</p>
+  </section>
+
+  <section class="pane" id="pane-stats">
+    <h3 style="color:var(--gold-2);margin:4px 0 10px">إحصائيات المنصة</h3>
+    <div id="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px"></div>
+    <div id="stats-langs" style="margin-top:16px"></div>
+  </section>
+
+  <section class="pane" id="pane-settings">
+    <h3 style="color:var(--gold-2);margin:4px 0 10px">إعدادات النشر والفلترة</h3>
+    <div class="switch-row">
+      <div>
+        <div class="t">القبول التلقائي للأكواد</div>
+        <div class="d">عند تفعيله يُنشر أي كود مباشرة بدون انتظار موافقتك (الفلترة تبقى شغّالة إن كانت مفعّلة).</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="sw-auto"><span></span></label>
+    </div>
+    <div class="switch-row">
+      <div>
+        <div class="t">فلترة المحتوى المخالف</div>
+        <div class="d">يرفض تلقائياً أي كود يحتوي كلمات مخالفة (إباحية / اختراق / محتوى شاذ) ويُرسل للناشر بريد رفض فيه أزرار التواصل مع الدعم.</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="sw-filter"><span></span></label>
+    </div>
+    <div class="switch-row">
+      <div>
+        <div class="t">الحذف المباشر للمستخدمين</div>
+        <div class="d">عند تفعيله يقدر أي مستخدم يحذف أكواده فوراً من صفحة الكود بدون إرسال طلب حذف للإدارة.</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="sw-direct-del"><span></span></label>
+    </div>
+    <div class="switch-row">
+      <div>
+        <div class="t">استقبال طلبات الحذف</div>
+        <div class="d">إيقافه يمنع المستخدمين من إرسال طلبات حذف جديدة للإدارة.</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="sw-del-req"><span></span></label>
+    </div>
+    <div class="switch-row">
+      <div>
+        <div class="t">تسجيل الدخول بجوجل</div>
+        <div class="d">يُظهر زر "المتابعة باستخدام جوجل" في صفحة الدخول، وينشئ للعضو الجديد كلمة سر تلقائية تُرسل لبريده.</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="sw-google"><span></span></label>
+    </div>
+    <div class="switch-row">
+      <div>
+        <div class="t">فتح التسجيل الجديد</div>
+        <div class="d">إيقافه يمنع إنشاء أي حساب جديد (بالبريد أو بجوجل) بدون التأثير على الأعضاء الحاليين.</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="sw-signup"><span></span></label>
+    </div>
+    <div class="switch-row">
+      <div>
+        <div class="t">السماح بتغيير البريد</div>
+        <div class="d">يقدر العضو يغيّر بريده من إعدادات حسابه، وتصله رسالة تأكيد على البريد الجديد قبل التغيير.</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="sw-email-change"><span></span></label>
+    </div>
+    <div class="switch-row">
+      <div>
+        <div class="t">السماح بتغيير اسم المستخدم</div>
+        <div class="d">تغيير اليوزر ينقل معه كل أكواده وطلباته المعلّقة تلقائياً.</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="sw-username-change"><span></span></label>
+    </div>
+    <div class="switch-row">
+      <div>
+        <div class="t">السماح بحذف الحساب</div>
+        <div class="d">يقدر العضو يحذف حسابه نهائياً (مع خيار حذف أكواده)، وتصله رسالة تأكيد بالحذف.</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="sw-account-delete"><span></span></label>
+    </div>
+    <div class="editor" style="margin-top:14px">
+      <label>الكلمات الممنوعة (كلمة في كل سطر)</label>
+      <textarea id="banned" style="min-height:180px;font-family:'JetBrains Mono',monospace;font-size:13px"></textarea>
+      <div style="margin-top:12px"><button class="btn primary" onclick="saveSettings(this)">حفظ الإعدادات</button></div>
+    </div>
+  </section>
+
+  <section class="pane" id="pane-deletes">
+    <h3 style="color:var(--gold-2);margin:4px 0 10px">طلبات حذف الأكواد</h3>
+    <div id="del-list" class="pending-list"></div>
+    <p id="del-empty" style="color:var(--muted);text-align:center;display:none">لا طلبات حذف.</p>
+  </section>
+
+  <section class="pane" id="pane-verified">
+    <h3 style="color:var(--gold-2);margin:4px 0 10px">الحسابات الموثقة</h3>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 10px">الحسابات الموثقة تنشر الأكواد مباشرة وتحذفها بدون موافقة الإدارة.</p>
+    <div id="ver-list"></div>
+    <p id="ver-empty" style="color:var(--muted);text-align:center;display:none">لا حسابات موثقة.</p>
+  </section>
+
+  <section class="pane" id="pane-users">
+    <h3 style="color:var(--gold-2);margin:4px 0 10px">كل الحسابات</h3>
+    <div id="all-list"></div>
+    <p id="all-empty" style="color:var(--muted);text-align:center;display:none">لا حسابات.</p>
+  </section>
+</main>
+<script src="/app.js"></script>
+<script>
+(async () => {
+  await renderNav();
+  const me = await loadMe();
+  if (!me || !me.is_admin) { location.href='/auth'; return; }
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+  await Promise.all([loadPending(), loadDeletes(), loadUsers('verified'), loadUsers('all'), loadSettings(), loadStats(), loadReports(), loadMessages(), loadBans()]);
+})();
+
+function switchTab(t) {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===t));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', p.id === 'pane-'+t));
+}
+
+async function loadPending() {
+  const list = document.getElementById('list');
+  list.innerHTML = '<p style="color:var(--muted)">تحميل...</p>';
+  try {
+    const { items } = await api('/api/pending');
+    if (!items.length) { list.innerHTML=''; document.getElementById('empty').style.display='block'; return; }
+    document.getElementById('empty').style.display='none';
+    list.innerHTML = items.map(renderItem).join('');
+  } catch (e) { list.innerHTML = `<p style="color:var(--danger)">${esc(e.message)}</p>`; }
+}
+
+async function loadDeletes() {
+  const list = document.getElementById('del-list');
+  list.innerHTML = '';
+  try {
+    const { items } = await api('/api/delete-requests');
+    if (!items.length) { document.getElementById('del-empty').style.display='block'; return; }
+    document.getElementById('del-empty').style.display='none';
+    list.innerHTML = items.map(renderDel).join('');
+  } catch (e) { list.innerHTML = `<p style="color:var(--danger)">${esc(e.message)}</p>`; }
+}
+
+async function loadUsers(kind) {
+  const path = kind === 'verified' ? '/api/users?filter=verified' : '/api/users?filter=all';
+  const targetId = kind === 'verified' ? 'ver-list' : 'all-list';
+  const emptyId = kind === 'verified' ? 'ver-empty' : 'all-empty';
+  const el = document.getElementById(targetId);
+  el.innerHTML = '<p style="color:var(--muted)">تحميل...</p>';
+  try {
+    const { users } = await api(path);
+    if (!users.length) { el.innerHTML=''; document.getElementById(emptyId).style.display='block'; return; }
+    document.getElementById(emptyId).style.display='none';
+    el.innerHTML = users.map(u => renderUser(u, kind)).join('');
+  } catch (e) { el.innerHTML = `<p style="color:var(--danger)">${esc(e.message)}</p>`; }
+}
+
+function renderUser(u, kind) {
+  const badge = u.is_verified_badge ? verifiedBadge() : '';
+  const roleTag = u.is_admin ? '<span class="role-tag">أدمن</span>' : '';
+  const canToggle = !u.is_admin;
+  const btn = !canToggle
+    ? ''
+    : u.is_verified_badge
+      ? `<button class="btn danger sm" onclick="toggleVerify('${esc(u.username)}',false,this)">إزالة التوثيق</button>`
+      : `<button class="btn primary sm" onclick="toggleVerify('${esc(u.username)}',true,this)">توثيق</button>`;
+  return `<div class="user-row" data-u="${esc(u.username)}">
+    <div class="who">
+      ${avatarNode({ username: u.username, avatar_url: u.avatar_url })}
+      <a href="/u/${encodeURIComponent(u.username)}" class="author">
+        <span class="uname">${esc(u.username)}</span> ${badge}
+      </a>
+      ${roleTag}
+    </div>
+    <div class="email">${esc(u.email || '')}</div>
+    <div class="actions">${btn}</div>
+  </div>`;
+}
+
+async function toggleVerify(username, verified, btn) {
+  btn.disabled = true;
+  try {
+    await api('/api/toggle-verify', { method:'POST', body: JSON.stringify({ username, verified }) });
+    showMsg(verified ? 'تم توثيق الحساب' : 'تمت إزالة التوثيق', true);
+    await Promise.all([loadUsers('verified'), loadUsers('all')]);
+  } catch (e) { showMsg(e.message, false); btn.disabled = false; }
+}
+
+function renderItem(it) {
+  const suggested = (it.title || 'code').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40) + '.' + (it.language||'txt');
+  return `<div class="pending-item" data-id="${esc(it.id)}">
+    <h4>${esc(it.title)}</h4>
+    <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--gold-dim);margin-bottom:6px">
+      ${authorLink({ author: it.author, author_avatar: it.author_avatar, author_verified: it.author_verified })}
+      <span>·</span> <span class="lang-tag">${esc(it.language)}</span>
+      <span>·</span> <span>${new Date(it.submitted_at).toLocaleString('ar')}</span>
+    </div>
+    <p style="color:var(--muted);margin:6px 0">${esc(it.description||'')}</p>
+    <div class="code-preview">${esc(it.code)}</div>
+    <div class="pending-actions">
+      <input type="text" placeholder="اسم الملف" value="${esc(suggested)}" />
+      <button class="btn primary" onclick="doApprove('${esc(it.id)}', this)">موافقة</button>
+      <button class="btn danger" onclick="doReject('${esc(it.id)}', this)">رفض</button>
+    </div>
+    <div class="reject-box" style="display:none;margin-top:10px">
+      <input type="text" class="reject-reason" placeholder="سبب الرفض (يُرسل للناشر بالبريد)" style="width:100%;padding:11px 14px;border-radius:14px;border:1px solid var(--border);background:var(--soft);color:var(--text)">
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn danger sm" onclick="confirmReject('${esc(it.id)}', this)">تأكيد الرفض وإرسال الرسالة</button>
+        <button class="btn ghost sm" onclick="this.closest('.reject-box').style.display='none'">إلغاء</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderDel(it) {
+  return `<div class="pending-item" data-id="${esc(it.id)}">
+    <h4>حذف: ${esc(it.filename)}</h4>
+    <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--gold-dim);margin-bottom:6px">
+      <span>الطالب:</span> ${authorLink({ author: it.author })}
+      <span>·</span> <span>${esc(it.email||'')}</span>
+      <span>·</span> <span>${new Date(it.created_at).toLocaleString('ar')}</span>
+    </div>
+    <p style="color:var(--muted);margin:6px 0">السبب: ${esc(it.reason||'—')}</p>
+    <div class="pending-actions">
+      <button class="btn primary" onclick="doResolve('${esc(it.id)}',true,this)">موافقة على الحذف</button>
+      <button class="btn danger" onclick="doResolve('${esc(it.id)}',false,this)">رفض</button>
+      <a class="btn ghost" href="/c/${esc(it.filename)}" target="_blank">عرض الكود</a>
+    </div>
+  </div>`;
+}
+
+async function doApprove(id, btn) {
+  const item = btn.closest('.pending-item');
+  const filename = item.querySelector('input').value.trim();
+  if (!filename) return alert('حدد اسم الملف');
+  btn.disabled = true;
+  try {
+    const r = await api('/api/approve', { method:'POST', body: JSON.stringify({ id, filename }) });
+    item.remove();
+    showMsg('تمت الموافقة: ' + r.url, true);
+  } catch (e) { showMsg(e.message, false); btn.disabled=false; }
+}
+function doReject(id, btn) {
+  const box = btn.closest('.pending-item').querySelector('.reject-box');
+  box.style.display = 'block';
+  box.querySelector('.reject-reason').focus();
+}
+
+async function confirmReject(id, btn) {
+  const item = btn.closest('.pending-item');
+  const reason = item.querySelector('.reject-reason').value.trim();
+  btn.disabled = true;
+  try {
+    const r = await api('/api/reject', { method:'POST', body: JSON.stringify({ id, reason }) });
+    item.remove();
+    showMsg(r.mailed ? 'تم الرفض وأُرسلت رسالة للناشر ✓' : 'تم الرفض (تعذّر إرسال البريد)', true);
+  } catch (e) { showMsg(e.message, false); btn.disabled = false; }
+}
+
+async function loadSettings() {
+  try {
+    const { settings } = await api('/api/settings');
+    document.getElementById('sw-auto').checked = !!settings.auto_approve;
+    document.getElementById('sw-filter').checked = !!settings.filter_enabled;
+    document.getElementById('sw-direct-del').checked = !!settings.direct_delete;
+    document.getElementById('sw-del-req').checked = settings.delete_requests_enabled !== false;
+    document.getElementById('sw-google').checked = settings.google_login_enabled !== false;
+    document.getElementById('sw-signup').checked = settings.signup_enabled !== false;
+    document.getElementById('sw-email-change').checked = settings.email_change_enabled !== false;
+    document.getElementById('sw-username-change').checked = settings.username_change_enabled !== false;
+    document.getElementById('sw-account-delete').checked = settings.account_delete_enabled !== false;
+    document.getElementById('banned').value = (settings.banned_words || []).join('\n');
+  } catch (e) { showMsg(e.message, false); }
+}
+
+async function saveSettings(btn) {
+  btn.disabled = true;
+  try {
+    await api('/api/settings', { method:'POST', body: JSON.stringify({
+      auto_approve: document.getElementById('sw-auto').checked,
+      filter_enabled: document.getElementById('sw-filter').checked,
+      direct_delete: document.getElementById('sw-direct-del').checked,
+      delete_requests_enabled: document.getElementById('sw-del-req').checked,
+      google_login_enabled: document.getElementById('sw-google').checked,
+      signup_enabled: document.getElementById('sw-signup').checked,
+      email_change_enabled: document.getElementById('sw-email-change').checked,
+      username_change_enabled: document.getElementById('sw-username-change').checked,
+      account_delete_enabled: document.getElementById('sw-account-delete').checked,
+      banned_words: document.getElementById('banned').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean),
+    }) });
+    showMsg('تم حفظ الإعدادات ✓', true);
+  } catch (e) { showMsg(e.message, false); }
+  btn.disabled = false;
+}
+
+document.addEventListener('change', (e) => {
+  if (['sw-auto','sw-filter','sw-direct-del','sw-del-req','sw-google','sw-signup','sw-email-change','sw-username-change','sw-account-delete'].includes(e.target.id)) {
+    api('/api/settings', { method:'POST', body: JSON.stringify({
+      auto_approve: document.getElementById('sw-auto').checked,
+      filter_enabled: document.getElementById('sw-filter').checked,
+      direct_delete: document.getElementById('sw-direct-del').checked,
+      delete_requests_enabled: document.getElementById('sw-del-req').checked,
+      google_login_enabled: document.getElementById('sw-google').checked,
+      signup_enabled: document.getElementById('sw-signup').checked,
+      email_change_enabled: document.getElementById('sw-email-change').checked,
+      username_change_enabled: document.getElementById('sw-username-change').checked,
+      account_delete_enabled: document.getElementById('sw-account-delete').checked,
+    }) }).then(() => showMsg('تم التحديث ✓', true)).catch(err => showMsg(err.message, false));
+  }
+});
+async function doResolve(id, approve, btn) {
+  if (!confirm(approve ? 'تأكيد حذف الكود؟' : 'رفض طلب الحذف؟')) return;
+  btn.disabled=true;
+  try {
+    await api('/api/resolve-delete', { method:'POST', body: JSON.stringify({ id, approve }) });
+    btn.closest('.pending-item').remove();
+    showMsg(approve ? 'تم الحذف' : 'رُفض الطلب', true);
+  } catch (e) { showMsg(e.message, false); btn.disabled=false; }
+}
+async function loadStats() {
+  const g = document.getElementById('stats-grid');
+  try {
+    const { stats } = await api('/api/stats');
+    const card = (label, value, color) => `<div style="border:1px solid var(--border);border-radius:18px;background:var(--panel);padding:14px">
+      <div style="font-size:26px;font-weight:800;color:${color||'var(--gold-2)'}">${value}</div>
+      <div style="color:var(--muted);font-size:12px;margin-top:4px">${label}</div></div>`;
+    g.innerHTML = [
+      card('إجمالي الأعضاء', stats.users),
+      card('حسابات موثقة', stats.verified_users, '#a259ff'),
+      card('دخول بجوجل', stats.google_users),
+      card('لم يفعّلوا بريدهم', stats.unconfirmed_users, 'var(--danger)'),
+      card('أكواد منشورة', stats.codes),
+      card('طلبات في الانتظار', stats.pending),
+      card('طلبات حذف', stats.delete_requests),
+      card('أعضاء جدد (٧ أيام)', stats.new_users_week),
+      card('أكواد جديدة (٧ أيام)', stats.new_codes_week),
+    ].join('');
+    document.getElementById('stats-langs').innerHTML = (stats.top_languages || []).length
+      ? '<h4 style="color:var(--gold-2);margin:0 0 8px">أكثر اللغات</h4>' +
+        stats.top_languages.map(([l, n]) => `<span class="lang-tag" style="margin:0 4px 6px 0;display:inline-block">${esc(l)} · ${n}</span>`).join('')
+      : '';
+  } catch (e) { g.innerHTML = `<p style="color:var(--danger)">${esc(e.message)}</p>`; }
+}
+
+function bcPayload(extra) {
+  return Object.assign({
+    subject: document.getElementById('bc-subject').value.trim(),
+    heading: document.getElementById('bc-heading').value.trim(),
+    body: document.getElementById('bc-body').value.trim(),
+    target: document.getElementById('bc-target').value,
+    emails: document.getElementById('bc-emails').value,
+  }, extra || {});
+}
+
+document.getElementById('bc-target').addEventListener('change', (e) => {
+  document.getElementById('bc-custom-wrap').style.display = e.target.value === 'custom' ? 'block' : 'none';
+});
+
+async function testBroadcast(btn) {
+  btn.disabled = true;
+  try {
+    await api('/api/broadcast', { method:'POST', body: JSON.stringify(bcPayload({ test: true })) });
+    showMsg('أُرسلت نسخة تجريبية إلى بريدك ✓', true);
+  } catch (e) { showMsg(e.message, false); }
+  btn.disabled = false;
+}
+
+async function sendBroadcast(btn) {
+  const p = bcPayload();
+  if (!p.subject || !p.body) return showMsg('العنوان ونص الرسالة مطلوبان', false);
+  if (!confirm('إرسال هذه الرسالة لكل المستهدفين؟')) return;
+  btn.disabled = true;
+  const prog = document.getElementById('bc-progress');
+  let offset = 0, sent = 0, total = 0, failed = [];
+  try {
+    while (true) {
+      const r = await api('/api/broadcast', { method:'POST', body: JSON.stringify(bcPayload({ offset })) });
+      sent += r.sent; total = r.total; failed = failed.concat(r.failed || []);
+      prog.textContent = `تم الإرسال ${sent} من ${total}...`;
+      if (r.done || r.next === null) break;
+      offset = r.next;
+    }
+    prog.innerHTML = `<span style="color:var(--gold-2)">✓ اكتمل الإرسال: ${sent} من ${total}</span>` +
+      (failed.length ? `<br><span style="color:var(--danger)">فشل: ${esc(failed.join(', '))}</span>` : '');
+    showMsg('تم إرسال الرسالة الجماعية ✓', true);
+  } catch (e) { prog.textContent = ''; showMsg(e.message, false); }
+  btn.disabled = false;
+}
+
+function showMsg(t, ok) { const m=document.getElementById('msg'); m.className='msg '+(ok?'ok':'err'); m.textContent=t; setTimeout(()=>{m.className='msg';m.textContent='';},3500); }
+
+// ===== Reports tab =====
+async function loadReports() {
+  const list = document.getElementById('reports-list');
+  list.innerHTML = '<p style="color:var(--muted)">تحميل...</p>';
+  try {
+    const { reports } = await api('/api/reports');
+    if (!reports.length) { list.innerHTML=''; document.getElementById('reports-empty').style.display='block'; return; }
+    document.getElementById('reports-empty').style.display='none';
+    list.innerHTML = reports.map(r => `
+      <div class="user-row">
+        <div class="who">
+          <span style="flex-shrink:0">${avatarNode({ username: r.reporter, avatar_url: r.reporter_avatar })}</span>
+          <div>
+            <a href="/u/${esc(r.reporter)}" style="font-weight:700;color:var(--gold-2);text-decoration:none">${esc(r.reporter_display || r.reporter)}</a>
+            <div class="email">${esc(r.text)}</div>
+            <div class="email">${new Date(r.created_at).toLocaleString('ar')} · <span style="color:${r.status==='open'?'var(--danger)':'var(--muted)'}">${r.status==='open'?'جديد':'مُتجاهل'}</span></div>
+          </div>
+        </div>
+        <div class="actions">
+          ${r.status==='open' ? `<button class="btn ghost sm" onclick="dismissReport('${r.id}',this)">تمييز كمُتجاهل</button>` : `<button class="btn ghost sm" onclick="reopenReport('${r.id}',this)">إعادة فتح</button>`}
+          <a class="btn ghost sm" href="/u/${esc(r.reporter)}">الملف</a>
+        </div>
+      </div>`).join('');
+  } catch (e) { list.innerHTML = `<p style="color:var(--danger)">${esc(e.message)}</p>`; }
+}
+async function dismissReport(id, btn) { btn.disabled=true; try { await api('/api/report-dismiss',{method:'POST',body:JSON.stringify({id,dismiss:true})}); await loadReports(); } catch(err){showMsg(err.message,false);btn.disabled=false;} }
+async function reopenReport(id, btn) { btn.disabled=true; try { await api('/api/report-dismiss',{method:'POST',body:JSON.stringify({id,dismiss:false})}); await loadReports(); } catch(err){showMsg(err.message,false);btn.disabled=false;} }
+
+// ===== Messages tab =====
+async function loadMessages() {
+  const list = document.getElementById('messages-list');
+  list.innerHTML = '<p style="color:var(--muted)">تحميل...</p>';
+  try {
+    const { messages } = await api('/api/messages');
+    if (!messages.length) { list.innerHTML=''; document.getElementById('messages-empty').style.display='block'; return; }
+    document.getElementById('messages-empty').style.display='none';
+    list.innerHTML = messages.map(m => `
+      <div class="user-row">
+        <div class="who">
+          <span style="flex-shrink:0">${avatarNode({ username: m.author, avatar_url: m.avatar_url })}</span>
+          <div>
+            <a href="/u/${esc(m.author)}" style="font-weight:700;color:var(--gold-2);text-decoration:none">${esc(m.display_name || m.author)}</a>
+            <div class="email">${esc(m.email||'')}</div>
+            <div style="font-weight:600;margin-top:4px">${esc(m.subject)}</div>
+            <div class="email" style="margin-top:4px;white-space:pre-wrap">${esc(m.text)}</div>
+            <div class="email">${new Date(m.created_at).toLocaleString('ar')}</div>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch (e) { list.innerHTML = `<p style="color:var(--danger)">${esc(e.message)}</p>`; }
+}
+
+// ===== Bans tab =====
+async function doBan(ban, btn) {
+  const username = document.getElementById('ban-input').value.trim();
+  if (!username) return showMsg('أدخل اسم المستخدم', false);
+  btn.disabled = true;
+  try {
+    await api('/api/ban', { method:'POST', body: JSON.stringify({ username, ban, reason: document.getElementById('ban-reason').value.trim() || undefined }) });
+    showMsg(ban ? 'تم تبنيد الحساب — أُحذفت أكواده وأُرسلت رسالة الإغلاق للبريد ✓' : 'تم فك التبنيد — أُرسلت رسالة العودة للبريد ✓', true);
+    document.getElementById('ban-input').value='';
+    document.getElementById('ban-reason').value='';
+    await loadBans();
+  } catch (e) { showMsg(e.message, false); btn.disabled=false; }
+  btn.disabled = false;
+}
+async function loadBans() {
+  const list = document.getElementById('bans-list');
+  try {
+    const { bans } = await api('/api/ban');
+    const entries = Object.entries(bans || {});
+    if (!entries.length) { list.innerHTML=''; document.getElementById('bans-empty').style.display='block'; return; }
+    document.getElementById('bans-empty').style.display='none';
+    list.innerHTML = entries.map(([u, b]) => `
+      <div class="user-row" style="border-color:${b.banned?'var(--danger)':'var(--border)'}">
+        <div class="who">
+          <div>
+            <a href="/u/${esc(u)}" style="font-weight:700;color:var(--gold-2);text-decoration:none">${esc(u)}</a>
+            <div class="email">${b.banned ? '🚫 مبنّد' : '✓ غير مبنّد'}${b.reason ? ' — السبب: '+esc(b.reason) : ''}</div>
+            <div class="email">${b.banned_at ? 'تبنيد: '+new Date(b.banned_at).toLocaleString('ar')+'<br>' : ''}${b.unbanned_at ? 'فك: '+new Date(b.unbanned_at).toLocaleString('ar') : ''}</div>
+          </div>
+        </div>
+        <div class="actions">
+          ${b.banned ? `<button class="btn primary sm" onclick="doBan(false, this)">فك التبنيد</button>` : ''}
+          ${!b.banned ? `<button class="btn danger sm" onclick="document.getElementById('ban-input').value='${esc(u)}';doBan(true,this)">تبنيد</button>` : ''}
+        </div>
+      </div>`).join('');
+  } catch (e) { list.innerHTML = `<p style="color:var(--danger)">${esc(e.message)}</p>`; }
+}
+</script>
+</body>
+</html>

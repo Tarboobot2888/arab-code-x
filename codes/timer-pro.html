@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-m="focus">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>بومودورو برو</title>
+<link id="fav" rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+:root{--f:#ff5a4e;--s:#2de2c5;--l:#5aa9ff;--a:var(--f);--bg:#0b0d12;--p:#141822;--p2:#1a1f2c;--line:#ffffff17;--ink:#eef0f6;--mut:#8b92a6}
+html[data-m=short]{--a:var(--s)}
+html[data-m=long]{--a:var(--l)}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'IBM Plex Sans Arabic',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;min-height:100dvh;line-height:1.6;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(70% 50% at 50% 0,color-mix(in srgb,var(--a) 28%,transparent),transparent),radial-gradient(50% 40% at 100% 100%,color-mix(in srgb,var(--a) 14%,transparent),transparent);pointer-events:none;transition:background .6s}
+button{font:500 .95rem 'IBM Plex Sans Arabic',Tahoma,sans-serif;color:var(--ink);background:#ffffff0f;border:1px solid var(--line);border-radius:14px;padding:8px 14px;cursor:pointer;min-height:44px}
+button:hover{border-color:#ffffff40}
+:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+input[type=text]{font:500 1rem 'IBM Plex Sans Arabic',Tahoma,sans-serif;color:var(--ink);background:#0005;border:1px solid var(--line);border-radius:14px;padding:10px 14px;min-height:46px;width:100%;min-width:0}
+input[type=range]{width:100%;accent-color:var(--a)}
+.hd{position:relative;z-index:15;display:flex;justify-content:space-between;align-items:center;gap:10px;max-width:1100px;margin:auto;padding:calc(12px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 6px max(16px,env(safe-area-inset-left))}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem}
+.logo i{width:30px;height:30px;border-radius:50%;border:4px solid var(--a);border-top-color:transparent;transition:border-color .6s}
+.zb{min-height:40px;padding:6px 14px;font-size:.9rem}
+main{position:relative;max-width:1100px;margin:auto;padding:12px max(16px,env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.view{display:none}.view.on{display:block}
+.grid2,.sg{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:900px){.grid2{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);align-items:start}.sg{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}main{padding-bottom:40px}}
+.col{display:grid;gap:16px;min-width:0}
+.box{background:linear-gradient(180deg,var(--p2),var(--p));border:1px solid var(--line);border-radius:22px;padding:18px;min-width:0}
+h2{font-size:1.02rem;font-weight:700;margin-bottom:12px}
+#tabs{position:fixed;z-index:20;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:#0d1017ee;backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+#tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;color:var(--mut);font-size:.72rem;min-height:52px;padding:4px}
+#tabs button[aria-current=true]{color:var(--a)}
+#tabs svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media(min-width:800px){#tabs{top:calc(9px + env(safe-area-inset-top));bottom:auto;left:50%;right:auto;transform:translateX(-50%);width:auto;grid-template-columns:repeat(4,auto);gap:4px;background:#ffffff0d;border:1px solid var(--line);border-radius:99px;padding:4px}
+#tabs button{flex-direction:row;gap:8px;font-size:.92rem;padding:6px 16px;border-radius:99px;min-height:40px}
+#tabs button[aria-current=true]{background:var(--a);color:#0b0d12}}
+
+.tm{text-align:center}
+.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:#0005;padding:5px;border-radius:16px;margin-bottom:12px}
+.modes button{border:0;background:none;color:var(--mut);padding:8px 2px;font-size:.9rem}
+.modes button[aria-pressed=true]{background:var(--a);color:#0b0d12;font-weight:700}
+.ringw{--ring:clamp(220px,min(80vw,50vh),440px);--ring:clamp(220px,min(80vw,50dvh),440px);width:var(--ring);height:var(--ring);margin:6px auto 10px;position:relative}
+.ringw svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+.trk{fill:none;stroke:#ffffff12;stroke-width:5}
+.prg{fill:none;stroke:var(--a);stroke-width:5;stroke-linecap:round;stroke-dasharray:289.03;stroke-dashoffset:0;transition:stroke-dashoffset .3s linear,stroke .6s;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--a) 70%,transparent))}
+.tx{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#time{font-size:calc(var(--ring) * .22);font-weight:700;direction:ltr;font-variant-numeric:tabular-nums;line-height:1.1;letter-spacing:1px}
+#lbl{color:var(--mut);font-size:calc(var(--ring) * .055)}
+.dots{display:flex;justify-content:center;gap:8px;margin-bottom:8px}
+.dots i{width:12px;height:12px;border-radius:50%;background:#ffffff1f;transition:background .3s}
+.dots i.on{background:var(--a)}
+.tip{color:var(--mut);font-size:.9rem;min-height:1.6em;margin-bottom:12px;padding:0 6px}
+.chip{display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:100%;margin-bottom:16px;border-radius:99px;padding:8px 18px;background:#0005}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ctl{display:flex;justify-content:center;align-items:center;gap:14px}
+.play{min-width:min(220px,50%);height:62px;border-radius:99px;border:0;background:var(--a);color:#0b0d12;font-weight:700;font-size:1.15rem;box-shadow:0 12px 30px -10px var(--a);transition:background .6s}
+.play:hover{filter:brightness(1.08)}
+.rnd{width:56px;height:56px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center}
+.rnd svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pri{background:var(--a);color:#0b0d12;border:0;font-weight:700}
+.gl{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.gb{flex:1;height:10px;border-radius:9px;background:#ffffff14;overflow:hidden}
+.gb i{display:block;height:100%;width:0;background:var(--a);border-radius:9px;transition:width .4s}
+.st,.st4{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.st4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.st>div,.st4>div{background:#0004;border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
+.st b,.st4 b{display:block;font-size:1.15rem;color:var(--a)}
+.st small,.st4 small{color:var(--mut);font-size:.78rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button[aria-pressed=true]{border-color:var(--a);background:color-mix(in srgb,var(--a) 22%,transparent)}
+
+.add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;margin-bottom:14px}
+.add .pri{grid-column:1/-1}
+.tk{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;background:#0003}
+.tk.cu{border-color:var(--a)}
+.tk.dn .tt b{text-decoration:line-through;color:var(--mut)}
+.tt b{display:block;font-weight:500;overflow-wrap:anywhere}.tt small{color:var(--mut)}
+.ck{width:30px;height:30px;min-height:0;padding:0;border-radius:50%;flex:none}
+.ck[aria-pressed=true]{background:var(--a);border-color:transparent}
+.ck[aria-pressed=true]::after{content:"✓";color:#0b0d12;font-weight:700}
+.tk .go{padding:6px 12px;min-height:40px;font-size:.85rem}
+.tk .rm{width:40px;min-height:40px;padding:0}
+.empty{color:var(--mut);text-align:center;padding:16px 0}
+.row2{display:flex;justify-content:flex-end;margin-top:6px}
+
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:end;height:130px}
+.wk div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:4px;font-size:.72rem;color:var(--mut)}
+.wk i{width:100%;max-width:28px;border-radius:8px 8px 4px 4px;background:#ffffff1c;min-height:4px}
+.wk .t i{background:var(--a)}
+.hm{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px}
+.hm i{aspect-ratio:1;border-radius:4px;background:#ffffff0f}
+.hm i.n{background:none}
+.hm .l1{background:color-mix(in srgb,var(--a) 28%,transparent)}.hm .l2{background:color-mix(in srgb,var(--a) 50%,transparent)}.hm .l3{background:color-mix(in srgb,var(--a) 75%,transparent)}.hm .l4{background:var(--a)}
+.lgi{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.lgi:last-child{border:0}.lgi span:first-child{min-width:0;overflow-wrap:anywhere}.lgi span:last-child{color:var(--mut);white-space:nowrap;font-size:.82rem}
+
+.rw{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.rw:last-child{border:0}.rw>span{font-size:.95rem;min-width:0}
+.sp{display:flex;align-items:center;gap:6px;flex:none}
+.sp button{width:40px;height:40px;min-height:40px;padding:0;font-size:1.2rem;border-radius:12px}
+.sp b{min-width:58px;text-align:center;font-variant-numeric:tabular-nums}
+.sw{width:52px;height:30px;min-height:0;padding:0;border-radius:99px;position:relative;background:#ffffff1c;flex:none}
+.sw::after{content:"";position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:inset-inline-start .2s}
+.sw[aria-checked=true]{background:var(--a)}.sw[aria-checked=true]::after{inset-inline-start:25px}
+.th{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.th button{display:flex;align-items:center;justify-content:center;gap:8px}
+.th button[aria-pressed=true]{border-color:var(--a)}
+.th i{width:14px;height:14px;border-radius:50%;display:inline-block}
+.mx{padding:8px 0;border-bottom:1px solid var(--line)}.mx:last-child{border:0}
+.mx .rw{border:0;padding:0 0 4px}
+.bt2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.file{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:#ffffff0f;border:1px solid var(--line);border-radius:14px;min-height:44px;padding:8px 14px;font-weight:500}
+.hide{display:none}
+.dng{color:#ff8a80}
+
+.ov{position:fixed;inset:0;z-index:100;background:#000b;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.ov[hidden]{display:none}
+.sh{width:100%;max-width:440px;background:var(--p2);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.sh>*{min-width:0}
+.sh button{text-align:start}
+.sh button.on{border-color:var(--a)}
+@media(min-width:700px){.ov{align-items:center}.sh{border-radius:24px}}
+#toast{position:fixed;z-index:120;bottom:calc(84px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,160px);background:var(--ink);color:#111;padding:11px 22px;border-radius:99px;font-weight:700;transition:transform .3s;max-width:92vw;text-align:center}
+#toast.on{transform:translate(-50%,0)}
+@media(min-width:900px){#toast{bottom:28px}}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:130}
+.zx{display:none}
+
+body.zen .hd,body.zen #tabs,body.zen .col,body.zen .view:not(#v-timer),body.zen .modes{display:none!important}
+body.zen main{padding:calc(20px + env(safe-area-inset-top)) 16px 24px;min-height:100dvh;display:flex;align-items:center;justify-content:center}
+body.zen #v-timer,body.zen .grid2{width:100%}
+body.zen .tm{background:none;border:0}
+body.zen .ringw{--ring:min(86vw,64vh,620px);--ring:min(86vw,64dvh,620px)}
+body.zen .zx{display:flex;position:fixed;z-index:30;top:calc(12px + env(safe-area-inset-top));left:14px;min-height:40px;padding:6px 14px}
+
+@media(orientation:landscape) and (max-height:520px){
+.ringw{--ring:clamp(140px,min(46vw,62vh),300px);--ring:clamp(140px,min(46vw,62dvh),300px)}
+.tm{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:22px;align-items:center}
+.tm .ringw{grid-column:1;grid-row:1/8;margin:0}
+.tm>:not(.ringw){grid-column:2}
+.tm .chip{justify-self:center}
+main{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+}
+@media(orientation:landscape) and (max-height:520px) and (max-width:799px){#tabs button{flex-direction:row;justify-content:center;min-height:40px;font-size:.8rem}#tabs{padding-top:2px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="hd"><span class="logo"><i></i>بومودورو برو</span><button class="zb" id="zen">وضع التركيز الكامل</button></header>
+<button class="zx" id="zx">خروج</button>
+<nav id="tabs" aria-label="التنقل">
+<button data-v="timer" aria-current="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>المؤقت</button>
+<button data-v="tasks" aria-current="false"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>المهام</button>
+<button data-v="stats" aria-current="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>إنجازك</button>
+<button data-v="set" aria-current="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>الإعدادات</button>
+</nav>
+<main>
+<section id="v-timer" class="view on"><div class="grid2">
+ <div class="box tm">
+  <div class="modes" id="modes" role="group" aria-label="نوع الجلسة"><button data-m="focus">تركيز</button><button data-m="short">استراحة قصيرة</button><button data-m="long">استراحة طويلة</button></div>
+  <div class="ringw" role="timer" aria-label="الوقت المتبقي"><svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="46"/><circle class="prg" id="prg" cx="50" cy="50" r="46"/></svg><div class="tx"><div id="time">25:00</div><div id="lbl"></div></div></div>
+  <div class="dots" id="dots" aria-hidden="true"></div>
+  <p class="tip" id="tip"></p>
+  <button class="chip" id="chip"><span id="chipt"></span></button>
+  <div class="ctl"><button class="rnd" id="rs" aria-label="إعادة"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button><button class="play" id="pl">ابدأ</button><button class="rnd" id="sk" aria-label="تخطي"><svg viewBox="0 0 24 24"><path d="M5 5l9 7-9 7z"/><path d="M19 5v14"/></svg></button></div>
+ </div>
+ <div class="col">
+  <div class="box"><h2>هدف النهارده</h2><div class="gl"><div class="gb"><i id="gbar"></i></div><b id="gtxt"></b></div>
+   <div class="st"><div><b id="s1">0</b><small>وقت التركيز</small></div><div><b id="s2">0</b><small>جلسات</small></div><div><b id="s3">0</b><small>أيام متواصلة</small></div></div></div>
+  <div class="box"><h2>أصوات هادية</h2><div class="chips" id="qamb"></div></div>
+ </div>
+</div></section>
+
+<section id="v-tasks" class="view"><div class="box">
+ <h2>مهامك</h2>
+ <div class="add"><input type="text" id="nt" maxlength="80" placeholder="اكتب مهمة جديدة" aria-label="مهمة جديدة" autocomplete="off"><div class="sp" id="nest"><button aria-label="أقل">−</button><b></b><button aria-label="أكتر">+</button></div><button class="pri" id="na">إضافة المهمة</button></div>
+ <div id="tl"></div>
+ <div class="row2"><button id="clr">مسح المكتملة</button></div>
+</div></section>
+
+<section id="v-stats" class="view"><div class="sg">
+ <div class="box"><h2>ملخص</h2><div class="st4"><div><b id="t1">0</b><small>إجمالي التركيز</small></div><div><b id="t2">0</b><small>إجمالي الجلسات</small></div><div><b id="t3">0</b><small>متوسط يومي (7 أيام)</small></div><div><b id="t4">0</b><small>أفضل يوم</small></div></div></div>
+ <div class="box"><h2>آخر 7 أيام</h2><div class="wk" id="wk"></div></div>
+ <div class="box"><h2>نشاطك في آخر 12 أسبوع</h2><div class="hm" id="hm"></div></div>
+ <div class="box"><h2>آخر الجلسات</h2><div id="lg"></div></div>
+</div></section>
+
+<section id="v-set" class="view"><div class="sg">
+ <div class="box"><h2>الأوقات</h2>
+  <div class="rw"><span>مدة التركيز</span><div class="sp" data-k="focus" data-min="5" data-max="90" data-step="5" data-u="د"></div></div>
+  <div class="rw"><span>الاستراحة القصيرة</span><div class="sp" data-k="short" data-min="1" data-max="30" data-step="1" data-u="د"></div></div>
+  <div class="rw"><span>الاستراحة الطويلة</span><div class="sp" data-k="long" data-min="5" data-max="60" data-step="5" data-u="د"></div></div>
+  <div class="rw"><span>استراحة طويلة كل</span><div class="sp" data-k="every" data-min="2" data-max="8" data-step="1" data-u="جلسات"></div></div>
+  <div class="rw"><span>هدف اليوم</span><div class="sp" data-k="goal" data-min="1" data-max="16" data-step="1" data-u="جلسة"></div></div></div>
+ <div class="box"><h2>السلوك</h2>
+  <div class="rw"><span>ابدأ الاستراحة تلقائي</span><button class="sw" role="switch" data-k="autoB" aria-label="استراحة تلقائي"></button></div>
+  <div class="rw"><span>ابدأ التركيز تلقائي</span><button class="sw" role="switch" data-k="autoF" aria-label="تركيز تلقائي"></button></div>
+  <div class="rw"><span>نغمة نهاية الجلسة</span><button class="sw" role="switch" data-k="sound" aria-label="النغمة"></button></div>
+  <div class="rw"><span>إشعار عند الانتهاء</span><button class="sw" role="switch" data-k="notif" aria-label="الإشعارات"></button></div>
+  <div class="rw"><span>إبقاء الشاشة شغالة</span><button class="sw" role="switch" data-k="wake" aria-label="إبقاء الشاشة"></button></div></div>
+ <div class="box"><h2>المظهر</h2><div class="th" id="th"></div></div>
+ <div class="box"><h2>الأصوات الهادية</h2><div id="mx"></div>
+  <div class="mx"><div class="rw"><span>مستوى الصوت العام</span></div><input type="range" id="vol" min="0" max="100" aria-label="مستوى الصوت العام"></div></div>
+ <div class="box"><h2>بياناتك</h2><div class="bt2"><button id="exp">تصدير نسخة احتياطية</button><label class="file"><input type="file" id="imp" accept="application/json,.json" class="hide">استيراد نسخة</label></div>
+  <button id="rst" class="dng" style="width:100%;margin-top:8px">مسح كل البيانات</button></div>
+</div></section>
+</main>
+<div class="ov" id="ov" hidden><div class="sh" role="dialog" aria-modal="true" aria-label="اختيار المهمة"><b>اختار المهمة الحالية</b><div id="ol" style="display:grid;gap:8px;grid-template-columns:minmax(0,1fr)"></div><button id="oc">إغلاق</button></div></div>
+<div id="toast" role="status"></div>
+<canvas id="fx"></canvas>
+<script>
+const $=id=>document.getElementById(id),qa=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const SOUNDS=[['rain','مطر'],['wave','موج'],['wind','رياح'],['brown','هدوء عميق']];
+const THEMES={ember:['#ff5a4e','#2de2c5','#5aa9ff','إمبر'],forest:['#34d399','#fbbf24','#60a5fa','غابة'],violet:['#a78bfa','#f472b6','#38bdf8','بنفسجي'],sunset:['#fb923c','#22d3ee','#c084fc','غروب']};
+const NAMES={focus:'وقت التركيز',short:'استراحة قصيرة',long:'استراحة طويلة'};
+const TIPS={focus:['خلّي موبايلك بعيد وركّز في مهمة واحدة بس.','ابدأ بأصعب جزء وأنت لسه نشيط.','مفيش حاجة تشتتك؟ كمّل، أنت ماشي صح.'],break:['قوم اتمشى دقيقة وحرّك رقبتك وكتافك.','اشرب كوباية مياه.','بص لحاجة بعيدة 20 ثانية عشان عينيك ترتاح.','خد 5 أنفاس عميقة وببطء.']};
+let cfg=Object.assign({focus:25,short:5,long:15,every:4,goal:8,autoB:true,autoF:false,sound:true,notif:false,wake:true,theme:'ember',vol:70,cur:null},store.get('pm-cfg',{}));
+const mixD={rain:{on:false,v:60},wave:{on:false,v:60},wind:{on:false,v:50},brown:{on:false,v:50}};
+cfg.mix=Object.assign({},mixD,cfg.mix||{});SOUNDS.forEach(([k])=>cfg.mix[k]=Object.assign({},mixD[k],cfg.mix[k],{on:false}));
+let log=store.get('pm-log',[]),tasks=store.get('pm-tasks',[]),mode='focus',total=0,left=0,running=false,endAt=0,done=0,tk=null,newEst=2,lastSec=-1;
+const saveCfg=()=>store.set('pm-cfg',cfg),saveTasks=()=>store.set('pm-tasks',tasks),saveLog=()=>store.set('pm-log',log);
+const saveState=()=>store.set('pm-state',{mode,run:running,endAt,left:running?Math.max(0,endAt-Date.now()):left,done});
+const dk=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const dur=m=>{const h=Math.floor(m/60),r=Math.round(m%60);return h?h+' س '+r+' د':r+' د'};
+const two=n=>String(n).padStart(2,'0');
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2200)}
+
+let ac=null,master=null;const snd={},bufs={};
+function audio(){if(!ac){const A=window.AudioContext||window.webkitAudioContext;if(!A)return false;ac=new A();master=ac.createGain();master.connect(ac.destination)}if(ac.state=='suspended')ac.resume();master.gain.value=cfg.vol/100;return true}
+function nbuf(brown){const k=brown?'b':'w';if(bufs[k])return bufs[k];const n=ac.sampleRate*3,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<n;i++){const w=Math.random()*2-1;if(brown){l=(l+.02*w)/1.02;d[i]=l*3.5}else d[i]=w*.5}return bufs[k]=b}
+function mkSound(k){const src=ac.createBufferSource();src.buffer=nbuf(k!='rain');src.loop=true;const vol=ac.createGain();vol.gain.value=0;vol.connect(master);let lfo=null;
+ if(k=='rain'){const a=ac.createBiquadFilter();a.type='highpass';a.frequency.value=700;const b=ac.createBiquadFilter();b.type='lowpass';b.frequency.value=7000;src.connect(a);a.connect(b);b.connect(vol)}
+ else{const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value={wave:650,wind:420,brown:900}[k];src.connect(f);
+  if(k=='brown')f.connect(vol);else{const wg=ac.createGain();wg.gain.value=k=='wave'?.55:.4;f.connect(wg);wg.connect(vol);lfo=ac.createOscillator();lfo.frequency.value=k=='wave'?.11:.07;const lg=ac.createGain();lg.gain.value=k=='wave'?.45:.3;lfo.connect(lg);lg.connect(wg.gain);lfo.start()}}
+ src.start();return{src,vol,lfo}}
+function applySound(k){const m=cfg.mix[k];
+ if(m.on){if(!audio())return;if(!snd[k])snd[k]=mkSound(k);snd[k].vol.gain.setTargetAtTime(m.v/100,ac.currentTime,.2)}
+ else if(snd[k]){const s=snd[k];delete snd[k];s.vol.gain.setTargetAtTime(0,ac.currentTime,.15);setTimeout(()=>{try{s.src.stop();s.lfo&&s.lfo.stop()}catch(e){}},700)}}
+function chime(){if(!cfg.sound||!audio())return;[660,880,1175].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+i*.22;o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.22,t+.03);g.gain.exponentialRampToValueAtTime(.001,t+1.2);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+1.3)})}
+let wl=null;async function wake(){try{if(cfg.wake&&'wakeLock' in navigator)wl=await navigator.wakeLock.request('screen')}catch(e){}}
+function unwake(){try{wl&&wl.release()}catch(e){}wl=null}
+
+function theme(){const t=THEMES[cfg.theme]||THEMES.ember,r=document.documentElement.style;r.setProperty('--f',t[0]);r.setProperty('--s',t[1]);r.setProperty('--l',t[2])}
+const accent=()=>(THEMES[cfg.theme]||THEMES.ember)[{focus:0,short:1,long:2}[mode]];
+const fc=document.createElement('canvas');fc.width=fc.height=64;
+function fav(){const c=fc.getContext('2d');c.clearRect(0,0,64,64);c.lineWidth=9;c.lineCap='round';c.strokeStyle='#ffffff30';c.beginPath();c.arc(32,32,24,0,7);c.stroke();c.strokeStyle=accent();c.beginPath();c.arc(32,32,24,-Math.PI/2,-Math.PI/2+Math.PI*2*(total?Math.max(.001,left/total):1));c.stroke();try{$('fav').href=fc.toDataURL()}catch(e){}}
+
+const C=2*Math.PI*46;let tipMode='';
+function curTask(){return tasks.find(t=>t.id===cfg.cur&&!t.done)||null}
+function draw(){
+ const s=Math.ceil(left/1000),t=two(Math.floor(s/60))+':'+two(s%60);
+ $('time').textContent=t;$('lbl').textContent=NAMES[mode];$('prg').style.strokeDashoffset=C*(1-(total?left/total:1));
+ document.documentElement.dataset.m=mode;document.title=(running?t+' · ':'')+NAMES[mode];
+ $('pl').textContent=running?'إيقاف مؤقت':(left<total?'كمّل':'ابدأ');
+ qa('#modes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m==mode));
+ const dd=$('dots');if(dd.children.length!=cfg.every){dd.innerHTML='<i></i>'.repeat(cfg.every)}
+ const n=mode=='long'?cfg.every:done;qa('#dots i').forEach((d,i)=>d.classList.toggle('on',i<n));
+ const k=mode=='focus'?'focus':'break';if(tipMode!=mode){tipMode=mode;const a=TIPS[k];$('tip').textContent=a[Math.floor(Math.random()*a.length)]}
+ const ct=curTask();$('chipt').textContent=ct?ct.title+'  ·  '+ct.spent+'/'+ct.est:'اختار المهمة الحالية';
+ if(s!==lastSec){lastSec=s;fav()}
+}
+function setMode(m){clearInterval(tk);running=false;unwake();mode=m;total=left=cfg[m]*60000;lastSec=-1;draw();saveState()}
+function start(){if(running||left<=0)return;audio();running=true;endAt=Date.now()+left;tk=setInterval(tick,250);wake();draw();saveState()}
+function pause(){if(!running)return;left=Math.max(0,endAt-Date.now());running=false;clearInterval(tk);unwake();draw();saveState()}
+function tick(){left=Math.max(0,endAt-Date.now());draw();if(left<=0)finish(true)}
+function finish(rec){
+ clearInterval(tk);const was=running;running=false;unwake();const prev=mode;let next;
+ if(prev=='focus'){if(rec){record();done++}next=done>=cfg.every?'long':'short'}else{if(prev=='long')done=0;next='focus'}
+ if(rec){chime();try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}notify(prev)}
+ setMode(next);if(rec&&was&&(next=='focus'?cfg.autoF:cfg.autoB))start()}
+function notify(prev){if(!cfg.notif||!('Notification' in window)||Notification.permission!='granted')return;try{new Notification(prev=='focus'?'خلصت جلسة تركيز 👏':'الاستراحة خلصت',{body:prev=='focus'?'وقت استراحة، أنت تستاهل.':'يلا نرجع نركّز.'})}catch(e){}}
+function record(){const ct=curTask();log.push({t:Date.now(),m:cfg.focus,k:ct?ct.title:''});if(log.length>1500)log=log.slice(-1500);saveLog();
+ if(ct){ct.spent++;saveTasks();renderTasks()}
+ const td=byDay()[dk(new Date())];if(td&&td.s==cfg.goal){toast('حققت هدف النهارده! 🎉');confetti()}drawStats()}
+$('pl').onclick=()=>running?pause():start();
+$('rs').onclick=()=>setMode(mode);
+$('sk').onclick=()=>finish(false);
+qa('#modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+document.addEventListener('visibilitychange',()=>{if(running&&document.visibilityState=='visible'){tick();wake()}});
+
+function renderTasks(){
+ const l=$('tl');l.innerHTML='';if(!tasks.length){l.innerHTML='<p class="empty">لسه مفيش مهام. ضيف أول مهمة.</p>'}
+ tasks.forEach(t=>{const r=document.createElement('div');r.className='tk'+(t.done?' dn':'')+(t.id===cfg.cur&&!t.done?' cu':'');
+  r.innerHTML=`<button class="ck" aria-label="تمت" aria-pressed="${t.done}"></button><div class="tt"><b>${esc(t.title)}</b><small>${t.spent} من ${t.est} جلسات</small></div><button class="go">${t.id===cfg.cur&&!t.done?'الحالية':'ابدأ بيها'}</button><button class="rm" aria-label="حذف">✕</button>`;
+  const[ck,,go,rm]=[r.children[0],0,r.children[2],r.children[3]];
+  ck.onclick=()=>{t.done=!t.done;saveTasks();renderTasks();draw()};
+  go.onclick=()=>{if(t.done){t.done=false}cfg.cur=t.id;saveCfg();saveTasks();renderTasks();draw();go_('timer')};
+  rm.onclick=()=>{tasks=tasks.filter(x=>x!==t);if(cfg.cur===t.id)cfg.cur=null;saveCfg();saveTasks();renderTasks();draw()};
+  l.appendChild(r)});
+}
+function addTask(){const v=$('nt').value.trim();if(!v)return;tasks.unshift({id:Date.now()+''+Math.floor(Math.random()*999),title:v,est:newEst,spent:0,done:false});$('nt').value='';saveTasks();renderTasks();draw()}
+$('na').onclick=addTask;$('nt').addEventListener('keydown',e=>{if(e.key=='Enter')addTask()});
+$('clr').onclick=()=>{tasks=tasks.filter(t=>!t.done);saveTasks();renderTasks()};
+(function(){const[m,p]=$('nest').querySelectorAll('button'),b=$('nest').querySelector('b'),f=()=>b.textContent=newEst+' جلسات';m.onclick=()=>{newEst=Math.max(1,newEst-1);f()};p.onclick=()=>{newEst=Math.min(12,newEst+1);f()};f()})();
+function openSheet(){const l=$('ol');l.innerHTML='';const mk=(txt,id,on)=>{const b=document.createElement('button');b.textContent=txt;if(on)b.className='on';b.onclick=()=>{cfg.cur=id;saveCfg();renderTasks();draw();$('ov').hidden=true};l.appendChild(b)};
+ mk('بدون مهمة',null,!curTask());tasks.filter(t=>!t.done).forEach(t=>mk(t.title+'  ·  '+t.spent+'/'+t.est,t.id,t.id===cfg.cur));
+ if(!tasks.some(t=>!t.done)){const p=document.createElement('p');p.className='empty';p.textContent='مفيش مهام لسه. ضيفها من تبويب المهام.';l.appendChild(p)}$('ov').hidden=false}
+$('chip').onclick=openSheet;$('oc').onclick=()=>$('ov').hidden=true;$('ov').addEventListener('pointerdown',e=>{if(e.target===$('ov'))$('ov').hidden=true});
+
+function byDay(){const m={};log.forEach(e=>{const k=dk(new Date(e.t));(m[k]=m[k]||{m:0,s:0});m[k].m+=e.m;m[k].s++});return m}
+function drawStats(){
+ const B=byDay(),td=B[dk(new Date())]||{m:0,s:0};
+ $('s1').textContent=dur(td.m);$('s2').textContent=td.s;$('gtxt').textContent=td.s+' / '+cfg.goal;$('gbar').style.width=Math.min(100,td.s/cfg.goal*100)+'%';
+ let st=0,d=new Date();if(!(B[dk(d)]&&B[dk(d)].s))d.setDate(d.getDate()-1);while(B[dk(d)]&&B[dk(d)].s){st++;d.setDate(d.getDate()-1)}$('s3').textContent=st;
+ const days=[];for(let i=6;i>=0;i--){const x=new Date();x.setDate(x.getDate()-i);days.push(x)}
+ const vals=days.map(x=>(B[dk(x)]||{m:0}).m),mx=Math.max(60,...vals);
+ $('wk').innerHTML=days.map((x,i)=>`<div class="${i==6?'t':''}" title="${dur(vals[i])}">${vals[i]?'<span>'+vals[i]+'</span>':''}<i style="height:${Math.max(4,vals[i]/mx*84)}px"></i>${x.toLocaleDateString('ar-EG',{weekday:'short'})}</div>`).join('');
+ const all=log.reduce((a,e)=>a+e.m,0),best=Math.max(0,...Object.values(B).map(x=>x.m));
+ $('t1').textContent=dur(all);$('t2').textContent=log.length;$('t3').textContent=dur(vals.reduce((a,b)=>a+b,0)/7);$('t4').textContent=dur(best);
+ const today=new Date();today.setHours(0,0,0,0);const idx=(today.getDay()+1)%7,start=new Date(today);start.setDate(start.getDate()-idx-11*7);
+ let h='';for(let i=0;i<84;i++){const x=new Date(start);x.setDate(start.getDate()+i);if(x>today){h+='<i class="n"></i>';continue}const m=(B[dk(x)]||{m:0}).m,l=m==0?0:m<30?1:m<60?2:m<120?3:4;h+=`<i class="l${l}" title="${dk(x)} · ${dur(m)}"></i>`}
+ $('hm').innerHTML=h;
+ const lg=$('lg');lg.innerHTML=log.length?'':'<p class="empty">لسه مفيش جلسات. ابدأ أول جلسة.</p>';
+ log.slice(-8).reverse().forEach(e=>{const r=document.createElement('div');r.className='lgi';r.innerHTML=`<span>${esc(e.k||'بدون مهمة')} · ${e.m} د</span><span>${new Date(e.t).toLocaleString('ar-EG',{weekday:'short',hour:'2-digit',minute:'2-digit'})}</span>`;lg.appendChild(r)})}
+
+function syncDur(){if(!running&&left==total){total=left=cfg[mode]*60000}}
+function drawCfg(){
+ qa('.sp[data-k]').forEach(s=>s.querySelector('b').textContent=cfg[s.dataset.k]+' '+s.dataset.u);
+ qa('.sw').forEach(s=>s.setAttribute('aria-checked',!!cfg[s.dataset.k]));
+ qa('#th button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t==cfg.theme));$('vol').value=cfg.vol;
+ SOUNDS.forEach(([k])=>{const b=$('q'+k);if(b)b.setAttribute('aria-pressed',cfg.mix[k].on);const w=$('m'+k);if(w){w.setAttribute('aria-checked',cfg.mix[k].on)}})}
+qa('.sp[data-k]').forEach(s=>{s.innerHTML='<button aria-label="أقل">−</button><b></b><button aria-label="أكتر">+</button>';const[m,p]=s.querySelectorAll('button'),k=s.dataset.k,mn=+s.dataset.min,mx=+s.dataset.max,st=+s.dataset.step;
+ const ch=d=>{cfg[k]=Math.min(mx,Math.max(mn,cfg[k]+d*st));saveCfg();syncDur();drawCfg();draw();drawStats()};m.onclick=()=>ch(-1);p.onclick=()=>ch(1)});
+qa('.sw[data-k]').forEach(s=>s.onclick=()=>{const k=s.dataset.k;
+ if(k=='notif'&&!cfg.notif){if(!('Notification' in window)){toast('المتصفح ده مش بيدعم الإشعارات');return}Notification.requestPermission().then(p=>{cfg.notif=p=='granted';if(!cfg.notif)toast('لازم تسمح بالإشعارات من إعدادات المتصفح');saveCfg();drawCfg()});return}
+ cfg[k]=!cfg[k];saveCfg();drawCfg();if(k=='wake'&&running)cfg.wake?wake():unwake()});
+$('th').innerHTML=Object.entries(THEMES).map(([k,v])=>`<button data-t="${k}"><i style="background:${v[0]}"></i><i style="background:${v[1]}"></i><i style="background:${v[2]}"></i>${v[3]}</button>`).join('');
+qa('#th button').forEach(b=>b.onclick=()=>{cfg.theme=b.dataset.t;saveCfg();theme();drawCfg();fav()});
+$('mx').innerHTML=SOUNDS.map(([k,n])=>`<div class="mx"><div class="rw"><span>${n}</span><button class="sw" role="switch" id="m${k}" aria-label="${n}"></button></div><input type="range" min="0" max="100" value="${cfg.mix[k].v}" data-k="${k}" aria-label="مستوى ${n}"></div>`).join('');
+$('qamb').innerHTML=SOUNDS.map(([k,n])=>`<button id="q${k}" aria-pressed="false">${n}</button>`).join('');
+SOUNDS.forEach(([k])=>{const t=()=>{cfg.mix[k].on=!cfg.mix[k].on;saveCfg();applySound(k);drawCfg()};$('m'+k).onclick=t;$('q'+k).onclick=t;
+ qa('#mx input[data-k="'+k+'"]')[0].oninput=e=>{cfg.mix[k].v=+e.target.value;saveCfg();applySound(k)}});
+$('vol').oninput=e=>{cfg.vol=+e.target.value;saveCfg();if(master)master.gain.value=cfg.vol/100};
+$('exp').onclick=()=>{const b=new Blob([JSON.stringify({cfg,log,tasks},null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='pomodoro-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000)};
+$('imp').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(Array.isArray(d.log))log=d.log;if(Array.isArray(d.tasks))tasks=d.tasks;if(d.cfg&&typeof d.cfg=='object'){const m=cfg.mix;Object.assign(cfg,d.cfg);cfg.mix=m}saveCfg();saveLog();saveTasks();theme();syncDur();drawCfg();renderTasks();drawStats();draw();toast('تم استيراد النسخة')}catch(x){toast('الملف مش صالح')}};r.readAsText(f);e.target.value=''};
+let rc=0;$('rst').onclick=()=>{if(!rc){rc=1;$('rst').textContent='اضغط تاني للتأكيد';setTimeout(()=>{rc=0;$('rst').textContent='مسح كل البيانات'},3500);return}
+ ['pm-cfg','pm-log','pm-tasks','pm-state'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});location.reload()};
+
+function go_(v){qa('.view').forEach(s=>s.classList.toggle('on',s.id=='v-'+v));qa('#tabs button').forEach(b=>b.setAttribute('aria-current',b.dataset.v==v));if(v=='stats')drawStats();window.scrollTo(0,0)}
+qa('#tabs button').forEach(b=>b.onclick=()=>go_(b.dataset.v));
+function zen(on){document.body.classList.toggle('zen',on);try{if(on&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});else if(!on&&document.fullscreenElement)document.exitFullscreen()}catch(e){}}
+$('zen').onclick=()=>{go_('timer');zen(true)};$('zx').onclick=()=>zen(false);
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)document.body.classList.remove('zen')});
+document.addEventListener('keydown',e=>{const tg=document.activeElement.tagName;if(tg=='INPUT'||tg=='TEXTAREA')return;
+ if(e.code=='Escape')zen(false);
+ else if(e.code=='Space'&&tg!='BUTTON'){e.preventDefault();$('pl').click()}
+ else if(e.code=='KeyR')$('rs').click();else if(e.code=='KeyS')$('sk').click();else if(e.code=='KeyF')zen(!document.body.classList.contains('zen'))});
+
+function confetti(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;const cv=$('fx'),c=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;
+ const cols=['#ff5a4e','#ffc83d','#2de2c5','#a78bfa','#fff'],ps=Array.from({length:120},()=>({x:cv.width/2,y:cv.height*.45,vx:(Math.random()-.5)*15,vy:-Math.random()*15-3,s:5+Math.random()*7,c:cols[Math.random()*5|0],r:Math.random()*6}));
+ let f=0;(function a(){c.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.2;c.save();c.translate(p.x,p.y);c.rotate(p.r);c.fillStyle=p.c;c.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);c.restore()});if(++f<140)requestAnimationFrame(a);else c.clearRect(0,0,cv.width,cv.height)})()}
+
+theme();
+(function(){const ss=store.get('pm-state',null);
+ if(ss&&NAMES[ss.mode]){mode=ss.mode;done=ss.done||0;total=cfg[mode]*60000;left=Math.min(total,ss.left>0?ss.left:total);
+  if(ss.run&&ss.endAt>Date.now()){running=true;endAt=ss.endAt;left=endAt-Date.now();tk=setInterval(tick,250);wake()}}
+ else{mode='focus';total=left=cfg.focus*60000}})();
+drawCfg();renderTasks();drawStats();draw();
+</script>
+</body>
+</html>

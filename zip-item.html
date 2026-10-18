@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ملف · ARAB code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.brand .dot{background:url(/assets/brand/logo.png) center/cover no-repeat!important}
+.zip-thumb{height:130px;border-radius:10px;margin:-4px -4px 10px;background:var(--bg-2,#111) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:42px;border:1px solid var(--border)}
+.zip-meta{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px}
+.zip-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:24px 0 16px}
+.zip-head input{flex:1;min-width:200px}
+.zip-box{max-width:820px;margin:24px auto}
+.zip-box .readme-body{line-height:1.9}
+</style>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="48x48" href="https://www.arab-code.cv/assets/brand/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://www.arab-code.cv/assets/brand/apple-touch-icon.png">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="brand"><span class="dot"></span> ARAB code</a>
+  <div class="nav-actions" id="nav-actions"></div>
+</nav>
+<main class="container"><div class="zip-box" id="box"><p style="text-align:center;color:var(--muted)">جارٍ التحميل...</p></div></main>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<footer class="footer"><div class="footer-decoration"></div><div class="footer-content"><div class="footer-rights"><span>© 2026 Code ARAB</span><span class="bmg">— BMG</span></div></div></footer>
+<script src="/app.js"></script>
+<script>
+function fmtSize(n){if(!n)return"";const u=["B","KB","MB","GB"];let i=0;while(n>=1024&&i<3){n/=1024;i++}return n.toFixed(i?1:0)+" "+u[i]}
+function fmtDate(d){try{return new Date(d).toLocaleDateString("ar")}catch{return""}}
+async function gate(){await renderNav();const me=await loadMe();if(!me){location.href="/auth?mode=login";return null}return me}
+</script>
+<script>
+function md(s){try{return DOMPurify.sanitize(marked.parse(s,{breaks:true,gfm:true}))}catch{return esc(s)}}
+(async()=>{const me=await gate();if(!me)return;
+  const slug=decodeURIComponent(location.pathname.split('/').filter(Boolean)[1]||'');
+  const box=document.getElementById('box');
+  try{const {zip:z}=await api('/api/zip?slug='+encodeURIComponent(slug));
+    document.title=z.title+' · ARAB code';
+    const own=me.is_admin||me.username.toLowerCase()===z.author.toLowerCase();
+    box.innerHTML=`${z.thumb?`<div class="zip-thumb" style="height:260px;background-image:url('${esc(z.thumb)}')"></div>`:''}
+      <h1 style="margin:10px 0 6px">${esc(z.title)}</h1>
+      <p style="color:var(--muted)">${esc(z.description||'')}</p>
+      <div class="zip-meta" style="margin:10px 0 16px">${authorLink(z)}<span class="lang-badge">${esc(z.type)}</span><span>${fmtSize(z.size)}</span>${z.version?`<span>v${esc(z.version)}</span>`:''}<span>${fmtDate(z.created_at)}</span>${(z.tags||[]).map(t=>`<span>#${esc(t)}</span>`).join('')}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn primary" href="${esc(z.url)}" download="${esc(z.filename)}" target="_blank" rel="noopener">⬇ تحميل الملف</a>
+        ${own?'<button class="btn ghost" id="del" style="color:var(--danger)">حذف</button>':''}
+      </div>
+      <section class="readme" style="margin-top:22px"><div class="readme-head"><span>📄 README.md</span></div>
+        <div class="readme-body">${z.readme?md(z.readme):'<p class="readme-empty">لا يوجد README</p>'}</div></section>`;
+    const d=document.getElementById('del');
+    if(d)d.onclick=async()=>{if(!confirm('حذف الملف؟'))return;try{await api('/api/zip-delete',{method:'POST',body:JSON.stringify({slug})});location.href='/zip'}catch(e){alert(e.message)}};
+  }catch(e){box.innerHTML=`<p style="text-align:center;color:var(--danger)">${esc(e.message)}</p>`}
+})();
+</script>
+</body></html>

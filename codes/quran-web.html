@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المصحف - مكتبة القرآن الكريم</title>
+
+    <!-- Google Fonts: Amiri (خط عثماني جميل) + Reem Kufi للعناوين -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Reem+Kufi:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #0a0a1a;
+            --bg-card: rgba(20, 20, 50, 0.75);
+            --gold: #d4a843;
+            --gold-light: #f0d78c;
+            --text: #e8e0d0;
+            --text-light: #c5bfb0;
+            --accent: #8b6914;
+            --star-color: #ffffff;
+            --card-border: rgba(180, 150, 100, 0.25);
+            --player-bg: rgba(10, 10, 30, 0.9);
+            --highlight: #f7e7b4;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Amiri', 'Scheherazade New', serif;
+            background: var(--bg-deep);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ⭐ طبقة النجوم المتحركة */
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .star {
+            position: absolute;
+            background: var(--star-color);
+            border-radius: 50%;
+            animation: twinkle var(--dur) ease-in-out infinite;
+            animation-delay: var(--delay);
+            opacity: 0;
+        }
+        @keyframes twinkle {
+            0%,
+            100% {
+                opacity: 0.2;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.9;
+                transform: scale(1.8);
+            }
+        }
+        /* نجوم كبيرة متلألئة */
+        .star.big {
+            box-shadow: 0 0 6px 2px rgba(255, 255, 220, 0.7), 0 0 15px 4px rgba(255, 215, 120, 0.4);
+        }
+
+        /* غبار كوني */
+        .nebula {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: 0;
+            animation: nebulaFloat 20s ease-in-out infinite;
+        }
+        .nebula.n1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #3a1c5c 0%, transparent 70%);
+            top: -10%;
+            left: 10%;
+        }
+        .nebula.n2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #1c3a5c 0%, transparent 70%);
+            bottom: -5%;
+            right: 5%;
+            animation-delay: -8s;
+        }
+        .nebula.n3 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, #5c3a1c 0%, transparent 70%);
+            top: 50%;
+            left: 60%;
+            animation-delay: -15s;
+        }
+        @keyframes nebulaFloat {
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+            25% {
+                transform: translate(30px, -20px);
+            }
+            50% {
+                transform: translate(-20px, 25px);
+            }
+            75% {
+                transform: translate(-15px, -15px);
+            }
+        }
+
+        /* الحاوية الرئيسية */
+        .main-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px 24px 120px;
+        }
+
+        /* ✅ الهيدر */
+        .header {
+            text-align: center;
+            padding: 40px 20px 30px;
+            position: relative;
+        }
+        .logo-svg {
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 16px;
+            filter: drop-shadow(0 0 20px rgba(212, 168, 67, 0.5));
+            animation: logoGlow 3s ease-in-out infinite;
+            display: block;
+        }
+        @keyframes logoGlow {
+            0%,
+            100% {
+                filter: drop-shadow(0 0 18px rgba(212, 168, 67, 0.5));
+            }
+            50% {
+                filter: drop-shadow(0 0 32px rgba(240, 200, 100, 0.8));
+            }
+        }
+        .site-title {
+            font-family: 'Reem Kufi', 'Amiri', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--gold-light);
+            letter-spacing: 2px;
+            text-shadow: 0 0 30px rgba(212, 168, 67, 0.4), 0 2px 8px rgba(0, 0, 0, 0.6);
+            margin: 0;
+            line-height: 1.3;
+        }
+        .site-subtitle {
+            font-family: 'Amiri', serif;
+            font-size: 1.2rem;
+            color: var(--text-light);
+            margin-top: 6px;
+            letter-spacing: 1px;
+            opacity: 0.85;
+        }
+        .bismillah {
+            font-family: 'Amiri', serif;
+            font-size: 2.2rem;
+            color: var(--gold);
+            margin-top: 10px;
+            text-shadow: 0 0 15px rgba(180, 140, 70, 0.5);
+        }
+
+        /* ✅ شريط البحث */
+        .search-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0 10px;
+        }
+        .search-box {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 14px 48px 14px 20px;
+            border-radius: 50px;
+            border: 2px solid var(--card-border);
+            background: var(--bg-card);
+            color: var(--text);
+            font-family: 'Amiri', serif;
+            font-size: 1.15rem;
+            outline: none;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+        .search-box input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 25px rgba(212, 168, 67, 0.25);
+        }
+        .search-box input::placeholder {
+            color: rgba(200, 185, 150, 0.5);
+        }
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        .search-icon svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--gold-light);
+            opacity: 0.7;
+        }
+
+        /* ✅ قسم العنوان */
+        .section-title {
+            font-family: 'Reem Kufi', sans-serif;
+            font-size: 1.6rem;
+            color: var(--gold-light);
+            text-align: center;
+            margin: 28px 0 16px;
+            letter-spacing: 1px;
+        }
+        .section-title .icon {
+            display: inline-block;
+            margin: 0 8px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+        @keyframes bounce {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        /* ✅ شبكة القراء */
+        .readers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+            gap: 14px;
+            padding: 0 4px;
+        }
+        .reader-card {
+            background: var(--bg-card);
+            border: 1.5px solid var(--card-border);
+            border-radius: 18px;
+            padding: 18px 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition);
+            backdrop-filter: blur(8px);
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .reader-card:hover,
+        .reader-card:active {
+            transform: translateY(-4px);
+            border-color: var(--gold);
+            box-shadow: 0 12px 35px rgba(180, 140, 60, 0.25), 0 0 0 1px rgba(212, 168, 67, 0.3) inset;
+            background: rgba(30, 25, 55, 0.85);
+        }
+        .reader-card.selected {
+            border-color: var(--gold-light) !important;
+            box-shadow: 0 0 30px rgba(240, 200, 100, 0.4), 0 0 0 2px rgba(240, 200, 100, 0.5) inset !important;
+            background: rgba(40, 30, 65, 0.9) !important;
+        }
+        .reader-card .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: radial-gradient(circle at 40% 35%, #3a2a10, #1a1005);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(200, 160, 80, 0.5);
+            box-shadow: 0 0 18px rgba(180, 140, 60, 0.3);
+            transition: var(--transition);
+        }
+        .reader-card:hover .avatar {
+            box-shadow: 0 0 28px rgba(220, 180, 80, 0.55);
+        }
+        .reader-card .avatar svg {
+            width: 30px;
+            height: 30px;
+            fill: var(--gold-light);
+        }
+        .reader-card .reader-name {
+            font-family: 'Amiri', serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.4;
+            margin-bottom: 4px;
+        }
+        .reader-card .surah-count {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            opacity: 0.7;
+        }
+
+        /* ✅ قائمة السور */
+        .surahs-container {
+            display: none;
+            margin-top: 20px;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        .surahs-container.active {
+            display: block;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(25px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .surahs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+        }
+        .surah-item {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 14px 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition);
+            backdrop-filter: blur(6px);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .surah-item:hover,
+        .surah-item:active {
+            transform: translateY(-3px);
+            border-color: var(--gold);
+            box-shadow: 0 8px 22px rgba(180, 140, 60, 0.2);
+        }
+        .surah-item.playing {
+            border-color: #5fa8d4 !important;
+            box-shadow: 0 0 20px rgba(100, 180, 220, 0.5) !important;
+            background: rgba(15, 30, 50, 0.85) !important;
+            animation: pulse-playing 1.8s ease-in-out infinite;
+        }
+        @keyframes pulse-playing {
+            0%,
+            100% {
+                box-shadow: 0 0 18px rgba(100, 180, 220, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 32px rgba(130, 200, 240, 0.7);
+            }
+        }
+        .surah-number {
+            font-size: 0.75rem;
+            color: var(--gold);
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+        .surah-name {
+            font-family: 'Amiri', serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* ✅ زر العودة */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1.5px solid var(--card-border);
+            color: var(--gold-light);
+            padding: 10px 22px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Reem Kufi', sans-serif;
+            font-size: 1rem;
+            transition: var(--transition);
+            margin-bottom: 16px;
+            backdrop-filter: blur(8px);
+        }
+        .back-btn:hover {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(180, 140, 60, 0.3);
+            background: rgba(30, 25, 55, 0.8);
+        }
+        .back-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--gold-light);
+        }
+        .selected-reader-info {
+            font-family: 'Amiri', serif;
+            font-size: 1.3rem;
+            color: var(--gold-light);
+            text-align: center;
+            margin: 8px 0 16px;
+            font-weight: 700;
+        }
+
+        /* ✅ مشغل الصوت */
+        .audio-player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--player-bg);
+            border-top: 2px solid var(--card-border);
+            padding: 14px 20px;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+        .audio-player.hidden {
+            transform: translateY(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .audio-player .player-info {
+            font-family: 'Amiri', serif;
+            color: var(--text);
+            font-size: 1rem;
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .audio-player .player-info .reciter-name {
+            font-weight: 700;
+            color: var(--gold-light);
+        }
+        .audio-player audio {
+            flex: 2;
+            min-width: 220px;
+            max-width: 500px;
+            height: 38px;
+            border-radius: 20px;
+            filter: sepia(0.3) hue-rotate(-10deg);
+        }
+        .audio-player .close-player {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--text-light);
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .audio-player .close-player:hover {
+            border-color: #e88;
+            color: #e88;
+            box-shadow: 0 0 12px rgba(255, 100, 100, 0.3);
+        }
+
+        /* ✅ رسالة تحميل */
+        .loading-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 25, 50, 0.9);
+            border: 1px solid var(--gold);
+            color: var(--gold-light);
+            padding: 12px 28px;
+            border-radius: 50px;
+            z-index: 200;
+            font-family: 'Amiri', serif;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            animation: toastIn 0.4s ease, toastOut 0.4s ease 2.5s forwards;
+            pointer-events: none;
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+        }
+
+        /* ✅ التجاوب */
+        @media (max-width: 768px) {
+            .site-title {
+                font-size: 2.2rem;
+            }
+            .bismillah {
+                font-size: 1.6rem;
+            }
+            .readers-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+            }
+            .reader-card {
+                padding: 14px 8px;
+            }
+            .reader-card .avatar {
+                width: 44px;
+                height: 44px;
+            }
+            .reader-card .avatar svg {
+                width: 24px;
+                height: 24px;
+            }
+            .reader-card .reader-name {
+                font-size: 0.85rem;
+            }
+            .surahs-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 7px;
+            }
+            .surah-item {
+                padding: 10px 6px;
+            }
+            .surah-name {
+                font-size: 0.9rem;
+            }
+            .audio-player {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            .audio-player audio {
+                max-width: 100%;
+                height: 32px;
+            }
+        }
+        @media (max-width: 400px) {
+            .readers-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .surahs-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .site-title {
+                font-size: 1.7rem;
+            }
+        }
+
+        /* شريط تمرير مخصص */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(180, 150, 100, 0.4);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(200, 170, 110, 0.7);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ⭐ طبقة النجوم -->
+    <div class="stars-container" id="starsContainer"></div>
+
+    <!-- 🌌 غبار كوني -->
+    <div class="nebula n1"></div>
+    <div class="nebula n2"></div>
+    <div class="nebula n3"></div>
+
+    <!-- 📦 الحاوية الرئيسية -->
+    <div class="main-container">
+        <!-- الهيدر -->
+        <header class="header">
+            <!-- أيقونة المصحف SVG -->
+            <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="coverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#5c3a10"/>
+                        <stop offset="50%" stop-color="#8b5e24"/>
+                        <stop offset="100%" stop-color="#3d2206"/>
+                    </linearGradient>
+                    <linearGradient id="pageGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#fdf5e0"/>
+                        <stop offset="100%" stop-color="#e8d5a3"/>
+                    </linearGradient>
+                    <filter id="glow">
+                        <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                <!-- الغلاف الخلفي -->
+                <rect x="18" y="10" width="28" height="78" rx="4" fill="url(#coverGrad)" stroke="#d4a843" stroke-width="2"/>
+                <!-- الصفحات -->
+                <rect x="44" y="12" width="20" height="74" rx="2" fill="url(#pageGrad)" opacity="0.9"/>
+                <line x1="48" y1="22" x2="60" y2="22" stroke="#c5b070" stroke-width="1.5" opacity="0.6"/>
+                <line x1="48" y1="30" x2="60" y2="30" stroke="#c5b070" stroke-width="1.5" opacity="0.6"/>
+                <line x1="48" y1="38" x2="60" y2="38" stroke="#c5b070" stroke-width="1.5" opacity="0.6"/>
+                <line x1="48" y1="46" x2="60" y2="46" stroke="#c5b070" stroke-width="1.5" opacity="0.6"/>
+                <line x1="48" y1="54" x2="60" y2="54" stroke="#c5b070" stroke-width="1.5" opacity="0.6"/>
+                <line x1="48" y1="62" x2="60" y2="62" stroke="#c5b070" stroke-width="1.5" opacity="0.6"/>
+                <line x1="48" y1="70" x2="56" y2="70" stroke="#c5b070" stroke-width="1.5" opacity="0.6"/>
+                <!-- الغلاف الأمامي -->
+                <rect x="62" y="8" width="28" height="80" rx="5" fill="url(#coverGrad)" stroke="#d4a843" stroke-width="2.5" filter="url(#glow)"/>
+                <!-- زخرفة على الغلاف -->
+                <circle cx="76" cy="35" r="7" fill="none" stroke="#f0d78c" stroke-width="1.5" opacity="0.7"/>
+                <text x="76" y="39" text-anchor="middle" font-size="9" fill="#f0d78c" font-family="serif" opacity="0.8">ﷲ</text>
+                <line x1="68" y1="52" x2="84" y2="52" stroke="#f0d78c" stroke-width="1" opacity="0.5"/>
+                <line x1="70" y1="58" x2="82" y2="58" stroke="#f0d78c" stroke-width="1" opacity="0.4"/>
+                <line x1="72" y1="64" x2="80" y2="64" stroke="#f0d78c" stroke-width="1" opacity="0.3"/>
+            </svg>
+            <h1 class="site-title">المصحف</h1>
+            <p class="site-subtitle">مكتبة القرآن الكريم | ١٠٦ قارئ | جميع السور</p>
+            <p class="bismillah">﷽</p>
+        </header>
+
+        <!-- شريط البحث عن قارئ -->
+        <div class="search-wrapper">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="ابحث عن قارئ...">
+                <span class="search-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                </span>
+            </div>
+        </div>
+
+        <!-- قسم القراء -->
+        <h2 class="section-title">
+            <span class="icon">🎙️</span> اختر القارئ <span class="icon">🎙️</span>
+        </h2>
+        <div class="readers-grid" id="readersGrid"></div>
+
+        <!-- قسم السور (يظهر بعد اختيار قارئ) -->
+        <div class="surahs-container" id="surahsContainer">
+            <button class="back-btn" id="backBtn" title="العودة لقائمة القراء">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                العودة للقراء
+            </button>
+            <p class="selected-reader-info" id="selectedReaderInfo"></p>
+            <div class="surahs-grid" id="surahsGrid"></div>
+        </div>
+    </div>
+
+    <!-- 🎵 مشغل الصوت -->
+    <div class="audio-player hidden" id="audioPlayer">
+        <span class="player-info" id="playerInfo">
+            <span class="reciter-name"></span> — <span class="surah-name-display"></span>
+        </span>
+        <audio id="audioElement" controls preload="none"></audio>
+        <button class="close-player" id="closePlayer" title="إغلاق المشغل">✕</button>
+    </div>
+
+    <script>
+        (function() {
+            // ==================== بيانات القراء والسور ====================
+            const SURAHS = [
+                'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام', 'الأعراف', 'الأنفال', 'التوبة', 'يونس',
+                'هود', 'يوسف', 'الرعد', 'إبراهيم', 'الحجر', 'النحل', 'الإسراء', 'الكهف', 'مريم', 'طه',
+                'الأنبياء', 'الحج', 'المؤمنون', 'النور', 'الفرقان', 'الشعراء', 'النمل', 'القصص', 'العنكبوت', 'الروم',
+                'لقمان', 'السجدة', 'الأحزاب', 'سبأ', 'فاطر', 'يس', 'الصافات', 'ص', 'الزمر', 'غافر',
+                'فصلت', 'الشورى', 'الزخرف', 'الدخان', 'الجاثية', 'الأحقاف', 'محمد', 'الفتح', 'الحجرات', 'ق',
+                'الذاريات', 'الطور', 'النجم', 'القمر', 'الرحمن', 'الواقعة', 'الحديد', 'المجادلة', 'الحشر', 'الممتحنة',
+                'الصف', 'الجمعة', 'المنافقون', 'التغابن', 'الطلاق', 'التحريم', 'الملك', 'القلم', 'الحاقة', 'المعارج',
+                'نوح', 'الجن', 'المزمل', 'المدثر', 'القيامة', 'الإنسان', 'المرسلات', 'النبأ', 'النازعات', 'عبس',
+                'التكوير', 'الانفطار', 'المطففين', 'الانشقاق', 'البروج', 'الطارق', 'الأعلى', 'الغاشية', 'الفجر', 'البلد',
+                'الشمس', 'الليل', 'الضحى', 'الشرح', 'التين', 'العلق', 'القدر', 'البينة', 'الزلزلة', 'العاديات',
+                'القارعة', 'التكاثر', 'العصر', 'الهمزة', 'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون', 'النصر',
+                'المسد', 'الإخلاص', 'الفلق', 'الناس'
+            ];
+
+            const READERS_RAW = [
+                { name: 'إبراهيم الأخضر', server: 'https://server6.mp3quran.net/akdr/',
+                surahCount: 114 },
+                { name: 'إبراهيم الجبرين', server: 'https://server6.mp3quran.net/jbreen/',
+                surahCount: 107 },
+                { name: 'إبراهيم الجرمي', server: 'https://server11.mp3quran.net/jormy/',
+                surahCount: 114 },
+                { name: 'إبراهيم الدوسري', server: 'https://server10.mp3quran.net/ibrahim_dosri/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'إبراهيم السعدان', server: 'https://server10.mp3quran.net/IbrahemSadan/',
+                surahCount: 50 },
+                { name: 'إبراهيم الشهري',
+                    server: 'https://server16.mp3quran.net/Ibrahim-Al-Shahri/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 113 },
+                { name: 'إدريس أبكر', server: 'https://server6.mp3quran.net/abkr/', surahCount: 114 },
+                { name: 'أحمد الحذيفي', server: 'https://server8.mp3quran.net/ahmad_huth/',
+                surahCount: 110 },
+                { name: 'أحمد الطرابلسي', server: 'https://server10.mp3quran.net/trabulsi/',
+                surahCount: 114 },
+                { name: 'أحمد طالب بن حميد', server: 'https://server16.mp3quran.net/a_binhameed/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 107 },
+                { name: 'أحمد عامر', server: 'https://server10.mp3quran.net/Aamer/', surahCount: 114 },
+                { name: 'أخيل عبدالحي روا', server: 'https://server12.mp3quran.net/malaysia/akil/',
+                surahCount: 4 },
+                { name: 'أستاذ زامري', server: 'https://server12.mp3quran.net/malaysia/zamri/',
+                surahCount: 7 },
+                { name: 'أكرم العلاقمي', server: 'https://server9.mp3quran.net/akrm/', surahCount: 114 },
+                { name: 'الحسيني العزازي', server: 'https://server8.mp3quran.net/3zazi/',
+                surahCount: 57 },
+                { name: 'الدوكالي محمد العالم', server: 'https://server7.mp3quran.net/dokali/',
+                    surahCount: 114 },
+                { name: 'الزين محمد أحمد', server: 'https://server9.mp3quran.net/alzain/',
+                surahCount: 114 },
+                { name: 'العشري عمران', server: 'https://server9.mp3quran.net/omran/', surahCount: 113 },
+                { name: 'العيون الكوشي', server: 'https://server11.mp3quran.net/koshi/',
+                surahCount: 114 },
+                { name: 'الفاتح محمد الزبير', server: 'https://server6.mp3quran.net/fateh/',
+                    surahCount: 114 },
+                { name: 'القارئ ياسين', server: 'https://server11.mp3quran.net/qari/',
+                surahCount: 114 },
+                { name: 'الوليد الشمسان', server: 'https://server14.mp3quran.net/shamsan/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 71 },
+                { name: 'بندر بليله', server: 'https://server6.mp3quran.net/balilah/',
+                surahCount: 114 },
+                { name: 'توفيق الصايغ', server: 'https://server6.mp3quran.net/twfeeq/',
+                surahCount: 114 },
+                { name: 'جمال الدين الزيلعي', server: 'https://server11.mp3quran.net/zilaie/',
+                    surahCount: 8 },
+                { name: 'جمال شاكر عبدالله', server: 'https://server6.mp3quran.net/jamal/',
+                    surahCount: 114 },
+                { name: 'جمعان العصيمي', server: 'https://server6.mp3quran.net/jaman/',
+                surahCount: 114 },
+                { name: 'جنيد آدم عبدالله', server: 'https://server16.mp3quran.net/J-Abdullah/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'حاتم فريد الواعر', server: 'https://server11.mp3quran.net/hatem/',
+                    surahCount: 114 },
+                { name: 'حسن الدغريري', server: 'https://server16.mp3quran.net/H-Aldaghriri/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'حسين آل الشيخ', server: 'https://server11.mp3quran.net/alshaik/',
+                surahCount: 59 },
+                { name: 'حمد الدغريري', server: 'https://server6.mp3quran.net/hamad/', surahCount: 88 },
+                { name: 'خالد الجليل', server: 'https://server10.mp3quran.net/jleel/',
+                surahCount: 114 },
+                { name: 'خالد الزيادي', server: 'https://server16.mp3quran.net/K-Alzadi/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'خالد الشريمي', server: 'https://server12.mp3quran.net/shoraimy/',
+                surahCount: 73 },
+                { name: 'خالد القحطاني', server: 'https://server10.mp3quran.net/qht/',
+                surahCount: 114 },
+                { name: 'خالد المهنا', server: 'https://server11.mp3quran.net/mohna/',
+                surahCount: 114 },
+                { name: 'رضية عبدالرحمن', server: 'https://server12.mp3quran.net/malaysia/rziah/',
+                    surahCount: 4 },
+                { name: 'رقية سولونق', server: 'https://server12.mp3quran.net/malaysia/rogiah/',
+                    surahCount: 1 },
+                { name: 'سابينة مامات', server: 'https://server12.mp3quran.net/malaysia/mamat/',
+                    surahCount: 4 },
+                { name: 'سعود الشريم', server: 'https://server7.mp3quran.net/shuraym/',
+                surahCount: 114 },
+                { name: 'سيدين عبدالرحمن', server: 'https://server12.mp3quran.net/malaysia/sideen/',
+                    surahCount: 4 },
+                { name: 'طارق عبدالغني دعوب', server: 'https://server10.mp3quran.net/tareq/',
+                    surahCount: 114 },
+                { name: 'عادل الكلباني', server: 'https://server8.mp3quran.net/a_klb/',
+                surahCount: 114 },
+                { name: 'عبدالإله بن عون', server: 'https://server16.mp3quran.net/a_binaoun/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'عبدالبديع غيلان', server: 'https://server16.mp3quran.net/A-Ghailan/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'عبدالرحمن السديس', server: 'https://server7.mp3quran.net/sudais/',
+                    surahCount: 114 },
+                { name: 'عبدالرحمن السويّد', server: 'https://server16.mp3quran.net/a_swaiyd/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 107 },
+                { name: 'عبدالرحمن بن عبدالرزاق البدر',
+                    server: 'https://server16.mp3quran.net/A-AlBadr/Rewayat-Hafs-A-n-Assem/', surahCount: 114 },
+                { name: 'عبدالغني عبدالله', server: 'https://server12.mp3quran.net/malaysia/abdulgani/',
+                    surahCount: 13 },
+                { name: 'عبدالله الكندري', server: 'https://server10.mp3quran.net/Abdullahk/',
+                    surahCount: 114 },
+                { name: 'عبدالله القرافي', server: 'https://server16.mp3quran.net/a_alqrafi/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'عبدالله فهمي', server: 'https://server12.mp3quran.net/malaysia/fhmi/',
+                    surahCount: 4 },
+                { name: 'عبد المجيب بنكيران',
+                    server: 'https://server16.mp3quran.net/A-Benkirane/Rewayat-Warsh-A-n-Nafi/', surahCount: 114 },
+                { name: 'عثمان الأنصاري', server: 'https://server11.mp3quran.net/Othmn/',
+                surahCount: 76 },
+                { name: 'علي الحذيفي', server: 'https://server7.mp3quran.net/huthify/',
+                surahCount: 114 },
+                { name: 'عليجان قوري حمدان', server: 'https://server16.mp3quran.net/Alijon/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'فارس عباد', server: 'https://server6.mp3quran.net/faris/', surahCount: 114 },
+                { name: 'ماجد الزامل', server: 'https://server9.mp3quran.net/zaml/', surahCount: 114 },
+                { name: 'ماجد العنزي', server: 'https://server8.mp3quran.net/majd_onazi/',
+                surahCount: 113 },
+                { name: 'ماهر المعيقلي', server: 'https://server12.mp3quran.net/maher/Almusshaf-Al-Mojawwad/',
+                    surahCount: 114 },
+                { name: 'ماهر شخاشيرو', server: 'https://server10.mp3quran.net/shaksh/',
+                    surahCount: 114 },
+                { name: 'محمد الأيراوي', server: 'https://server6.mp3quran.net/earawi/',
+                surahCount: 111 },
+                { name: 'محمد البراك', server: 'https://server13.mp3quran.net/braak/', surahCount: 63 },
+                { name: 'محمد الحافظ', server: 'https://server12.mp3quran.net/malaysia/hafz/',
+                    surahCount: 3 },
+                { name: 'محمد الزبيدي', server: 'https://server16.mp3quran.net/M-AlZubaidi/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'محمد الطبلاوي', server: 'https://server12.mp3quran.net/tblawi/Al-Mojawwad/',
+                    surahCount: 114 },
+                { name: 'محمد الفقيه', server: 'https://server16.mp3quran.net/M_Alfaqih/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'محمد اللحيدان', server: 'https://server8.mp3quran.net/lhdan/',
+                surahCount: 114 },
+                { name: 'محمد المحيسني', server: 'https://server11.mp3quran.net/mhsny/',
+                surahCount: 114 },
+                { name: 'محمد المنشد', server: 'https://server10.mp3quran.net/monshed/',
+                surahCount: 110 },
+                { name: 'محمد أيوب', server: 'https://server16.mp3quran.net/ayyoub2/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'محمد برهجي', server: 'https://server16.mp3quran.net/M_Burhaji/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'محمد جبريل', server: 'https://server8.mp3quran.net/jbrl/', surahCount: 114 },
+                { name: 'محمد حفص علي', server: 'https://server12.mp3quran.net/malaysia/hfs/',
+                    surahCount: 5 },
+                { name: 'محمد خير النور', server: 'https://server12.mp3quran.net/malaysia/nor/',
+                    surahCount: 4 },
+                { name: 'محمد رشاد الشريف', server: 'https://server10.mp3quran.net/rashad/',
+                    surahCount: 114 },
+                { name: 'محمد سايد', server: 'https://server16.mp3quran.net/m_sayed/Rewayat-Warsh-A-n-Nafi/',
+                    surahCount: 114 },
+                { name: 'محمد صالح عالم شاه', server: 'https://server12.mp3quran.net/shah/',
+                    surahCount: 114 },
+                { name: 'محمد صديق المنشاوي', server: 'https://server10.mp3quran.net/minsh/Almusshaf-Al-Mo-lim/',
+                    surahCount: 114 },
+                { name: 'محمد عبدالحكيم سعيد العبدالله',
+                    server: 'https://server9.mp3quran.net/abdullah/Rewayat-AlDorai-A-n-Al-Kisa-ai/', surahCount: 114 },
+                { name: 'محمد عبدالكريم',
+                    server: 'https://server12.mp3quran.net/m_krm/Rewayat-Warsh-A-n-Nafi-Men-Tariq-Abi-Baker-Alasbahani/',
+                    surahCount: 114 },
+                { name: 'محمد عثمان خان', server: 'https://server6.mp3quran.net/khan/', surahCount: 114 },
+                { name: 'محمود الرفاعي', server: 'https://server11.mp3quran.net/mrifai/',
+                surahCount: 114 },
+                { name: 'محمود الشيمي', server: 'https://server10.mp3quran.net/sheimy/',
+                surahCount: 114 },
+                { name: 'محمود خليل الحصري', server: 'https://server13.mp3quran.net/husr/Rewayat-Qalon-A-n-Nafi/',
+                    surahCount: 114 },
+                { name: 'محمود علي البنا', server: 'https://server8.mp3quran.net/bna/Almusshaf-Al-Mojawwad/',
+                    surahCount: 114 },
+                { name: 'معمر الأندونيسي', server: 'https://server6.mp3quran.net/muamr/',
+                surahCount: 8 },
+                { name: 'معيض الحارثي', server: 'https://server8.mp3quran.net/harthi/',
+                surahCount: 114 },
+                { name: 'مشاري العفاسي', server: 'https://server8.mp3quran.net/afasy/',
+                surahCount: 114 },
+                { name: 'مصطفى إسماعيل', server: 'https://server8.mp3quran.net/mustafa/Almusshaf-Al-Mojawwad/',
+                    surahCount: 114 },
+                { name: 'مصطفى اللاهوني', server: 'https://server6.mp3quran.net/lahoni/',
+                    surahCount: 114 },
+                { name: 'مصطفى رعد العزاوي', server: 'https://server8.mp3quran.net/ra3ad/',
+                    surahCount: 114 },
+                { name: 'مفتاح السلطني',
+                    server: 'https://server14.mp3quran.net/muftah_sultany/Rewayat_Ibn-Thakwan-A-n-Ibn-Amer/',
+                    surahCount: 114 },
+                { name: 'موسى بلال', server: 'https://server11.mp3quran.net/bilal/', surahCount: 114 },
+                { name: 'ناصر العبيد', server: 'https://server11.mp3quran.net/obaid/', surahCount: 67 },
+                { name: 'نورين محمد صديق', server: 'https://server16.mp3quran.net/nourin_siddig/Rewayat-Aldori-A-n-Abi-Amr/',
+                    surahCount: 114 },
+                { name: 'واصل المذن', server: 'https://server11.mp3quran.net/wasel/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 9 },
+                { name: 'وديع اليمني', server: 'https://server6.mp3quran.net/wdee3/', surahCount: 114 },
+                { name: 'وشيار حيدر اربيلي', server: 'https://server11.mp3quran.net/wishear/',
+                    surahCount: 2 },
+                { name: 'ياسر الدوسري', server: 'https://server11.mp3quran.net/yasser/',
+                surahCount: 114 },
+                { name: 'ياسر سلامة', server: 'https://server12.mp3quran.net/salamah/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 114 },
+                { name: 'يوسف الدغوش', server: 'https://server7.mp3quran.net/dgsh/', surahCount: 26 },
+                { name: 'يوسف العيدروس', server: 'https://server16.mp3quran.net/Y_ALaidroos/Rewayat-Hafs-A-n-Assem/',
+                    surahCount: 113 },
+                { name: 'يوسف بن نوح أحمد', server: 'https://server8.mp3quran.net/noah/',
+                surahCount: 114 },
+            ];
+
+            // إزالة التكرار والترتيب الأبجدي
+            const seenNames = new Set();
+            const READERS = READERS_RAW
+                .filter(r => { if (seenNames.has(r.name)) return false;
+                    seenNames.add(r.name); return true; })
+                .sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+
+            // ==================== عناصر DOM ====================
+            const readersGrid = document.getElementById('readersGrid');
+            const surahsContainer = document.getElementById('surahsContainer');
+            const surahsGrid = document.getElementById('surahsGrid');
+            const selectedReaderInfo = document.getElementById('selectedReaderInfo');
+            const backBtn = document.getElementById('backBtn');
+            const searchInput = document.getElementById('searchInput');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const audioElement = document.getElementById('audioElement');
+            const playerInfo = document.getElementById('playerInfo');
+            const closePlayer = document.getElementById('closePlayer');
+            const starsContainer = document.getElementById('starsContainer');
+
+            let selectedReader = null;
+            let currentPlayingSurahNum = null;
+
+            // ==================== توليد النجوم ====================
+            function createStars() {
+                const count = 180;
+                const fragment = document.createDocumentFragment();
+                for (let i = 0; i < count; i++) {
+                    const star = document.createElement('div');
+                    star.classList.add('star');
+                    const size = Math.random() * 3.5 + 0.8;
+                    star.style.width = size + 'px';
+                    star.style.height = size + 'px';
+                    star.style.left = Math.random() * 100 + '%';
+                    star.style.top = Math.random() * 100 + '%';
+                    star.style.setProperty('--dur', (Math.random() * 4 + 2) + 's');
+                    star.style.setProperty('--delay', (Math.random() * 5) + 's');
+                    if (size > 2.5) star.classList.add('big');
+                    fragment.appendChild(star);
+                }
+                starsContainer.appendChild(fragment);
+            }
+            createStars();
+
+            // ==================== عرض توست ====================
+            function showToast(msg) {
+                const toast = document.createElement('div');
+                toast.className = 'loading-toast';
+                toast.textContent = msg;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            // ==================== بناء رابط MP3 ====================
+            function getMp3Url(server, surahNum) {
+                return server + String(surahNum).padStart(3, '0') + '.mp3';
+            }
+
+            // ==================== عرض القراء ====================
+            function renderReaders(filterText = '') {
+                readersGrid.innerHTML = '';
+                const filtered = READERS.filter(r =>
+                    r.name.includes(filterText) || r.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .includes(filterText)
+                );
+                if (filtered.length === 0) {
+                    readersGrid.innerHTML =
+                        '<p style="text-align:center;color:var(--text-light);grid-column:1/-1;padding:30px;">لم يتم العثور على قارئ مطابق.</p>';
+                    return;
+                }
+                filtered.forEach((reader, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'reader-card';
+                    if (selectedReader && selectedReader.name === reader.name) {
+                        card.classList.add('selected');
+                    }
+                    card.innerHTML = `
+                        <div class="avatar">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 14c-3.3 0-6 2.7-6 6v1h12v-1c0-3.3-2.7-6-6-6zm0-2c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4z"/>
+                                <circle cx="12" cy="6" r="1.5" fill="#f0d78c" opacity="0.8"/>
+                            </svg>
+                        </div>
+                        <div class="reader-name">${reader.name}</div>
+                        <div class="surah-count">${reader.surahCount} سورة</div>
+                    `;
+                    card.addEventListener('click', () => selectReader(reader));
+                    readersGrid.appendChild(card);
+                });
+            }
+
+            // ==================== اختيار قارئ ====================
+            function selectReader(reader) {
+                selectedReader = reader;
+                currentPlayingSurahNum = null;
+                // تحديث حالة البطاقات
+                document.querySelectorAll('.reader-card').forEach(c => c.classList.remove('selected'));
+                const cards = document.querySelectorAll('.reader-card');
+                const idx = READERS.findIndex(r => r.name === reader.name);
+                if (idx >= 0 && cards[idx]) cards[idx].classList.add('selected');
+                // عرض السور
+                renderSurahs(reader);
+                surahsContainer.classList.add('active');
+                selectedReaderInfo.textContent = `🎙️ ${reader.name} — ${reader.surahCount} سورة متاحة`;
+                // تمرير للأسفل
+                surahsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // ==================== عرض السور ====================
+            function renderSurahs(reader) {
+                surahsGrid.innerHTML = '';
+                const count = Math.min(reader.surahCount, 114);
+                for (let i = 1; i <= count; i++) {
+                    const surahName = SURAHS[i - 1];
+                    const item = document.createElement('div');
+                    item.className = 'surah-item';
+                    if (currentPlayingSurahNum === i && selectedReader && selectedReader.name === reader.name) {
+                        item.classList.add('playing');
+                    }
+                    item.innerHTML = `
+                        <div class="surah-number">${i}</div>
+                        <div class="surah-name">${surahName}</div>
+                    `;
+                    item.addEventListener('click', () => playSurah(reader, i, surahName, item));
+                    surahsGrid.appendChild(item);
+                }
+            }
+
+            // ==================== تشغيل السورة ====================
+            function playSurah(reader, surahNum, surahName, itemElement) {
+                const url = getMp3Url(reader.server, surahNum);
+                // تحديث حالة التشغيل
+                document.querySelectorAll('.surah-item').forEach(el => el.classList.remove('playing'));
+                if (itemElement) itemElement.classList.add('playing');
+                currentPlayingSurahNum = surahNum;
+                // تحديث المشغل
+                audioElement.src = url;
+                audioElement.load();
+                audioElement.play().catch(() => {
+                    // إذا فشل التشغيل المباشر، نجرب فتحه في نافذة جديدة أو نعرض رسالة
+                    showToast('⏳ جارٍ تحميل السورة... إذا لم يبدأ التشغيل تلقائياً، اضغط زر التشغيل.');
+                });
+                // إظهار المشغل
+                audioPlayer.classList.remove('hidden');
+                playerInfo.innerHTML = `<span class="reciter-name">${reader.name}</span> — <span class="surah-name-display">${surahName} (${surahNum})</span>`;
+                // حفظ آخر اختيار
+                selectedReader = reader;
+                document.querySelectorAll('.reader-card').forEach(c => c.classList.remove('selected'));
+                const cards = document.querySelectorAll('.reader-card');
+                const idx = READERS.findIndex(r => r.name === reader.name);
+                if (idx >= 0 && cards[idx]) cards[idx].classList.add('selected');
+                showToast(`🎵 ${reader.name} — سورة ${surahName}`);
+            }
+
+            // ==================== معالجة أخطاء الصوت ====================
+            audioElement.addEventListener('error', () => {
+                showToast('⚠️ تعذر تحميل الملف الصوتي. قد يكون الرابط غير متاح حالياً.');
+                document.querySelectorAll('.surah-item').forEach(el => el.classList.remove('playing'));
+                currentPlayingSurahNum = null;
+            });
+            audioElement.addEventListener('loadeddata', () => {
+                // تم التحميل بنجاح
+            });
+            audioElement.addEventListener('play', () => {
+                // بدأ التشغيل
+            });
+
+            // ==================== إغلاق المشغل ====================
+            closePlayer.addEventListener('click', () => {
+                audioElement.pause();
+                audioElement.src = '';
+                audioPlayer.classList.add('hidden');
+                document.querySelectorAll('.surah-item').forEach(el => el.classList.remove('playing'));
+                currentPlayingSurahNum = null;
+            });
+
+            // ==================== زر العودة ====================
+            backBtn.addEventListener('click', () => {
+                surahsContainer.classList.remove('active');
+                document.querySelectorAll('.reader-card').forEach(c => c.classList.remove('selected'));
+                selectedReader = null;
+                currentPlayingSurahNum = null;
+                readersGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+
+            // ==================== البحث ====================
+            searchInput.addEventListener('input', () => {
+                const val = searchInput.value.trim();
+                renderReaders(val);
+                if (val && surahsContainer.classList.contains('active')) {
+                    // إذا كان المستخدم يبحث، نبقيه في وضع القراء لكن نخفي السور مؤقتاً إذا كان قد اختار قارئاً
+                }
+                if (!val && selectedReader && surahsContainer.classList.contains('active')) {
+                    // إعادة عرض السور عند مسح البحث
+                }
+            });
+
+            // ==================== بدء التشغيل ====================
+            renderReaders();
+
+            // ==================== اختصارات لوحة المفاتيح ====================
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (!audioPlayer.classList.contains('hidden')) {
+                        closePlayer.click();
+                    }
+                }
+                if (e.key === ' ' && e.target.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    if (audioElement.src) {
+                        if (audioElement.paused) audioElement.play();
+                        else audioElement.pause();
+                    }
+                }
+            });
+
+            console.log('✅ موقع المصحف جاهز | ١٠٦ قارئ | جميع السور | ثيم نجوم');
+            console.log('🌟 اضغط على أي قارئ لاختياره، ثم اختر سورة لتشغيلها.');
+        })();
+    </script>
+</body>
+</html>

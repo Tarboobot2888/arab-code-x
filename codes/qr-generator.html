@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>استوديو QR</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0}
+:root{--a:#00c48c;--a2:#0a84ff;--bg:#080d14;--p:#101823;--p2:#16212f;--line:#ffffff17;--ink:#eaf1f8;--mut:#8a9bb0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:Tajawal,Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100dvh;line-height:1.6}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(50% 40% at 100% 0,#0a84ff33,transparent),radial-gradient(50% 40% at 0 100%,#00c48c26,transparent);pointer-events:none}
+.nav{position:sticky;top:0;z-index:5;background:#080d14cc;backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left))}
+.nav div{max-width:1180px;margin:auto;display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem}
+.nav svg{width:34px;height:34px}
+.wrap{position:relative;max-width:1180px;margin:auto;padding:22px max(16px,env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));display:grid;gap:18px}
+@media(min-width:960px){.wrap{grid-template-columns:1fr 420px}.wrap>.box{grid-column:1}.prev{grid-column:2;grid-row:1/4;position:sticky;top:84px;align-self:start}}
+.col{display:grid;gap:16px;min-width:0}
+.box{background:linear-gradient(180deg,var(--p2),var(--p));border:1px solid var(--line);border-radius:20px;padding:18px;min-width:0}
+h2{font-size:1.05rem;font-weight:800;margin-bottom:12px}
+.tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:6px;margin-bottom:14px}
+.tabs button{font:500 .95rem Tajawal,Tahoma,sans-serif;color:var(--mut);background:#0003;border:1px solid var(--line);border-radius:12px;padding:10px 4px;cursor:pointer;min-height:44px}
+.tabs button[aria-selected=true]{color:#04140f;background:linear-gradient(135deg,var(--a),#3ee6c9);border-color:transparent;font-weight:800}
+label{display:block;font-weight:500;margin:12px 0 6px;font-size:.9rem;color:var(--mut)}
+input[type=text],input[type=tel],input[type=email],textarea,select{width:100%;font:1rem Tajawal,Tahoma,sans-serif;color:var(--ink);background:#0006;border:1px solid var(--line);border-radius:12px;padding:11px 14px;min-height:46px}
+textarea{resize:vertical;min-height:100px}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--a);outline-offset:1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input[type=color]{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:3px;background:#0006;cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--a)}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opts button,.pre button,.file{font:500 .9rem Tajawal,Tahoma,sans-serif;color:var(--ink);background:#0004;border:1px solid var(--line);border-radius:12px;padding:8px 14px;cursor:pointer;min-height:42px;display:inline-flex;align-items:center;gap:8px}
+.opts button[aria-pressed=true]{border-color:var(--a);background:#00c48c22}
+.pre{display:flex;gap:8px;flex-wrap:wrap}
+.pre i{width:18px;height:18px;border-radius:50%;display:inline-block}
+.chk{display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer;color:var(--ink);font-size:.95rem}
+.chk input{width:20px;height:20px;accent-color:var(--a)}
+.out{text-align:center}
+.card{border-radius:18px;background:repeating-conic-gradient(#1c2836 0 25%,#141d29 0 50%) 0 0/18px 18px;padding:16px;display:flex;justify-content:center;border:1px solid var(--line)}
+canvas{width:100%;max-width:360px;height:auto;border-radius:10px;display:block;box-shadow:0 20px 50px -18px #000}
+.msg{color:#ff8a80;min-height:1.6em;margin-top:8px;font-size:.92rem}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.btn{border:0;border-radius:14px;font:800 1rem Tajawal,Tahoma,sans-serif;padding:14px;cursor:pointer;min-height:50px;color:#04140f;background:linear-gradient(135deg,var(--a),#3ee6c9)}
+.btn.g{color:var(--ink);background:#ffffff14;border:1px solid var(--line);font-weight:500}
+.hide{display:none!important}
+
+.cpb{display:flex;align-items:center;justify-content:center;width:100%;height:46px;border:1px solid var(--line);border-radius:12px;cursor:pointer;padding:0;min-height:0;font-family:inherit;font-weight:700;font-size:.9rem;box-shadow:inset 0 0 0 3px #0000002e;transition:transform .15s}
+.cpb:hover{transform:translateY(-1px)}
+.cpb.cmp{width:54px;height:54px;flex:none;border-radius:14px}
+.cpb.cmp .cpt{display:none}
+.cpt{direction:ltr;letter-spacing:.5px}
+.cpo{position:fixed;inset:0;z-index:100;background:#000b;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);--acc:var(--c,var(--a,#6d5efc))}
+.cpo[hidden]{display:none}
+.cpp{width:100%;max-width:380px;grid-template-columns:minmax(0,1fr);overflow-x:hidden;background:var(--p2);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));color:var(--ink);display:grid;gap:12px;max-height:calc(100vh - 12px);max-height:calc(100dvh - 12px);overflow-y:auto;overscroll-behavior:contain;animation:cpu .25s ease-out}
+@keyframes cpu{from{transform:translateY(40px);opacity:0}}
+@media(min-width:700px){.cpo{align-items:center}.cpp{border-radius:24px}}
+.cpp>*{min-width:0}
+.cph{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.cpp .cpx{width:40px;padding:0;min-height:40px;border-radius:12px}
+.cpsv{position:relative;height:clamp(120px,26vh,210px);height:clamp(120px,26dvh,210px);border-radius:16px;direction:ltr;touch-action:none;cursor:crosshair;background:linear-gradient(to top,#000,#0000),linear-gradient(to right,#fff,var(--hue,red))}
+.cphue{position:relative;height:24px;border-radius:99px;direction:ltr;touch-action:none;cursor:pointer;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.cpk{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #0008,0 3px 10px #0009;pointer-events:none}
+.cphue .cpk{top:50%}
+.cpr{display:flex;gap:10px}
+.cpv{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);flex:none}
+.cpi{flex:1;width:0;min-width:0;text-align:center;direction:ltr;font-family:inherit;font-weight:700;font-size:1.15rem;color:var(--ink);background:#0006;border:1px solid var(--line);border-radius:12px;padding:0 10px}
+.cpsw{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.cpp .cpsw button{min-height:0;height:34px;padding:0;border-radius:10px;border:2px solid var(--line)}
+@media(orientation:landscape) and (max-height:520px){.cpo{align-items:center}.cpp{max-width:660px;border-radius:20px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;column-gap:16px}.cpsv{grid-column:1;grid-row:1/4;height:auto;min-height:130px}.cphue{grid-column:1;grid-row:4}.cph{grid-column:2;grid-row:1}.cpr{grid-column:2;grid-row:2}.cpsw{grid-column:2;grid-row:3}.cpd{grid-column:2;grid-row:4}}
+.cpp .cpd{background:var(--acc);color:var(--on,#04140f);border:0;font-weight:800;min-height:48px;border-radius:14px;font-size:1rem}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:8px}
+.seg button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:500 .95rem Tajawal,Tahoma,sans-serif;color:var(--ink);background:#0004;border:1px solid var(--line);border-radius:14px;padding:10px 6px;cursor:pointer;min-height:58px;transition:border-color .15s,background .15s}
+.seg button b{font-weight:800}
+.seg button small{color:var(--mut);font-size:.78rem}
+.seg button[aria-pressed=true]{border-color:var(--a);background:linear-gradient(135deg,#00c48c30,#0a84ff26);box-shadow:inset 0 0 0 1px var(--a)}
+.seg button[aria-pressed=true] small{color:var(--ink)}
+</style>
+</head>
+<body>
+<header class="nav"><div>
+<svg viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#00c48c"/><path fill="#04140f" d="M6 6h8v8H6zM18 6h8v8h-8zM6 18h8v8H6zM18 18h4v4h-4zM24 24h2v2h-2zM22 18h4v2h-4z"/></svg>
+استوديو QR</div></header>
+<main class="wrap">
+ <section class="box">
+  <h2>1. اختار نوع المحتوى</h2>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div id="fields"></div>
+ </section>
+<aside class="prev"><div class="box out">
+ <div class="card"><canvas id="cv" width="1000" height="1000"></canvas></div>
+ <div class="msg" id="msg" role="status"></div>
+ <div class="btns"><button class="btn" id="dl">تحميل PNG</button><button class="btn g" id="cp">نسخ الصورة</button></div>
+</div></aside>
+ <section class="box">
+  <h2>2. شكل الكود</h2>
+  <label>ستايلات جاهزة</label>
+  <div class="pre" id="pre"></div>
+  <label>شكل النقاط</label>
+  <div class="opts" data-k="dot"><button data-v="sq">مربعة</button><button data-v="rd">مدوّرة</button><button data-v="dt">دوائر</button></div>
+  <label>شكل العيون</label>
+  <div class="opts" data-k="eye"><button data-v="sq">مربعة</button><button data-v="rd">مدوّرة</button><button data-v="ci">دائرية</button></div>
+  <div class="two"><div><label for="c1">اللون الأول</label><input type="hidden" class="cp" id="c1" value="#0a1f44"></div><div><label for="c2">اللون الثاني (تدرج)</label><input type="hidden" class="cp" id="c2" value="#0a84ff"></div></div>
+  <label class="chk"><input type="checkbox" id="gr" checked> استخدم تدرج بين اللونين</label>
+  <label for="bg">لون الخلفية</label><input type="hidden" class="cp" id="bg" value="#ffffff"><label>مستوى التصحيح <span style="opacity:.7;font-weight:400">(كل ما زاد، الكود يتحمل خدوش أكتر)</span></label><input type="hidden" id="ec" value="M"><div class="seg" data-for="ec"><button type="button" data-v="L"><b>بسيط</b><small>7%</small></button><button type="button" data-v="M"><b>متوسط</b><small>15%</small></button><button type="button" data-v="Q"><b>قوي</b><small>25%</small></button><button type="button" data-v="H"><b>أقوى</b><small>30%</small></button></div>
+ </section>
+ <section class="box">
+  <h2>3. لمسات إضافية</h2>
+  <label for="cap">نص تحت الكود (اختياري)</label><input type="text" id="cap" placeholder="امسح الكود">
+  <label>لوجو في المنتصف (اختياري)</label>
+  <label class="file" style="margin:0"><input type="file" id="logo" accept="image/*" class="hide"><span id="ln">اختار صورة</span></label>
+  <button class="file hide" id="lx" style="margin-inline-start:8px">إزالة</button>
+  <label for="sz">حجم الصورة: <span id="szv">1000</span> بكسل</label>
+  <input type="range" id="sz" min="400" max="2000" step="100" value="1000">
+ </section>
+
+</main>
+<script>
+(function(){
+const on=h=>{const[r,g,b]=[1,3,5].map(i=>parseInt(h.substr(i,2),16));return(r*299+g*587+b*114)/1000>150?'#111':'#fff'};
+function rgb2hsv(r,g,b){r/=255;g/=255;b/=255;const M=Math.max(r,g,b),m=Math.min(r,g,b),d=M-m;let h=0;if(d){h=M==r?((g-b)/d)%6:M==g?(b-r)/d+2:(r-g)/d+4;h*=60;if(h<0)h+=360}return[h,M?d/M:0,M]}
+function hsv2hex(h,s,v){const f=n=>{const k=(n+h/60)%6;return Math.round(255*(v-v*s*Math.max(0,Math.min(k,4-k,1)))).toString(16).padStart(2,'0')};return'#'+f(5)+f(3)+f(1)}
+const PRE=['#ff3d81','#ff5f6d','#ff9f1c','#ffc83d','#2de2c5','#00c48c','#0a84ff','#6d5efc','#9b5de5','#ffffff','#8a9bb0','#000000'];
+const ov=document.createElement('div');ov.className='cpo';ov.hidden=true;
+ov.innerHTML='<div class="cpp" role="dialog" aria-modal="true" aria-label="اختيار اللون"><div class="cph"><span>اختيار اللون</span><button type="button" class="cpx" aria-label="إغلاق">✕</button></div><div class="cpsv"><i class="cpk"></i></div><div class="cphue"><i class="cpk"></i></div><div class="cpr"><span class="cpv"></span><input class="cpi" maxlength="7" spellcheck="false" aria-label="كود اللون"></div><div class="cpsw"></div><button type="button" class="cpd">تمام</button></div>';
+document.body.appendChild(ov);
+const q=s=>ov.querySelector(s),sv=q('.cpsv'),hu=q('.cphue'),pv=q('.cpv'),ip=q('.cpi'),sw=q('.cpsw');
+let cur=null,btn=null,h=0,s=1,v=1;
+function paint(){const hex=hsv2hex(h,s,v);sv.style.setProperty('--hue',hsv2hex(h,1,1));sv.firstChild.style.left=s*100+'%';sv.firstChild.style.top=(1-v)*100+'%';hu.firstChild.style.left=h/360*100+'%';pv.style.background=hex;hu.firstChild.style.background=hsv2hex(h,1,1);if(document.activeElement!==ip)ip.value=hex.toUpperCase();return hex}
+function push(){const hex=paint();if(cur)cur.__push(hex)}
+function load(hex){const[r,g,b]=[1,3,5].map(i=>parseInt(hex.substr(i,2),16)),a=rgb2hsv(r,g,b);if(a[1]>0.02&&a[2]>0.02)h=a[0];s=a[1];v=a[2]}
+function drag(el,fn){el.addEventListener('pointerdown',e=>{el.setPointerCapture(e.pointerId);const mv=ev=>{const r=el.getBoundingClientRect();fn(Math.min(1,Math.max(0,(ev.clientX-r.left)/r.width)),Math.min(1,Math.max(0,(ev.clientY-r.top)/r.height)))};mv(e);el.onpointermove=mv;el.onpointerup=el.onpointercancel=()=>{el.onpointermove=null};e.preventDefault()})}
+drag(sv,(x,y)=>{s=x;v=1-y;push()});drag(hu,x=>{h=x*360;push()});
+ip.addEventListener('input',()=>{let t=ip.value.trim();if(t[0]!='#')t='#'+t;if(/^#[0-9a-f]{6}$/i.test(t)){load(t.toLowerCase());push()}});
+ip.addEventListener('blur',()=>paint());
+PRE.forEach(c=>{const b=document.createElement('button');b.type='button';b.style.background=c;b.setAttribute('aria-label',c);b.onclick=()=>{load(c);push()};sw.appendChild(b)});
+function close(){ov.hidden=true;if(btn)btn.focus();cur=null}
+q('.cpx').onclick=q('.cpd').onclick=close;
+ov.addEventListener('pointerdown',e=>{if(e.target===ov)close()});
+addEventListener('keydown',e=>{if(!ov.hidden&&e.key=='Escape')close()});
+function open(inp,b){cur=inp;btn=b;load(inp.value);ov.hidden=false;paint();q('.cpd').focus()}
+document.querySelectorAll('input.cp').forEach(inp=>{
+ let val=(inp.value||'#000000').toLowerCase();
+ const b=document.createElement('button');b.type='button';b.className='cpb'+(inp.dataset.compact!==undefined?' cmp':'');
+ const lab=document.querySelector('label[for="'+inp.id+'"]');b.setAttribute('aria-label',lab?lab.textContent.trim():'اختيار اللون');
+ b.innerHTML='<span class="cpt"></span>';inp.after(b);
+ const draw=()=>{b.style.background=val;b.style.color=on(val);b.firstChild.textContent=val.toUpperCase()};
+ Object.defineProperty(inp,'value',{get:()=>val,set:x=>{val=String(x).toLowerCase();draw()},configurable:true});
+ inp.__push=x=>{val=x;draw();inp.dispatchEvent(new Event('input',{bubbles:true}))};
+ b.onclick=()=>open(inp,b);draw();
+});
+})();
+</script>
+<script>
+const $=id=>document.getElementById(id);
+const T={
+text:{n:'نص / رابط',f:'<label for="v1">النص أو الرابط</label><textarea id="v1">https://example.com</textarea>',g:v=>v.v1},
+wifi:{n:'واي فاي',f:'<label for="v1">اسم الشبكة</label><input type="text" id="v1"><label for="v2">كلمة السر</label><input type="text" id="v2"><label>التشفير</label><input type="hidden" id="v3" value="WPA"><div class="seg" data-for="v3"><button type="button" data-v="WPA"><b>WPA / WPA2</b></button><button type="button" data-v="WEP"><b>WEP</b></button><button type="button" data-v="nopass"><b>بدون كلمة سر</b></button></div>',g:v=>{const e=s=>s.replace(/([\\;,:"])/g,'\\$1');return v.v1?`WIFI:T:${v.v3};S:${e(v.v1)};P:${v.v3=='nopass'?'':e(v.v2)};;`:''}},
+wa:{n:'واتساب',f:'<label for="v1">الرقم بالكود الدولي</label><input type="tel" id="v1" dir="ltr" placeholder="201001234567"><label for="v2">رسالة جاهزة (اختياري)</label><input type="text" id="v2">',g:v=>{const n=(v.v1||'').replace(/\D/g,'');return n?'https://wa.me/'+n+(v.v2?'?text='+encodeURIComponent(v.v2):''):''}},
+mail:{n:'إيميل',f:'<label for="v1">البريد</label><input type="email" id="v1" dir="ltr"><label for="v2">الموضوع</label><input type="text" id="v2"><label for="v3">النص</label><input type="text" id="v3">',g:v=>v.v1?`mailto:${v.v1}?subject=${encodeURIComponent(v.v2||'')}&body=${encodeURIComponent(v.v3||'')}`:''},
+tel:{n:'اتصال',f:'<label for="v1">رقم الهاتف</label><input type="tel" id="v1" dir="ltr" placeholder="+201001234567">',g:v=>v.v1?'tel:'+v.v1.replace(/\s/g,''):''},
+card:{n:'كارت شخصي',f:'<label for="v1">الاسم</label><input type="text" id="v1"><label for="v2">الهاتف</label><input type="tel" id="v2" dir="ltr"><label for="v3">البريد</label><input type="email" id="v3" dir="ltr"><label for="v4">الشركة</label><input type="text" id="v4"><label for="v5">الموقع</label><input type="text" id="v5" dir="ltr">',g:v=>v.v1?`BEGIN:VCARD\nVERSION:3.0\nFN:${v.v1}\nTEL:${v.v2||''}\nEMAIL:${v.v3||''}\nORG:${v.v4||''}\nURL:${v.v5||''}\nEND:VCARD`:''}
+};
+const P=[['أوقيانوس','#0a1f44','#0a84ff','#ffffff','rd','rd'],['غروب','#7a1fa2','#ff5f6d','#fff8f0','dt','ci'],['غابة','#053b2a','#00c48c','#f2fff9','rd','rd'],['كلاسيك','#000000','#000000','#ffffff','sq','sq'],['نيون','#f5f7ff','#3ee6c9','#0b1020','dt','rd']];
+const S={dot:'rd',eye:'rd'};let tab='text',logoImg=null;
+function vals(){const o={};for(let i=1;i<=5;i++){const e=$('v'+i);if(e)o['v'+i]=e.value}return o}
+function tabsUI(){const t=$('tabs');t.innerHTML='';for(const k in T){const b=document.createElement('button');b.textContent=T[k].n;b.setAttribute('role','tab');b.setAttribute('aria-selected',k==tab);b.onclick=()=>{tab=k;tabsUI();fieldsUI();draw()};t.appendChild(b)}}
+function bindSeg(root){root.querySelectorAll('.seg').forEach(g=>{const inp=$(g.dataset.for),bs=g.querySelectorAll('button'),sync=()=>bs.forEach(b=>b.setAttribute('aria-pressed',b.dataset.v==inp.value));bs.forEach(b=>b.onclick=()=>{inp.value=b.dataset.v;sync();inp.dispatchEvent(new Event('input',{bubbles:true}))});sync()})}
+function fieldsUI(){$('fields').innerHTML=T[tab].f;$('fields').querySelectorAll('input,textarea,select').forEach(e=>e.addEventListener('input',draw));bindSeg($('fields'))}
+function optsUI(){document.querySelectorAll('.opts').forEach(g=>g.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',S[g.dataset.k]==b.dataset.v);b.onclick=()=>{S[g.dataset.k]=b.dataset.v;optsUI();draw()}}))}
+P.forEach(p=>{const b=document.createElement('button');b.innerHTML=`<i style="background:linear-gradient(135deg,${p[1]},${p[2]})"></i>${p[0]}`;b.onclick=()=>{$('c1').value=p[1];$('c2').value=p[2];$('bg').value=p[3];S.dot=p[4];S.eye=p[5];$('gr').checked=p[1]!=p[2];optsUI();draw()};$('pre').appendChild(b)});
+function rr(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function shape(c,x,y,w,h,k){if(k=='sq')c.rect(x,y,w,h);else if(k=='ci'||k=='dt'){c.moveTo(x+w,y+h/2);c.arc(x+w/2,y+h/2,w/2,0,7)}else rr(c,x,y,w,h,w*.3)}
+function draw(){
+ const cv=$('cv'),c=cv.getContext('2d'),msg=$('msg'),s=+$('sz').value,txt=T[tab].g(vals()),cap=$('cap').value.trim(),bg=$('bg').value;
+ $('szv').textContent=s;msg.textContent='';
+ const ch=cap?Math.round(s*.13):0;cv.width=s;cv.height=s+ch;c.fillStyle=bg;c.fillRect(0,0,s,s+ch);
+ if(!txt){msg.textContent='املأ البيانات وهيظهر الكود هنا.';return}
+ if(typeof qrcode=='undefined'){msg.textContent='مكتبة QR ما اتحملتش. تأكد من الإنترنت وحدّث الصفحة.';return}
+ try{
+  qrcode.stringToBytes=qrcode.stringToBytesFuncs['UTF-8'];
+  const q=qrcode(0,logoImg?'H':$('ec').value);q.addData(txt);q.make();
+  const n=q.getModuleCount(),m=3,cell=s/(n+m*2),o=m*cell;
+  let f=$('c1').value;if($('gr').checked){f=c.createLinearGradient(0,0,s,s);f.addColorStop(0,$('c1').value);f.addColorStop(1,$('c2').value)}
+  c.fillStyle=f;c.beginPath();
+  const eye=(r,q2)=>(r<7&&q2<7)||(r<7&&q2>=n-7)||(r>=n-7&&q2<7);
+  const cx=n/2,lr=logoImg?n*.11:0;
+  for(let r=0;r<n;r++)for(let k=0;k<n;k++){if(eye(r,k)||!q.isDark(r,k))continue;if(logoImg&&Math.abs(r+.5-cx)<lr+1&&Math.abs(k+.5-cx)<lr+1)continue;
+   const g=S.dot=='dt'?.86:1,d=cell*(1-g)/2;shape(c,o+k*cell+d,o+r*cell+d,cell*g,cell*g,S.dot=='dt'?'dt':S.dot)}
+  [[0,0],[0,n-7],[n-7,0]].forEach(([r,k])=>{const x=o+k*cell,y=o+r*cell,E=S.eye=='ci'?'ci':S.eye;shape(c,x,y,7*cell,7*cell,E);shape(c,x+cell,y+cell,5*cell,5*cell,E);shape(c,x+2*cell,y+2*cell,3*cell,3*cell,E)});
+  c.fill('evenodd');
+  const h=$('cv').height;
+  if(logoImg){const L=s*.2,x=(s-L)/2;c.fillStyle=bg;c.beginPath();rr(c,x-L*.08,x-L*.08,L*1.16,L*1.16,L*.22);c.fill();c.save();c.beginPath();rr(c,x,x,L,L,L*.18);c.clip();const a=Math.max(L/logoImg.width,L/logoImg.height);c.drawImage(logoImg,x+(L-logoImg.width*a)/2,x+(L-logoImg.height*a)/2,logoImg.width*a,logoImg.height*a);c.restore()}
+  if(cap){c.fillStyle=$('c1').value;c.font=`800 ${Math.round(ch*.42)}px Tajawal,Tahoma,sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(cap,s/2,s+ch*.42,s*.9)}
+ }catch(e){msg.textContent='المحتوى طويل زيادة. قصّره أو قلل مستوى التصحيح.'}
+}
+$('logo').onchange=e=>{const f=e.target.files[0];if(!f)return;const i=new Image();i.onload=()=>{logoImg=i;$('ln').textContent=f.name.slice(0,22);$('lx').classList.remove('hide');draw()};i.src=URL.createObjectURL(f)};
+$('lx').onclick=()=>{logoImg=null;$('logo').value='';$('ln').textContent='اختار صورة';$('lx').classList.add('hide');draw()};
+['c1','c2','gr','bg','ec','sz','cap'].forEach(i=>$(i).addEventListener('input',draw));
+$('dl').onclick=()=>{const a=document.createElement('a');a.href=$('cv').toDataURL('image/png');a.download='qr-code.png';document.body.appendChild(a);a.click();a.remove()};
+$('cp').onclick=()=>{$('cv').toBlob(async b=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);$('msg').style.color='#3ee6c9';$('msg').textContent='تم نسخ الصورة'}catch(e){$('msg').style.color='#ff8a80';$('msg').textContent='المتصفح ما سمحش بالنسخ. استخدم زر التحميل.'}setTimeout(()=>{$('msg').style.color='';$('msg').textContent=''},2000)})};
+bindSeg(document);tabsUI();fieldsUI();optsUI();draw();window.addEventListener('load',draw);
+</script>
+</body>
+</html>

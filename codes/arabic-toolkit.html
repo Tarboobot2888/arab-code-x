@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>أدوات النص العربي</title>
+<style>
+:root{--bg:#f3f6f2;--panel:#fff;--ink:#0a1f26;--mut:#58707a;--line:#d3ddd9;--acc:#0a7a62;--gold:#a8820f;--out:#eaf1ec}
+@media(prefers-color-scheme:dark){:root{--bg:#06141b;--panel:#0b2229;--ink:#e8f1ef;--mut:#8ea9ad;--line:#1d3b42;--acc:#10c98a;--gold:#d4a937;--out:#071a21}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 "Segoe UI",Tahoma,"Noto Naskh Arabic","Geeza Pro",sans-serif}
+main{max-width:760px;margin:0 auto;padding:28px 16px 48px}
+h1{font-size:1.7rem;margin:0 0 4px;line-height:1.3}
+.sub{color:var(--mut);margin:0 0 22px}
+[role=tablist]{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+[role=tab]{font:inherit;background:none;border:0;color:var(--mut);padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+[role=tab][aria-selected=true]{color:var(--ink);border-bottom-color:var(--acc);font-weight:600}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+section{background:var(--panel);border:1px solid var(--line);border-top:0;padding:20px;border-radius:0 0 10px 10px}
+label{display:block;font-weight:600;margin:14px 0 6px}
+label:first-child{margin-top:0}
+input[type=text],input[type=date],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+textarea{min-height:130px;resize:vertical}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>div{flex:1;min-width:180px}
+.chk{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px}
+.chk label{display:flex;align-items:center;gap:6px;font-weight:400;margin:0}
+.out{margin-top:18px;background:var(--out);border-inline-start:4px solid var(--gold);border-radius:8px;padding:14px 16px;min-height:3.2em;font-size:1.25rem;line-height:1.8;word-break:break-word}
+.out.empty{color:var(--mut);font-size:1rem}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;color:var(--mut);font-size:.9rem;flex-wrap:wrap}
+button.cp{font:inherit;background:var(--acc);color:#fff;border:0;border-radius:8px;padding:7px 16px;cursor:pointer}
+@media(prefers-color-scheme:dark){button.cp{color:#06141b;font-weight:600}}
+.err{color:#c0392b}
+footer{margin-top:22px;text-align:center;color:var(--mut);font-size:.85rem}
+</style>
+</head>
+<body>
+<main>
+<h1>أدوات النص العربي</h1>
+<p class="sub">تفقيط الأرقام، تنظيف النص، التاريخ الهجري، وروابط عربية. كلها تعمل داخل المتصفح بدون إنترنت.</p>
+
+<div role="tablist" aria-label="الأدوات">
+<button role="tab" id="t0" aria-selected="true" aria-controls="p0">التفقيط</button>
+<button role="tab" id="t1" aria-selected="false" aria-controls="p1" tabindex="-1">تنظيف النص</button>
+<button role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">التاريخ الهجري</button>
+<button role="tab" id="t3" aria-selected="false" aria-controls="p3" tabindex="-1">رابط عربي</button>
+</div>
+
+<section id="p0" role="tabpanel" aria-labelledby="t0">
+<div class="row">
+<div><label for="num">المبلغ أو الرقم</label><input id="num" type="text" inputmode="decimal" value="1234.50" autocomplete="off"></div>
+<div><label for="cur">العملة</label><select id="cur">
+<option value="">بدون عملة</option><option value="EGP" selected>جنيه مصري</option><option value="SAR">ريال سعودي</option><option value="AED">درهم إماراتي</option><option value="USD">دولار أمريكي</option><option value="KWD">دينار كويتي</option><option value="QAR">ريال قطري</option></select></div>
+</div>
+<div class="chk"><label><input type="checkbox" id="only" checked> إضافة «فقط لا غير»</label><label><input type="checkbox" id="fem"> المعدود مؤنث (بدون عملة)</label></div>
+<div class="out" id="o0" aria-live="polite"></div>
+<div class="bar"><span id="m0"></span><button class="cp" data-c="o0">نسخ</button></div>
+</section>
+
+<section id="p1" role="tabpanel" aria-labelledby="t1" hidden>
+<label for="txt">النص</label>
+<textarea id="txt" placeholder="الصق نصك هنا">أَهْلًا بِكُمْ فِي مَدْرَسَةِ الْقَاهِرَةِ، رَقْم ١٢٣ ـــ مـــرحبـــا.</textarea>
+<div class="chk" id="opts">
+<label><input type="checkbox" data-k="tash" checked> حذف التشكيل</label>
+<label><input type="checkbox" data-k="tat" checked> حذف الكشيدة</label>
+<label><input type="checkbox" data-k="alef" checked> توحيد الألف</label>
+<label><input type="checkbox" data-k="yaa" checked> ى ← ي</label>
+<label><input type="checkbox" data-k="taa"> ة ← ه</label>
+<label><input type="checkbox" data-k="dig" checked> أرقام لاتينية</label>
+<label><input type="checkbox" data-k="ws" checked> تقليص المسافات</label>
+</div>
+<div class="out" id="o1"></div>
+<div class="bar"><span id="m1"></span><button class="cp" data-c="o1">نسخ</button></div>
+</section>
+
+<section id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+<div class="row">
+<div><label for="gd">التاريخ الميلادي</label><input id="gd" type="date"></div>
+<div><label for="cal">التقويم</label><select id="cal"><option value="islamic-umalqura">أم القرى</option><option value="islamic-civil">الحسابي (المدني)</option></select></div>
+</div>
+<div class="out" id="o2" aria-live="polite"></div>
+<div class="bar"><span>قد يختلف يومًا عن الإعلان الرسمي حسب رؤية الهلال.</span><button class="cp" data-c="o2">نسخ</button></div>
+</section>
+
+<section id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+<label for="sl">العنوان</label>
+<input id="sl" type="text" value="مرحباً بالعالم! Hello World 2026" autocomplete="off">
+<div class="out" id="o3" dir="ltr" style="text-align:right"></div>
+<div class="bar"><span>يحافظ على الحروف العربية ويحذف التشكيل والرموز.</span><button class="cp" data-c="o3">نسخ</button></div>
+</section>
+
+<footer>ARAB code × Khalid Hisham</footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var TASH=/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED]/g;
+function west(s){return s.replace(/[\u0660-\u0669]/g,function(d){return d.charCodeAt(0)-1632}).replace(/[\u06F0-\u06F9]/g,function(d){return d.charCodeAt(0)-1776})}
+
+/* ---- التفقيط ---- */
+var OM=['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة','عشرة','أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'];
+var OF=['','واحدة','اثنتان','ثلاث','أربع','خمس','ست','سبع','ثماني','تسع','عشر','إحدى عشرة','اثنتا عشرة','ثلاث عشرة','أربع عشرة','خمس عشرة','ست عشرة','سبع عشرة','ثماني عشرة','تسع عشرة'];
+var TN=['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
+var HU=['','مائة','مائتان','ثلاثمائة','أربعمائة','خمسمائة','ستمائة','سبعمائة','ثمانمائة','تسعمائة'];
+var SC=[0,['ألف','ألفان','آلاف','ألفًا'],['مليون','مليونان','ملايين','مليونًا'],['مليار','ملياران','مليارات','مليارًا'],['تريليون','تريليونان','تريليونات','تريليونًا']];
+var CU={
+EGP:{a:['جنيه','جنيهان','جنيهات','جنيهًا'],b:['قرش','قرشان','قروش','قرشًا'],u:100},
+SAR:{a:['ريال','ريالان','ريالات','ريالًا'],b:['هللة','هللتان','هللات','هللةً'],u:100,f:1},
+AED:{a:['درهم','درهمان','دراهم','درهمًا'],b:['فلس','فلسان','فلوس','فلسًا'],u:100},
+USD:{a:['دولار','دولاران','دولارات','دولارًا'],b:['سنت','سنتان','سنتات','سنتًا'],u:100},
+KWD:{a:['دينار','ديناران','دنانير','دينارًا'],b:['فلس','فلسان','فلوس','فلسًا'],u:1000},
+QAR:{a:['ريال','ريالان','ريالات','ريالًا'],b:['درهم','درهمان','دراهم','درهمًا'],u:100}};
+function b100(n,o){if(n<20)return o[n];var u=n%10;return u?o[u]+' و'+TN[(n-u)/10]:TN[n/10]}
+function b1000(n,o){var h=Math.floor(n/100),r=n%100,p=[];if(h)p.push(HU[h]);if(r)p.push(b100(r,o));return p.join(' و')}
+function words(n,f){
+ if(!n)return 'صفر';var o=f?OF:OM,g=[],p=[],i,v,s,w,l;
+ while(n>0){g.push(n%1000);n=Math.floor(n/1000)}
+ for(i=g.length-1;i>=0;i--){v=g[i];if(!v)continue;
+  if(!i){p.push(b1000(v,o));continue}
+  s=SC[i];if(v===1){p.push(s[0]);continue}if(v===2){p.push(s[1]);continue}
+  w=b1000(v,OM);l=v%100;
+  if(!l){if(v===200)w='مائتا';p.push(w+' '+s[0])}
+  else p.push(w+' '+(l<=10&&l>=3?s[2]:l>=11?s[3]:s[0]));}
+ return p.join(' و')}
+function counted(n,F,f){
+ if(n===1)return F[0]+' '+(f?'واحدة':'واحد');if(n===2)return F[1];
+ var l=n%100,w=words(n,f);if(n%1000===200)w=w.replace(/مائتان$/,'مائتا');
+ return w+' '+(l>=3&&l<=10?F[2]:l>=11?F[3]:F[0])}
+function tafqeet(raw,code,only,fem){
+ var s=west(raw).replace(/[,\u066C\s]/g,'').replace(/\u066B/g,'.');
+ if(!s)return{e:''};var x=Number(s);
+ if(!isFinite(x))return{e:'اكتب رقمًا صحيحًا، مثل 1250 أو 99.75'};
+ var neg=x<0,a=Math.abs(x);if(a>=1e15)return{e:'الرقم كبير جدًا. الحد الأقصى أقل من 10^15'};
+ var out,c=CU[code];
+ if(c){var d=Math.round(Math.log(c.u)/Math.LN10),q=a.toFixed(d).split('.'),M=+q[0],m=+(q[1]||0),p=[];
+  if(M>0||!m)p.push(counted(M,c.a,0));if(m>0)p.push(counted(m,c.b,c.f));
+  out=p.join(' و')+(only?' فقط لا غير':'');if(neg&&(M||m))out='سالب '+out;return{t:out}}
+ var t=String(a);if(/e/i.test(t))return{e:'صيغة الرقم غير مدعومة'};
+ var z=t.split('.');out=words(+z[0],fem);
+ if(z[1])out+=' فاصلة '+z[1].split('').map(function(k){return k==='0'?'صفر':OM[+k]}).join(' ');
+ if(neg&&a)out='سالب '+out;return{t:out}}
+
+/* ---- تنظيف النص ---- */
+function clean(t,o){
+ if(o.tash)t=t.replace(TASH,'');if(o.tat)t=t.replace(/\u0640/g,'');
+ if(o.alef)t=t.replace(/[\u0622\u0623\u0625\u0671]/g,'\u0627');
+ if(o.yaa)t=t.replace(/\u0649/g,'\u064A');if(o.taa)t=t.replace(/\u0629/g,'\u0647');
+ if(o.dig)t=west(t);
+ if(o.ws)t=t.replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g,'').replace(/[ \t]+/g,' ').replace(/ *\n */g,'\n').trim();
+ return t}
+function readMin(w){var m=Math.max(1,Math.ceil(w/180));return m===1?'دقيقة واحدة':m===2?'دقيقتان':m<=10?m+' دقائق':m+' دقيقة'}
+
+/* ---- الهجري ---- */
+var HM=['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
+var WD=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+function hijri(v,cal){
+ var p=v.split('-').map(Number);if(p.length<3||!p[0])return null;
+ var d=new Date(Date.UTC(p[0],p[1]-1,p[2],12));
+ var f=new Intl.DateTimeFormat('en-u-ca-'+cal+'-nu-latn',{year:'numeric',month:'numeric',day:'numeric',timeZone:'UTC'}).formatToParts(d),r={};
+ f.forEach(function(x){if(/^(year|month|day)$/.test(x.type))r[x.type]=parseInt(x.value,10)});
+ if(!r.year||!r.month)return null;
+ return WD[d.getUTCDay()]+' '+r.day+' '+HM[r.month-1]+' '+r.year+' هـ'}
+
+/* ---- Slug ---- */
+function slug(s){return west(s).replace(TASH,'').replace(/\u0640/g,'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-+|-+$/g,'')}
+
+/* ---- الواجهة ---- */
+function show(id,txt,err){var e=$(id);e.textContent=txt||'النتيجة ستظهر هنا';e.className='out'+(txt&&!err?'':' empty')+(err?' err':'')}
+function r0(){var r=tafqeet($('#num').value,$('#cur').value,$('#only').checked,$('#fem').checked);
+ show('#o0',r.t||r.e,!!r.e);$('#fem').disabled=!!$('#cur').value;$('#m0').textContent=''}
+function r1(){var o={};[].forEach.call(document.querySelectorAll('#opts input'),function(c){o[c.dataset.k]=c.checked});
+ var src=$('#txt').value,res=clean(src,o);show('#o1',res);
+ var w=(res.match(/[\p{L}\p{N}]+/gu)||[]).length;
+ $('#m1').textContent=w+' كلمة · '+res.length+' حرف · قراءة '+readMin(w)}
+function r2(){var h=null;try{h=hijri($('#gd').value,$('#cal').value)}catch(e){}
+ show('#o2',h||($('#gd').value?'التقويم الهجري غير مدعوم في هذا المتصفح':'اختر تاريخًا'),!h&&!!$('#gd').value)}
+function r3(){show('#o3',slug($('#sl').value))}
+
+var now=new Date();
+$('#gd').value=now.getFullYear()+'-'+('0'+(now.getMonth()+1)).slice(-2)+'-'+('0'+now.getDate()).slice(-2);
+['#num','#cur','#only','#fem'].forEach(function(s){$(s).addEventListener('input',r0)});
+$('#txt').addEventListener('input',r1);$('#opts').addEventListener('change',r1);
+['#gd','#cal'].forEach(function(s){$(s).addEventListener('input',r2)});
+$('#sl').addEventListener('input',r3);
+r0();r1();r2();r3();
+
+/* التبويبات */
+var tabs=[].slice.call(document.querySelectorAll('[role=tab]'));
+function pick(i){tabs.forEach(function(t,k){var on=k===i;t.setAttribute('aria-selected',on);t.tabIndex=on?0:-1;$('#'+t.getAttribute('aria-controls')).hidden=!on});tabs[i].focus()}
+tabs.forEach(function(t,i){t.addEventListener('click',function(){pick(i)});
+ t.addEventListener('keydown',function(e){var n=i+(e.key==='ArrowLeft'?1:e.key==='ArrowRight'?-1:0);if(n!==i&&n>=0&&n<tabs.length){e.preventDefault();pick(n)}})});
+
+/* النسخ */
+document.addEventListener('click',function(e){var b=e.target.closest('.cp');if(!b)return;
+ var el=$('#'+b.dataset.c);if(el.classList.contains('empty'))return;var txt=el.textContent;
+ function ok(){b.textContent='تم النسخ';setTimeout(function(){b.textContent='نسخ'},1200)}
+ function fb(){var a=document.createElement('textarea');a.value=txt;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(x){}a.remove()}
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,fb);else fb()});
+})();
+</script>
+</body>
+</html>
