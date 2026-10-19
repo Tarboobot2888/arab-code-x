@@ -1,3 +1,13 @@
+// Admin-configurable platform settings.
+//
+// Two things changed (plan: SEC-02, 6.1 step 2):
+//   * The committed data/settings.json had auto_approve=true and
+//     filter_enabled=false. Defaults here are the safe ones, and the live file
+//     has been corrected, so a missing or corrupt settings file can no longer
+//     fall back to "publish everything unchecked".
+//   * The banned-word list is documented for what it is — a moderation aid, not
+//     a security control. What protects the origin is that untrusted content is
+//     never served as an executable document (see .vercelignore / vercel.json).
 const { readJson, writeJson } = require('./_gh');
 
 const PATH = 'data/settings.json';
@@ -12,50 +22,62 @@ const DEFAULT_BANNED = [
   'تهكير حسابات', 'سرقة حسابات', 'كروت مسروقة', 'بطاقات مسروقة',
 ];
 
-const DEFAULTS = {
+/** Every boolean flag and its SAFE default (deny-by-default where it matters). */
+const BOOLEAN_DEFAULTS = Object.freeze({
+  // Review-by-default. Executable content ignores this flag entirely and is
+  // always queued for review — see api/_h/submit.js.
   auto_approve: false,
   filter_enabled: true,
-  // When true, any user can delete their own code instantly (no admin request).
   direct_delete: false,
-  // When false, the "طلب حذف" flow is disabled entirely.
   delete_requests_enabled: true,
-  // Google one-click sign-in.
   google_login_enabled: true,
-  // Master switch for new account creation (email + google).
   signup_enabled: true,
-  // Account self-service features.
   email_change_enabled: true,
   username_change_enabled: true,
   account_delete_enabled: true,
-  banned_words: DEFAULT_BANNED,
-};
+});
 
-const bool = (v, d) => (v === undefined ? d : !!v);
+const BOOLEAN_KEYS = Object.freeze(Object.keys(BOOLEAN_DEFAULTS));
+
+const DEFAULTS = Object.freeze({ ...BOOLEAN_DEFAULTS, banned_words: DEFAULT_BANNED });
+
+const bool = (v, d) => (v === undefined || v === null ? d : !!v);
 
 async function getSettings() {
-  const { data } = await readJson(PATH, {});
-  return {
-    auto_approve: bool(data.auto_approve, false),
-    filter_enabled: bool(data.filter_enabled, true),
-    direct_delete: bool(data.direct_delete, false),
-    delete_requests_enabled: bool(data.delete_requests_enabled, true),
-    google_login_enabled: bool(data.google_login_enabled, true),
-    signup_enabled: bool(data.signup_enabled, true),
-    email_change_enabled: bool(data.email_change_enabled, true),
-    username_change_enabled: bool(data.username_change_enabled, true),
-    account_delete_enabled: bool(data.account_delete_enabled, true),
-    banned_words: Array.isArray(data.banned_words) && data.banned_words.length
-      ? data.banned_words
-      : DEFAULT_BANNED,
-  };
+  let data = {};
+  try {
+    ({ data } = await readJson(PATH, {}));
+  } catch (e) {
+    // A corrupt settings file must not open the gate; fall back to the safe set.
+    // eslint-disable-next-line no-console
+    console.error('[settings] unreadable, using safe defaults:', e.message);
+    data = {};
+  }
+  const out = {};
+  for (const k of BOOLEAN_KEYS) out[k] = bool(data[k], BOOLEAN_DEFAULTS[k]);
+  out.banned_words = Array.isArray(data.banned_words) && data.banned_words.length
+    ? data.banned_words
+    : [...DEFAULT_BANNED];
+  return out;
 }
 
 async function saveSettings(next) {
-  await writeJson(PATH, next, 'settings: update');
-  return next;
+  const clean = {};
+  for (const k of BOOLEAN_KEYS) clean[k] = bool(next[k], BOOLEAN_DEFAULTS[k]);
+  clean.banned_words = Array.isArray(next.banned_words) && next.banned_words.length
+    ? next.banned_words
+    : [...DEFAULT_BANNED];
+  await writeJson(PATH, clean, 'settings: update');
+  return clean;
 }
 
-// Returns the matched banned word, or null when clean.
+/**
+ * Returns the matched banned word, or null when clean.
+ * NOTE: a substring word list. It helps moderators triage; it is explicitly NOT
+ * a security boundary and must never be the only thing between untrusted input
+ * and the platform (plan 4.1 SEC-02: "لا تعتمد على مرشح الكلمات باعتباره
+ * ضمانًا أمنيًا").
+ */
 function scanContent({ title = '', description = '', code = '', filename = '' }, words) {
   const hay = `${title}\n${description}\n${filename}\n${code}`.toLowerCase();
   for (const w of words || []) {
@@ -66,4 +88,7 @@ function scanContent({ title = '', description = '', code = '', filename = '' },
   return null;
 }
 
-module.exports = { getSettings, saveSettings, scanContent, DEFAULTS, DEFAULT_BANNED };
+module.exports = {
+  getSettings, saveSettings, scanContent,
+  DEFAULTS, DEFAULT_BANNED, BOOLEAN_DEFAULTS, BOOLEAN_KEYS, PATH,
+};

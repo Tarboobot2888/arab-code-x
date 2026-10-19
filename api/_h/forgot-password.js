@@ -1,41 +1,54 @@
-const { loadUsers, saveUsers, readBody, randomToken, EMAIL_RE } = require('../_auth');
-const { sendMail } = require('../_mail');
+// POST /api/forgot-password { email, turnstile_token }
+//
+// Fixes against the audited version: Turnstile is now required (it was the one
+// sensitive route with no bot check at all), the request is rate limited, and
+// the reset token is stored hashed with a mandatory expiry (SEC-01, SEC-07).
+const { updateUsers, findUserByEmail, readBody, EMAIL_RE } = require('../_auth');
+const { SKIP_WRITE } = require('../_gh');
+const tokens = require('../_tokens');
+const { sendPasswordReset } = require('../_mail');
+const { verifyTurnstile, clientIp } = require('../_turnstile');
+const { wrap, methodGuard, HttpError, noStore, assertSameOrigin } = require('../_http');
+const { enforce } = require('../_ratelimit');
+const { baseUrl } = require('../_config');
 
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  try {
-    const { email } = await readBody(req);
-    if (!email || !EMAIL_RE.test(email)) return res.status(400).json({ error: 'إيميل غير صالح' });
+// Always the same answer — the endpoint must not reveal whether an address is
+// registered (plan 7: منع تعداد البريد).
+const OK = { ok: true, message: 'إذا كان البريد مسجلاً فستصلك رسالة لإعادة التعيين.' };
 
-    const data = await loadUsers();
-    const u = data.users.find((x) => x.email.toLowerCase() === email.toLowerCase());
-    if (!u) return res.status(200).json({ ok: true }); // Don't leak user existence
+module.exports = wrap('forgot-password', async (req, res) => {
+  if (!methodGuard(req, res, 'POST')) return;
+  assertSameOrigin(req);
+  noStore(res);
 
-    const reset_token = randomToken(32);
-    u.reset_token = reset_token;
-    u.reset_expires = Date.now() + 3600000; // 1 hour
-    await saveUsers(data, `chore: reset request for ${u.username}`);
+  const body = await readBody(req, { maxBytes: 2048 });
+  const email = String(body.email || '').trim().toLowerCase();
+  if (!(await enforce(req, res, 'forgot-password', email)).allowed) return;
 
-    const base = process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`;
-    const resetUrl = `${base}/auth?mode=reset&token=${reset_token}&email=${encodeURIComponent(email)}`;
-    
-    await sendMail({
-      to: email,
-      subject: 'استعادة كلمة السر - ARAB code',
-      html: `
-        <div dir="rtl" style="font-family:sans-serif;padding:20px;background:#111;color:#eee;">
-          <h2 style="color:#d4af37;">استعادة كلمة السر</h2>
-          <p>أهلاً ${u.username}،</p>
-          <p>لقد طلبت استعادة كلمة السر الخاصة بك في ARAB code. اضغط على الزر أدناه لتعيين كلمة سر جديدة:</p>
-          <a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#d4af37;color:#000;text-decoration:none;border-radius:5px;font-weight:bold;">تعيين كلمة سر جديدة</a>
-          <p style="margin-top:20px;font-size:0.8rem;color:#888;">هذا الرابط صالح لمدة ساعة واحدة فقط.</p>
-        </div>
-      `
-    });
+  const ts = await verifyTurnstile(body.turnstile_token, clientIp(req));
+  if (!ts.ok) throw new HttpError(400, ts.error);
+  if (!email || !EMAIL_RE.test(email)) throw new HttpError(400, 'إيميل غير صالح');
 
-    res.status(200).json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'خطأ داخلي' });
+  let token = null;
+  let username = null;
+  await updateUsers((data) => {
+    const u = findUserByEmail(data.users, email);
+    if (!u) return SKIP_WRITE;
+    token = tokens.issue(u, 'reset');
+    username = u.username;
+    return null;
+  }, 'chore: password reset requested');
+
+  if (token) {
+    const resetUrl = `${baseUrl(req)}/auth?mode=reset&token=${token}&email=${encodeURIComponent(email)}`;
+    try {
+      await sendPasswordReset({ to: email, username, resetUrl });
+    } catch (e) {
+      // Never surface SMTP detail, and never log the token.
+      // eslint-disable-next-line no-console
+      console.error('[forgot-password] mail failed:', e.message);
+    }
   }
-};
+
+  res.status(200).json(OK);
+});

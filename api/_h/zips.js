@@ -1,125 +1,224 @@
-const { currentUser, readBody, isAdminEmail } = require('../_auth');
-const { readJson, writeJson } = require('../_gh');
+// Ready-made archive packages.
+//
+// Fixes (plan: SEC-03, SEC-05, APP-07, 7.1 P2):
+//   * The ban check goes through _guard (the audited code tested `u.banned` on
+//     the user record while bans actually live in data/bans.json — SEC-05).
+//   * No hardcoded provider key (SEC-03).
+//   * Archives are identified by magic bytes, the declared extension must agree,
+//     and ZIPs are inspected for zip-slip paths and bomb-like ratios without
+//     ever being extracted.
+//   * A SHA-256 checksum and the scan status are stored with every package.
+//   * Writes use updateJson so two concurrent publishes cannot lose one another.
+const crypto = require('crypto');
+const { readBody } = require('../_auth');
+const { requireUser, assertOwnerOrAdmin } = require('../_guard');
+const { readJson, updateJson, SKIP_WRITE } = require('../_gh');
 const { getSettings, scanContent } = require('../_settings');
 const { verifyTurnstile, clientIp } = require('../_turnstile');
+const { wrap, methodGuard, HttpError, noStore, readRawBody } = require('../_http');
+const { enforce } = require('../_ratelimit');
+const { config } = require('../_config');
+const { inspectArchive, scanForSecrets } = require('../_content');
+const { upload, isProviderUrl } = require('../_uploads');
+const { logDecision } = require('../_moderation');
 
-const NEZUKO_URL = 'https://nezukouploads.hidenplay.net/api/upload';
-const UPLOADS_ORIGIN = 'https://nezukouploads.hidenplay.net';
 const MANIFEST = 'data/zips.json';
-const ALLOWED = /\.(zip|rar|7z|tar|gz|tgz|tar\.gz|tar\.xz|xz|bz2)$/i;
-const MAX = 4 * 1024 * 1024;
-function publicUploadUrl(url) {
-  const u = new URL(url);
-  const match = u.pathname.match(/^\/file\/([^/]+)$/);
-  return match ? `${UPLOADS_ORIGIN}/file/${encodeURIComponent(match[1])}` : url;
-}
+const ALLOWED_NAME = /\.(zip|rar|7z|tar|gz|tgz|xz|bz2)$/i;
 
 function slugify(s) {
   return String(s || 'file').trim().toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').slice(0, 50) || 'file';
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 50) || 'file';
 }
+
 function typeOf(name) {
-  const m = String(name).toLowerCase().match(/\.(tar\.gz|tar\.xz|[a-z0-9]+)$/);
+  const m = String(name || '').toLowerCase().match(/\.(tar\.gz|tar\.xz|[a-z0-9]+)$/);
   return m ? m[1].toUpperCase() : 'FILE';
 }
-async function mustUser(req, res) {
-  const u = await currentUser(req);
-  if (!u) { res.status(401).json({ error: 'القسم للمسجلين فقط — سجّل دخول أولاً' }); return null; }
-  if (u.banned) { res.status(403).json({ error: 'حسابك محظور' }); return null; }
-  return u;
-}
-function readRaw(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = []; let n = 0;
-    req.on('data', (c) => { n += c.length; if (n > MAX) { reject(new Error('TOO_BIG')); req.destroy(); } else chunks.push(c); });
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', reject);
-  });
-}
 
-async function list(req, res) {
-  if (!(await mustUser(req, res))) return;
+const list = wrap('zips-list', async (req, res) => {
+  if (!methodGuard(req, res, 'GET')) return;
+  await requireUser(req, { csrf: false });
+  noStore(res);
   const { data } = await readJson(MANIFEST, { zips: [] });
-  const url = new URL(req.url, 'http://x');
-  const q = (url.searchParams.get('q') || '').trim().toLowerCase();
+  const url = new URL(req.url, 'http://localhost');
+  const q = String(url.searchParams.get('q') || '').trim().toLowerCase();
+  // `readme` can be 30k characters — it is only sent on the detail route.
   let zips = (data.zips || []).map(({ readme, ...z }) => z);
-  if (q) zips = zips.filter((z) => [z.title, z.description, z.author, (z.tags || []).join(' ')].join(' ').toLowerCase().includes(q));
+  if (q) {
+    zips = zips.filter((z) => [z.title, z.description, z.author, (z.tags || []).join(' ')]
+      .join(' ').toLowerCase().includes(q));
+  }
   res.status(200).json({ zips });
-}
+});
 
-async function get(req, res) {
-  if (!(await mustUser(req, res))) return;
-  const slug = new URL(req.url, 'http://x').searchParams.get('slug') || '';
+const get = wrap('zip-get', async (req, res) => {
+  if (!methodGuard(req, res, 'GET')) return;
+  await requireUser(req, { csrf: false });
+  noStore(res);
+  const slug = new URL(req.url, 'http://localhost').searchParams.get('slug') || '';
   const { data } = await readJson(MANIFEST, { zips: [] });
   const z = (data.zips || []).find((x) => x.slug === slug);
-  if (!z) return res.status(404).json({ error: 'الملف غير موجود' });
+  if (!z) throw new HttpError(404, 'الملف غير موجود');
   res.status(200).json({ zip: z });
-}
+});
 
-async function upload(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const u = await mustUser(req, res); if (!u) return;
-  const name = decodeURIComponent(new URL(req.url, 'http://x').searchParams.get('name') || '').replace(/[^\w.\-]/g, '_').slice(0, 80);
-  if (!name || !ALLOWED.test(name)) return res.status(400).json({ error: 'نوع الملف غير مدعوم (zip, rar, 7z, tar.gz ...)' });
-  let buf;
-  try { buf = await readRaw(req); } catch (e) {
-    return res.status(413).json({ error: 'الملف أكبر من 4 ميغا' });
+const uploadHandler = wrap('zip-upload', async (req, res) => {
+  if (!methodGuard(req, res, 'POST')) return;
+  noStore(res);
+
+  const { user } = await requireUser(req, { verified: true });
+  if (!(await enforce(req, res, 'zip-upload', user.username)).allowed) return;
+
+  // The provider receives this as the stored filename, so it is validated the
+  // same way a path segment would be: no traversal, no separators, no control
+  // characters, and an extension from the archive allowlist.
+  let declared = '';
+  try {
+    declared = decodeURIComponent(new URL(req.url, 'http://localhost').searchParams.get('name') || '');
+  } catch {
+    throw new HttpError(400, 'اسم الملف غير صالح');
   }
-  if (!buf.length) return res.status(400).json({ error: 'الملف فارغ' });
-  const fd = new FormData();
-  fd.append('file', new Blob([buf], { type: 'application/octet-stream' }), name);
-  const r = await fetch(NEZUKO_URL, { method: 'POST', headers: { 'x-api-key': process.env.NEZUKO_API_KEY || 'nzk_f250ea202babe341bc1c064d168054d4f6ba14bace44eab981cc0a1b435e9992', accept: '*/*' }, body: fd });
-  let j; try { j = JSON.parse(await r.text()); } catch { j = {}; }
-  if (!r.ok || !j.success || !j.file || !j.file.url) return res.status(502).json({ error: 'فشل رفع الملف، حاول مرة ثانية' });
-  res.status(200).json({ ok: true, url: publicUploadUrl(j.file.url), filename: j.file.filename || name, size: j.file.size || buf.length });
-}
+  declared = declared.trim().slice(0, 80);
+  const unsafeName = !declared
+    || declared.includes('..')
+    || declared.startsWith('.')
+    || /[^\w.-]/.test(declared)
+    || !ALLOWED_NAME.test(declared);
+  if (unsafeName) {
+    throw new HttpError(415, 'اسم أو نوع الملف غير مدعوم (zip, rar, 7z, tar.gz ...)');
+  }
 
-async function publish(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const u = await mustUser(req, res); if (!u) return;
-  if (!u.verified) return res.status(403).json({ error: 'فعّل بريدك أولاً' });
-  const b = await readBody(req);
+  const max = config().limits.archiveBytes;
+  // Rejects with 413 the moment the cap is crossed — never buffers past it.
+  const buf = await readRawBody(req, max);
+  if (!buf.length) throw new HttpError(400, 'الملف فارغ');
+
+  // Magic bytes + structural inspection. Nothing is extracted.
+  const verdict = inspectArchive(buf, declared);
+  if (!verdict.ok) {
+    await logDecision({
+      actor: user.username, action: 'archive-rejected', target: declared,
+      reason: verdict.error, meta: verdict.findings || null,
+    });
+    throw new HttpError(422, verdict.error);
+  }
+
+  const sha256 = crypto.createHash('sha256').update(buf).digest('hex');
+  const result = await upload(buf, declared, 'application/octet-stream');
+
+  res.status(200).json({
+    ok: true,
+    url: result.url,
+    filename: result.filename,
+    size: result.size,
+    sha256,
+    archive_type: verdict.type,
+    // Signature + structure only. A malware engine is a separate worker — see
+    // AUDIT_FINAL_ARAB_CODE.md (ما زال يحتاج تدخلاً تشغيلياً).
+    scan_status: verdict.findings && verdict.findings.inspected === 'signature-only'
+      ? 'signature-only'
+      : 'structure-checked',
+    findings: verdict.findings || null,
+  });
+});
+
+const publish = wrap('zip-publish', async (req, res) => {
+  if (!methodGuard(req, res, 'POST')) return;
+  noStore(res);
+
+  const { user, isAdmin } = await requireUser(req, { verified: true });
+  if (!(await enforce(req, res, 'zip-publish', user.username)).allowed) return;
+
+  const b = await readBody(req, { maxBytes: 128 * 1024 });
   const ts = await verifyTurnstile(b.turnstile_token, clientIp(req));
-  if (!ts.ok) return res.status(400).json({ error: ts.error });
+  if (!ts.ok) throw new HttpError(400, ts.error);
+
   const title = String(b.title || '').trim().slice(0, 120);
-  if (!title) return res.status(400).json({ error: 'اسم الملف مطلوب' });
-  if (!b.url || !/^https:\/\/nezukouploads\.hidenplay\.net\/file\/[^/]+$/.test(b.url)) return res.status(400).json({ error: 'ارفع الملف أولاً' });
+  if (!title) throw new HttpError(400, 'اسم الملف مطلوب');
+  if (!isProviderUrl(b.url)) throw new HttpError(400, 'ارفع الملف أولاً');
+
   const readme = String(b.readme || '').slice(0, 30000);
   const description = String(b.description || '').slice(0, 300);
-  const isAdmin = isAdminEmail(u.email);
   const settings = await getSettings();
+
   if (settings.filter_enabled && !isAdmin) {
     const hit = scanContent({ title, description, code: readme }, settings.banned_words);
-    if (hit) return res.status(400).json({ error: `تم رفض الملف لاحتوائه على محتوى مخالف ("${hit}")` });
+    if (hit) throw new HttpError(400, `تم رفض الملف لاحتوائه على محتوى مخالف ("${hit}")`);
   }
-  const { data } = await readJson(MANIFEST, { zips: [] });
-  data.zips = data.zips || [];
-  const base = slugify(title); let slug = base, i = 1;
-  while (data.zips.some((z) => z.slug === slug)) slug = `${base}-${i++}`;
-  const tags = String(b.tags || '').split(/[,،]/).map((t) => t.trim()).filter(Boolean).slice(0, 8);
-  data.zips.unshift({
-    slug, title, description, readme, tags,
-    version: String(b.version || '').slice(0, 30),
-    thumb: /^https:\/\/nezukouploads\.hidenplay\.net\/file\/[^/]+$/.test(b.thumb || '') ? String(b.thumb).slice(0, 400) : '',
-    url: b.url, filename: String(b.filename || '').slice(0, 100), type: typeOf(b.filename || b.url),
-    size: Number(b.size) || 0, author: u.username, author_avatar: u.avatar_url || null,
-    author_verified: isAdmin || !!u.is_verified_badge, created_at: new Date().toISOString(),
-  });
-  await writeJson(MANIFEST, data, `zip: +${slug} by ${u.username}`);
-  res.status(200).json({ ok: true, url: '/zip/' + encodeURIComponent(slug) });
-}
 
-async function del(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const u = await mustUser(req, res); if (!u) return;
-  const { slug } = await readBody(req);
-  const { data } = await readJson(MANIFEST, { zips: [] });
-  const z = (data.zips || []).find((x) => x.slug === slug);
-  if (!z) return res.status(404).json({ error: 'الملف غير موجود' });
-  if (!isAdminEmail(u.email) && z.author.toLowerCase() !== u.username.toLowerCase()) return res.status(403).json({ error: 'غير مسموح' });
-  data.zips = data.zips.filter((x) => x.slug !== slug);
-  await writeJson(MANIFEST, data, `zip: -${slug}`);
+  const secrets = scanForSecrets(readme);
+  const tags = String(b.tags || '').split(/[,،]/).map((t) => t.trim().slice(0, 24)).filter(Boolean).slice(0, 8);
+  const sha256 = /^[a-f0-9]{64}$/i.test(String(b.sha256 || '')) ? String(b.sha256).toLowerCase() : null;
+
+  let slug = null;
+  await updateJson(MANIFEST, { zips: [] }, (data) => {
+    if (!Array.isArray(data.zips)) data.zips = [];
+    const base = slugify(title);
+    let candidate = base;
+    let i = 1;
+    while (data.zips.some((z) => z.slug === candidate)) candidate = `${base}-${i++}`;
+    slug = candidate;
+    data.zips.unshift({
+      slug,
+      title,
+      description,
+      readme,
+      tags,
+      version: String(b.version || '').slice(0, 30),
+      thumb: isProviderUrl(b.thumb) ? String(b.thumb).slice(0, 400) : '',
+      url: String(b.url),
+      filename: String(b.filename || '').slice(0, 100),
+      type: typeOf(b.filename || b.url),
+      size: Math.max(0, Number(b.size) || 0),
+      sha256,
+      scan_status: ['structure-checked', 'signature-only'].includes(b.scan_status) ? b.scan_status : 'unknown',
+      archive_type: String(b.archive_type || '').slice(0, 10) || null,
+      secret_findings: secrets.map((s) => s.id),
+      downloads: 0,
+      author: user.username,
+      author_avatar: user.avatar_url || null,
+      author_verified: isAdmin || !!user.is_verified_badge,
+      created_at: new Date().toISOString(),
+    });
+    return null;
+  }, `zip: +${slugify(title)} by ${user.username}`);
+
+  if (!slug) throw new HttpError(500, 'تعذّر نشر الملف، حاول لاحقاً');
+  res.status(200).json({ ok: true, url: `/zip/${encodeURIComponent(slug)}` });
+});
+
+const del = wrap('zip-delete', async (req, res) => {
+  if (!methodGuard(req, res, 'POST')) return;
+  noStore(res);
+
+  const ctx = await requireUser(req, { verified: true });
+  const { slug } = await readBody(req, { maxBytes: 2048 });
+  if (!slug || typeof slug !== 'string') throw new HttpError(400, 'الملف مطلوب');
+
+  let found = false;
+  let denied = false;
+  await updateJson(MANIFEST, { zips: [] }, (data) => {
+    if (!Array.isArray(data.zips)) data.zips = [];
+    const z = data.zips.find((x) => x.slug === slug);
+    if (!z) return SKIP_WRITE;
+    found = true;
+    try {
+      assertOwnerOrAdmin(ctx, z.author, 'غير مسموح');
+    } catch {
+      denied = true;
+      return SKIP_WRITE;
+    }
+    data.zips = data.zips.filter((x) => x.slug !== slug);
+    return null;
+  }, `zip: -${slug}`);
+
+  if (!found) throw new HttpError(404, 'الملف غير موجود');
+  if (denied) throw new HttpError(403, 'غير مسموح');
+
+  await logDecision({ actor: ctx.user.username, action: 'zip-delete', target: `zip:${slug}` });
   res.status(200).json({ ok: true });
-}
+});
 
-module.exports = { list, get, upload, publish, del };
+module.exports = { list, get, upload: uploadHandler, publish, del };

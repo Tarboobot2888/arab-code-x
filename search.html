@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>البحث · ARAB code | ابحث في مكتبة الأكواد العربية</title>
+
+<meta name="description" content="ابحث في مكتبة ARAB code بالعربية والإنجليزية: فلاتر للغة والوسوم والترخيص، مع تطبيع الهمزات والتشكيل حتى تجد الكود الذي تريده.">
+<meta name="keywords" content="بحث أكواد, ARAB CODE, عرب كود, مكتبة أكواد عربية, JavaScript, HTML, CSS, Python">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.arab-code.cv/search">
+<link rel="alternate" hreflang="ar" href="https://www.arab-code.cv/search">
+<link rel="alternate" hreflang="x-default" href="https://www.arab-code.cv/search">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="البحث · ARAB code">
+<meta property="og:description" content="ابحث في مكتبة الأكواد العربية مع فلاتر اللغة والوسوم والترخيص.">
+<meta property="og:url" content="https://www.arab-code.cv/search">
+<meta property="og:image" content="https://www.arab-code.cv/assets/brand/logo.png">
+<meta property="og:site_name" content="ARAB CODE">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
+<style>
+  .search-page{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+  .search-form{display:grid;gap:12px;margin:0 0 20px}
+  .search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .search-field{display:flex;flex-direction:column;gap:6px;flex:1 1 180px;min-width:150px}
+  .search-field label{font-size:12.5px;color:var(--muted)}
+  .search-field input,.search-field select{
+    width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--border);
+    background:var(--bg-2,#111);color:var(--text);font:inherit;min-height:44px;
+  }
+  /* Query and code text read left-to-right even on an RTL page. */
+  #q{direction:rtl;unicode-bidi:plaintext}
+  .search-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .result-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px;font-size:13.5px;color:var(--muted)}
+  .pager{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:24px;flex-wrap:wrap}
+  .pager .page-info{font-size:13px;color:var(--muted)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chip{padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text);font:inherit;font-size:12.5px;cursor:pointer;min-height:34px}
+  .chip:hover,.chip:focus-visible{border-color:var(--gold-2);color:var(--gold-2)}
+  .empty-box{text-align:center;padding:40px 16px;color:var(--muted)}
+  .skeleton-card{height:132px;border-radius:14px;border:1px solid var(--border);background:linear-gradient(90deg,rgba(255,255,255,.03),rgba(255,255,255,.07),rgba(255,255,255,.03));background-size:200% 100%;animation:sk 1.2s linear infinite}
+  @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  :focus-visible{outline:2px solid var(--gold-2,#d4af37);outline-offset:2px}
+  @media (max-width:560px){ .search-field{flex:1 1 100%} }
+</style>
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="/"><img src="/assets/brand/logo.png" alt="ARAB code" width="34" height="34"><span>ARAB code</span></a>
+  <div id="nav-actions" class="nav-actions"></div>
+</header>
+
+<main class="search-page">
+  <h1 style="margin:0 0 6px;font-size:24px">البحث في المكتبة</h1>
+  <p style="margin:0 0 18px;color:var(--muted);font-size:14px">
+    البحث يتعامل مع الهمزات والتشكيل والمسافات، فيمكنك كتابة «اضافة» أو «إضافة» وتحصل على النتيجة نفسها.
+  </p>
+
+  <form class="search-form" id="form" role="search" aria-label="بحث في الأكواد">
+    <div class="search-row">
+      <div class="search-field" style="flex:2 1 320px">
+        <label for="q">كلمة البحث</label>
+        <input id="q" name="q" type="search" placeholder="مثال: تحميل فيديو، RTL، qr" autocomplete="off" enterkeyhint="search">
+      </div>
+      <div class="search-field">
+        <label for="language">اللغة</label>
+        <select id="language" name="language"><option value="">كل اللغات</option></select>
+      </div>
+      <div class="search-field">
+        <label for="license">الترخيص</label>
+        <select id="license" name="license"><option value="">كل التراخيص</option></select>
+      </div>
+      <div class="search-field">
+        <label for="sort">الترتيب</label>
+        <select id="sort" name="sort">
+          <option value="relevance">الأكثر مطابقة</option>
+          <option value="newest">الأحدث</option>
+          <option value="oldest">الأقدم</option>
+        </select>
+      </div>
+    </div>
+    <div class="search-row">
+      <div class="search-field">
+        <label for="tag">وسم</label>
+        <input id="tag" name="tag" type="text" placeholder="مثال: bot" autocomplete="off">
+      </div>
+      <div class="search-field">
+        <label for="author">المطوّر</label>
+        <input id="author" name="author" type="text" placeholder="اسم المستخدم" autocomplete="off">
+      </div>
+      <div class="search-actions">
+        <button class="btn primary" type="submit">بحث</button>
+        <button class="btn ghost" type="reset" id="clearBtn">مسح</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="result-meta">
+    <span id="status" role="status" aria-live="polite">اكتب كلمة أو اختر فلتراً لعرض النتائج.</span>
+    <span id="count"></span>
+  </div>
+
+  <div class="grid" id="results"></div>
+  <div id="empty" class="empty-box" hidden></div>
+  <nav class="pager" id="pager" aria-label="تنقل بين صفحات النتائج" hidden></nav>
+</main>
+
+<script src="/app.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const FIELDS = ['q', 'language', 'license', 'sort', 'tag', 'author'];
+let currentPage = 1;
+
+function readParams() {
+  const p = new URLSearchParams(location.search);
+  FIELDS.forEach((f) => { if (p.get(f)) $(f).value = p.get(f); });
+  currentPage = Math.max(1, parseInt(p.get('page') || '1', 10) || 1);
+}
+
+function queryString(page) {
+  const p = new URLSearchParams();
+  FIELDS.forEach((f) => { const v = $(f).value.trim(); if (v && !(f === 'sort' && v === 'relevance')) p.set(f, v); });
+  if (page > 1) p.set('page', String(page));
+  return p.toString();
+}
+
+function fillFacets(facets) {
+  if (!facets) return;
+  const lang = $('language');
+  if (lang.options.length <= 1 && Array.isArray(facets.languages)) {
+    for (const l of facets.languages) {
+      const o = document.createElement('option');
+      o.value = l; o.textContent = l;
+      lang.appendChild(o);
+    }
+  }
+  const lic = $('license');
+  if (lic.options.length <= 1 && Array.isArray(facets.licenses)) {
+    for (const l of facets.licenses) {
+      const o = document.createElement('option');
+      o.value = l; o.textContent = l;
+      lic.appendChild(o);
+    }
+  }
+}
+
+function renderSuggestions(s) {
+  const box = $('empty');
+  box.hidden = false;
+  const chip = (label, field, value) =>
+    `<button type="button" class="chip" data-field="${esc(field)}" data-value="${esc(value)}">${esc(label)}</button>`;
+  let html = '<p style="margin:0 0 6px;font-size:15px">لا نتائج مطابقة.</p>';
+  if (s && (s.languages || []).length) {
+    html += '<p style="margin:14px 0 4px;font-size:13px">جرّب لغة:</p><div class="chips">'
+      + s.languages.map((l) => chip(`${l.value} (${l.count})`, 'language', l.value)).join('') + '</div>';
+  }
+  if (s && (s.tags || []).length) {
+    html += '<p style="margin:14px 0 4px;font-size:13px">أو وسماً:</p><div class="chips">'
+      + s.tags.map((t) => chip(`#${t.value} (${t.count})`, 'tag', t.value)).join('') + '</div>';
+  }
+  if (s && (s.near || []).length) {
+    html += '<p style="margin:14px 0 4px;font-size:13px">ربما تقصد:</p><div class="chips">'
+      + s.near.map((n) => `<a class="chip" href="/c/${encodeURIComponent(n.filename)}">${esc(n.title || n.filename)}</a>`).join('')
+      + '</div>';
+  }
+  box.innerHTML = html;
+  box.querySelectorAll('.chip[data-field]').forEach((b) => {
+    b.onclick = () => { $(b.dataset.field).value = b.dataset.value; $('q').value = ''; run(1, true); };
+  });
+}
+
+function renderPager(page, pages) {
+  const pager = $('pager');
+  if (pages <= 1) { pager.hidden = true; pager.innerHTML = ''; return; }
+  pager.hidden = false;
+  pager.innerHTML = `
+    <button class="btn ghost" type="button" id="prev" ${page <= 1 ? 'disabled' : ''}>السابق</button>
+    <span class="page-info">صفحة ${page} من ${pages}</span>
+    <button class="btn ghost" type="button" id="next" ${page >= pages ? 'disabled' : ''}>التالي</button>`;
+  const prev = $('prev'); const next = $('next');
+  if (prev) prev.onclick = () => run(page - 1, true);
+  if (next) next.onclick = () => run(page + 1, true);
+}
+
+async function run(page = 1, push = false) {
+  currentPage = Math.max(1, page);
+  const qs = queryString(currentPage);
+  if (push) history.replaceState(null, '', qs ? `/search?${qs}` : '/search');
+
+  const results = $('results');
+  const empty = $('empty');
+  empty.hidden = true;
+  $('status').textContent = 'جارٍ البحث...';
+  results.innerHTML = Array.from({ length: 6 }, () => '<div class="skeleton-card"></div>').join('');
+
+  try {
+    const data = await api(`/api/search?${qs || 'page=1'}`);
+    fillFacets(data.facets);
+    renderPager(data.page, data.pages);
+    $('count').textContent = data.total ? `${data.total} نتيجة` : '';
+    if (!data.codes.length) {
+      results.innerHTML = '';
+      $('status').textContent = 'لا نتائج.';
+      renderSuggestions(data.suggestions);
+      return;
+    }
+    results.innerHTML = data.codes.map(codeCard).join('');
+    $('status').textContent = `عرض ${data.codes.length} من ${data.total}.`;
+  } catch (e) {
+    results.innerHTML = '';
+    $('status').textContent = 'تعذّر تنفيذ البحث.';
+    empty.hidden = false;
+    empty.innerHTML = `<p style="color:var(--danger)">${esc(e.message)}</p>`;
+  }
+}
+
+(async () => {
+  await renderNav();
+  await renderBanOverlay(await loadMe());
+  readParams();
+  $('form').onsubmit = (e) => { e.preventDefault(); run(1, true); };
+  $('clearBtn').onclick = () => {
+    setTimeout(() => { history.replaceState(null, '', '/search'); run(1); }, 0);
+  };
+  let t;
+  $('q').addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => run(1, true), 350); });
+  ['language', 'license', 'sort'].forEach((f) => $(f).addEventListener('change', () => run(1, true)));
+  run(currentPage);
+})();
+</script>
+</body>
+</html>

@@ -40,8 +40,76 @@ async function api(path, opts = {}, retries = 2) {
   }
 }
 
+
+// --- escaping by context -------------------------------------------------
+// One escape function is not enough for every context (plan 10): text, an
+// attribute value, a URL and a CSS value each need their own rule.
+
+/** Text or quoted-attribute context. */
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+/**
+ * URL context. Returns '' for anything that is not a plain http(s) or mailto
+ * link, so javascript:, data: and vbscript: can never reach an href/src.
+ */
+function escUrl(value) {
+  const raw = String(value == null ? '' : value).trim();
+  if (!raw) return '';
+  // Reject control characters and whitespace used to smuggle a scheme.
+  if (/[\u0000-\u001f\u007f\s]/.test(raw)) return '';
+  let u;
+  try { u = new URL(raw, location.origin); } catch { return ''; }
+  if (!['http:', 'https:', 'mailto:'].includes(u.protocol)) return '';
+  return esc(u.href);
+}
+
+/**
+ * CSS value context (e.g. style="background-image:url('...')").
+ *
+ * Stripping quotes from an ALREADY html-escaped string is not enough: the
+ * browser HTML-decodes the attribute first, so a `&#39;` would come back as a
+ * real quote and close the url() token. Anything that could terminate the token
+ * or the declaration is therefore refused outright, before escaping.
+ */
+function escCss(value) {
+  const raw = String(value == null ? '' : value).trim();
+  if (!raw) return '';
+  if (/[\u0000-\u001f\u007f\s'"()\\;{}<>]/.test(raw)) return '';
+  let u;
+  try { u = new URL(raw, location.origin); } catch { return ''; }
+  if (!['http:', 'https:'].includes(u.protocol)) return '';
+  // Re-check the normalised form: URL() can reveal characters the input hid.
+  if (/['"()\\;{}<>]/.test(u.href)) return '';
+  return esc(u.href);
+}
+
+/**
+ * Markdown -> HTML. FAILS CLOSED: if DOMPurify did not load (CSP, blocked CDN,
+ * offline) the text is escaped instead of being injected raw. The audited
+ * user.html did `DOMPurify ? sanitize(raw) : raw`, which silently turned a
+ * blocked CDN into stored XSS.
+ */
+function renderMarkdown(md) {
+  const text = String(md == null ? '' : md);
+  const plain = () => esc(text).replace(/\r?\n/g, '<br>');
+  if (!window.DOMPurify || typeof window.DOMPurify.sanitize !== 'function') return plain();
+  let raw;
+  try {
+    raw = window.marked ? window.marked.parse(text, { breaks: true, gfm: true }) : plain();
+  } catch { return plain(); }
+  try {
+    return window.DOMPurify.sanitize(raw, {
+      ALLOWED_TAGS: ['a','b','blockquote','br','code','del','em','h1','h2','h3','h4','h5','h6',
+        'hr','i','li','ol','p','pre','s','span','strong','table','tbody','td','th','thead','tr','ul','img'],
+      ALLOWED_ATTR: ['href','title','alt','src','target','rel','align'],
+      ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|#)/i,
+      ADD_ATTR: ['target'],
+      FORBID_TAGS: ['style','script','iframe','object','embed','form','input','svg','math'],
+      FORBID_ATTR: ['style','srcset','formaction','onerror','onload'],
+    });
+  } catch { return plain(); }
 }
 
 function avatarLetter(name) { return (name || '?').trim().charAt(0).toUpperCase(); }
@@ -56,7 +124,8 @@ function avatarNode(user, size = '') {
   const name = typeof user === 'string' ? user : (user && (user.username || user.author)) || '?';
   const url = typeof user === 'object' ? avatarUrl(user) : null;
   const cls = 'avatar' + (size ? ' ' + size : '');
-  if (url) return `<span class="${cls}"><img src="${esc(url)}" alt="${esc(name)}" loading="lazy"></span>`;
+  const safe = url ? escUrl(url) : "";
+  if (safe) return `<span class="${cls}"><img src="${safe}" alt="${esc(name)}" loading="lazy" referrerpolicy="no-referrer"></span>`;
   return `<span class="${cls}">${esc(avatarLetter(name))}</span>`;
 }
 
@@ -82,7 +151,10 @@ function isVerified(entry) {
 function authorLink(entry, opts = {}) {
   const username = entry.author || entry.username || 'unknown';
   const name = entry.author_display || entry.display_name || username;
-  const isAdmin = entry.is_admin || entry.author_is_admin || (username.toLowerCase() === 'ziad');
+  // APP-03: trust markers come from server-sent fields only. The old code also
+  // granted the admin badge to any account named "ziad", which let a badge be
+  // faked by picking a username.
+  const isAdmin = !!(entry.is_admin || entry.author_is_admin);
   return `<a href="/u/${encodeURIComponent(username)}" class="author" onclick="event.stopPropagation()">
     ${avatarNode({ username, avatar_url: avatarUrl(entry) }, opts.size || 'sm')}
     <span class="uname">${esc(name)}</span>
@@ -136,7 +208,10 @@ async function renderNav() {
   const sideNav = document.getElementById('sidebar-nav');
   if (!sideNav) return;
   
-  const searchLink = `<a href="#" class="sidebar-link" onclick="closeSidebar(); openSearch(); return false;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg> بحث عن كود</a>`;
+  const searchIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>';
+  // Quick overlay plus a link to the real, indexable /search page (APP-04).
+  const searchLink = `<a href="#" class="sidebar-link" onclick="closeSidebar(); openSearch(); return false;">${searchIcon} بحث سريع</a>`
+    + `<a href="/search" class="sidebar-link">${searchIcon} البحث المتقدّم والفلاتر</a>`;
   const homeLink = `<a href="/" class="sidebar-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> الرئيسية</a>`;
   
   if (me) {
@@ -215,7 +290,8 @@ function codeCard(c) {
   </article>`;
 }
 
-window.api = api; window.esc = esc;
+window.api = api; window.esc = esc; window.escUrl = escUrl; window.escCss = escCss;
+window.renderMarkdown = renderMarkdown;
 window.avatarNode = avatarNode; window.avatarUrl = avatarUrl; window.isVerified = isVerified; window.authorLink = authorLink; window.verifiedBadge = verifiedBadge;
 window.renderNav = renderNav; window.doLogout = doLogout;
 window.openSearch = openSearch; window.closeSearch = closeSearch;
@@ -249,9 +325,9 @@ async function renderBanOverlay(me) {
       <div style="width:74px;height:74px;margin:0 auto 16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#e05252 0%,#5c1212 100%);display:grid;place-items:center;font-size:34px;">🚫</div>
       <h2 style="margin:0 0 12px;color:#e05252;font-size:22px;">تم إغلاق هذا الحساب</h2>
       <p style="margin:0 0 8px;color:#d8c9a3;font-size:15px;line-height:1.9;">لقد تم غلق هذا الحساب لأسباب أمنية${me.ban.reason ? ' (<b>' + esc(me.ban.reason) + '</b>)' : ''}.</p>
-      <p style="margin:14px 0 0;color:#a08454;font-size:13.5px;line-height:1.8;">يمكنك التواصل مع الدعم عبر تطبيق واتساب لإعادة تفعيل حسابك، اضغط على الزر أدناه.</p>
+      <p style="margin:14px 0 0;color:#a08454;font-size:13.5px;line-height:1.8;">لإعادة تفعيل حسابك تواصل مع الدعم من صفحة معلومات المنصة.</p>
       <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <a href="https://wa.me/249918614328" style="display:inline-flex;align-items:center;gap:8px;padding:13px 28px;background:linear-gradient(135deg,#5ce18b,#25d366);color:#0a0a0a;text-decoration:none;font-weight:800;border-radius:12px;font-size:15px;">💬 واتساب — التواصل مع الدعم</a>
+        <a class="btn primary" href="/info#support">التواصل مع الدعم</a>
       </div>
     </div>
   </div>`;

@@ -1,0 +1,85 @@
+# CI gate (plan 9.1: "تنسيق/Lint، syntax، unit/integration tests، secret
+# scanning، dependency scanning" و"منع الدمج عند فشل اختبار أو وجود سر في diff").
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, test and scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The secret scanner's --history pass needs the full history.
+          fetch-depth: 0
+
+      - name: Use the pinned Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install exactly what the lockfile says
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint (syntax, missing await, DOM sinks)
+        run: npm run lint
+
+      - name: Data integrity report
+        run: npm run verify:data
+
+      - name: Secret scan (working tree — fails the build)
+        run: node scripts/scan-secrets.js
+
+      - name: Secret scan (history — reports only)
+        run: node scripts/scan-secrets.js --history
+        continue-on-error: true
+
+      - name: Tests
+        run: npm test
+        env:
+          NODE_ENV: test
+
+      - name: Dependency audit (high and above)
+        run: npm audit --omit=dev --audit-level=high
+
+  config-gate:
+    name: Deployment configuration gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+
+      # Fails if data/, pending/ or codes/ would be published, if a security
+      # header is missing, or if the sitemap lists a page that does not exist.
+      - name: Assert the deployment never serves private paths
+        run: node --test tests/deploy-seo.test.js
+
+      - name: Assert the service fails closed without its secrets
+        run: |
+          set -e
+          node -e "
+            process.env.VERCEL_ENV='production';
+            for (const k of ['JWT_SECRET','ADMIN_EMAIL','PUBLIC_BASE_URL','GITHUB_TOKEN','TURNSTILE_SECRET_KEY']) delete process.env[k];
+            const cfg = require('./api/_config').config();
+            if (cfg.ok) { console.error('FAIL: production validated with no secrets configured'); process.exit(1); }
+            console.log('ok: production refuses to run unconfigured (' + cfg.problems.length + ' problems)');
+          "

@@ -1,19 +1,15 @@
-const { currentUser, publicUser } = require('../_auth');
-const { readJson } = require('../_gh');
-const BANS_PATH = 'data/bans.json';
-module.exports = async (req, res) => {
-  const u = await currentUser(req);
-  const out = { user: publicUser(u) };
-  if (u) {
-    try {
-      const { data } = await readJson(BANS_PATH, {});
-      const b = data[String(u.username).toLowerCase()] || null;
-      if (b && b.banned) {
-        out.ban = { reason: b.reason || 'أسباب أمنية', banned_at: b.banned_at };
-      }
-    } catch (e) {
-      console.error('ban check failed:', e && e.message);
-    }
-  }
+const { publicUser } = require('../_auth');
+const { optionalUser } = require('../_guard');
+const { wrap, methodGuard, noStore } = require('../_http');
+
+// GET /api/me — the session's own identity. This is the one route that reports a
+// ban instead of refusing, so the UI can explain the situation; every other
+// route refuses a banned caller in _guard.js.
+module.exports = wrap('me', async (req, res) => {
+  if (!methodGuard(req, res, 'GET')) return;
+  noStore(res); // per-account response — never cacheable by a CDN
+  const { user, ban } = await optionalUser(req);
+  const out = { user: publicUser(user) };
+  if (user && ban) out.ban = { reason: ban.reason, banned_at: ban.banned_at };
   res.status(200).json(out);
-};
+});

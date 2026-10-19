@@ -1,46 +1,63 @@
-const { currentUser, readBody } = require('../_auth');
+// POST /api/upload-avatar { data_url, filename? }
+//
+// Fixes (plan: SEC-03, SEC-09, 8):
+//   * No hardcoded provider key — see _uploads.js.
+//   * The body is capped WHILE streaming, so a 50 MB data URL is rejected with
+//     413 before it is buffered. The audited version parsed the whole JSON body
+//     and only then checked the decoded image size.
+//   * The real image type is detected from the bytes; the declared MIME is only
+//     used as a hint and must agree with the content. SVG is refused outright
+//     because it is an executable document.
+const { readBody } = require('../_auth');
+const { requireUser } = require('../_guard');
+const { wrap, methodGuard, HttpError, noStore } = require('../_http');
+const { enforce } = require('../_ratelimit');
+const { config } = require('../_config');
+const { sniffImage } = require('../_content');
+const { upload } = require('../_uploads');
 
-const NEZUKO_URL = 'https://nezukouploads.hidenplay.net/api/upload';
-const UPLOADS_ORIGIN = 'https://nezukouploads.hidenplay.net';
-const NEZUKO_KEY = process.env.NEZUKO_API_KEY || 'nzk_f250ea202babe341bc1c064d168054d4f6ba14bace44eab981cc0a1b435e9992';
-function publicImageUrl(url) {
-  const u = new URL(url);
-  const match = u.pathname.match(/^\/file\/([^/]+)$/);
-  return match ? `${UPLOADS_ORIGIN}/file/${encodeURIComponent(match[1])}` : url;
-}
+const DATA_URL_RE = /^data:(image\/[a-z0-9+.-]{2,20});base64,([A-Za-z0-9+/=\s]+)$/i;
 
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const u = await currentUser(req);
-  if (!u) return res.status(401).json({ error: 'سجل دخول أولاً' });
-  try {
-    const { data_url, filename } = await readBody(req);
-    if (!data_url || !/^data:image\/(png|jpe?g|gif|webp);base64,/.test(data_url)) {
-      return res.status(400).json({ error: 'ملف صورة غير صالح' });
-    }
-    const m = data_url.match(/^data:(image\/[a-z+.-]+);base64,(.+)$/i);
-    const mime = m[1];
-    const b64 = m[2];
-    const buf = Buffer.from(b64, 'base64');
-    if (buf.length > 3 * 1024 * 1024) return res.status(400).json({ error: 'الصورة أكبر من 3 ميغا' });
-    const ext = mime.split('/')[1].replace('jpeg', 'jpg');
-    const name = (filename || `avatar_${u.username}`).replace(/[^\w.-]/g, '_').slice(0, 40) + '.' + ext;
+module.exports = wrap('upload-avatar', async (req, res) => {
+  if (!methodGuard(req, res, 'POST')) return;
+  noStore(res);
 
-    const fd = new FormData();
-    fd.append('file', new Blob([buf], { type: mime }), name);
-    const r = await fetch(NEZUKO_URL, {
-      method: 'POST',
-      headers: { 'x-api-key': NEZUKO_KEY, accept: '*/*' },
-      body: fd,
-    });
-    const txt = await r.text();
-    let j; try { j = JSON.parse(txt); } catch { j = { raw: txt }; }
-    if (!r.ok || !j.success || !j.file || !j.file.url) {
-      return res.status(502).json({ error: 'فشل رفع الصورة', detail: j });
-    }
-    res.status(200).json({ ok: true, url: publicImageUrl(j.file.url) });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'خطأ داخلي: ' + (e.message || 'unknown') });
+  const { user } = await requireUser(req, { verified: true });
+  if (!(await enforce(req, res, 'upload-avatar', user.username)).allowed) return;
+
+  const maxImage = config().limits.avatarBytes;
+  // base64 inflates by ~4/3; allow that plus a small JSON envelope.
+  const body = await readBody(req, { maxBytes: Math.ceil(maxImage * 1.4) + 2048 });
+
+  const dataUrl = typeof body.data_url === 'string' ? body.data_url : '';
+  const m = DATA_URL_RE.exec(dataUrl);
+  if (!m) throw new HttpError(400, 'ملف صورة غير صالح');
+
+  const declaredMime = m[1].toLowerCase();
+  if (declaredMime === 'image/svg+xml') {
+    throw new HttpError(415, 'صور SVG غير مدعومة للصور الشخصية');
   }
-};
+
+  let buf;
+  try { buf = Buffer.from(m[2].replace(/\s+/g, ''), 'base64'); } catch { throw new HttpError(400, 'ترميز الصورة غير صالح'); }
+  if (!buf.length) throw new HttpError(400, 'الصورة فارغة');
+  if (buf.length > maxImage) {
+    throw new HttpError(413, `الصورة أكبر من ${Math.round(maxImage / (1024 * 1024))} ميغا`);
+  }
+
+  // Content decides the type, not the client.
+  const sniffed = sniffImage(buf);
+  if (!sniffed.ok) throw new HttpError(415, sniffed.error);
+  if (sniffed.mime !== declaredMime && !(declaredMime === 'image/jpg' && sniffed.mime === 'image/jpeg')) {
+    throw new HttpError(415, 'نوع الصورة المعلن لا يطابق محتواها');
+  }
+
+  const safeBase = String(body.filename || `avatar_${user.username}`)
+    .replace(/[^\w-]/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 40) || `avatar_${user.username}`;
+  const name = `${safeBase}.${sniffed.ext}`;
+
+  const result = await upload(buf, name, sniffed.mime);
+  res.status(200).json({ ok: true, url: result.url });
+});

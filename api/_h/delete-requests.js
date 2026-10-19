@@ -1,10 +1,13 @@
-const { currentUser, isAdminEmail } = require('../_auth');
+// GET /api/delete-requests — admin queue of pending delete requests.
+const { requireAdmin } = require('../_guard');
 const { readJson } = require('../_gh');
+const { wrap, methodGuard, noStore } = require('../_http');
 
-module.exports = async (req, res) => {
-  const u = await currentUser(req);
-  if (!u || !isAdminEmail(u.email)) return res.status(403).json({ error: 'ممنوع' });
+module.exports = wrap('delete-requests', async (req, res) => {
+  if (!methodGuard(req, res, 'GET')) return;
+  await requireAdmin(req, { csrf: false });
+  noStore(res);
   const { data } = await readJson('data/delete_requests.json', { items: [] });
-  const items = (data.items || []).filter((x) => x.status === 'pending');
+  const items = (data.items || []).filter((x) => (x.status || 'pending') === 'pending');
   res.status(200).json({ items });
-};
+});

@@ -1,73 +1,91 @@
-// POST /api/ban        { username, ban, reason }   — admin only
-// GET  /api/ban?username=<u>                       -> { banned, reason, banned_at }
-// Admins store bans in data/bans.json: { "<username>": { banned:true, reason, banned_at, unbanned_at, messages: [...] } }
-// On ban: delete all approved codes of the user (files + manifest + pending), send emails.
-// On unban: send restoration email. Users see ban overlay on frontend via /api/ban check.
-const { currentUser, isAdminEmail, readBody, loadUsers, saveUsers } = require('../_auth');
-const { readJson, writeJson, deleteFile, listDir, getFile, putFile, REPO, BRANCH } = require('../_gh');
+// POST /api/ban { username, ban, reason }   — admin only
+// GET  /api/ban?username=<u>                -> this user's ban record
+//
+// Fixes:
+//   * deleteFile() was called WITHOUT a blob sha, which GitHub rejects (422), so
+//     "delete the banned member's codes" silently did nothing. _gh.deleteFile now
+//     resolves the sha itself and failures are reported instead of swallowed.
+//   * Banning bumps session_version, so the member's existing cookie stops
+//     working immediately instead of staying valid until it expires.
+//   * The stale fallback admin address / vercel.app domain are gone (APP-05).
+//   * Every ban and unban is written to the moderation audit log.
+const { readBody, loadUsers, findUser, updateUsers, bumpSessionVersion } = require('../_auth');
+const { requireAdmin, BANS_PATH } = require('../_guard');
+const { readJson, updateJson, deleteFile, listDir, getFile, SKIP_WRITE } = require('../_gh');
 const { sendMail, shell, escapeHtml } = require('../_mail');
+const { config, baseUrl } = require('../_config');
+const { wrap, methodGuard, HttpError, noStore } = require('../_http');
+const { enforce } = require('../_ratelimit');
+const { logDecision } = require('../_moderation');
 
-const BANS_PATH = 'data/bans.json';
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'mzmlzip@gmail.com').toLowerCase();
-const SITE_URL = process.env.SITE_URL || process.env.APP_URL || 'https://monte-top-v.vercel.app';
-const WA_1 = '249918614328';
+const SUPPORT_WA = (process.env.SUPPORT_WHATSAPP || '').replace(/[^\d]/g, '');
 
-async function loadBans() {
-  const { data } = await readJson(BANS_PATH, {});
-  return data;
-}
-async function saveBans(d) {
-  await writeJson(BANS_PATH, d, 'bans: update');
-  return d;
-}
-
-async function loadManifest() {
-  const f = await getFile('data/manifest.json');
-  if (!f) return { data: { codes: [] }, sha: null };
-  try { return { data: JSON.parse(f.content), sha: f.sha }; }
-  catch { return { data: { codes: [] }, sha: f.sha }; }
+function supportBlock(req) {
+  if (SUPPORT_WA) {
+    return `<div style="text-align:center;margin-top:18px;">
+      <a href="https://wa.me/${SUPPORT_WA}" style="display:inline-block;margin:6px 4px;padding:12px 26px;background:linear-gradient(135deg,#5ce18b,#25d366);color:#0a0a0a;text-decoration:none;font-weight:bold;border-radius:10px;font-size:15px;">💬 التواصل مع الدعم عبر واتساب</a>
+    </div>`;
+  }
+  const admin = config().adminEmail;
+  return `<p style="margin:14px 0 0;color:#a08454;font-size:13px;">
+    للتواصل مع الدعم: <a href="mailto:${escapeHtml(admin)}" style="color:#f2c675;">${escapeHtml(admin)}</a>
+    أو من <a href="${baseUrl(req)}/info" style="color:#f2c675;">صفحة معلومات المنصة</a>.
+  </p>`;
 }
 
-function waButton(label, number) {
-  return `<a href="https://wa.me/${number}" style="display:inline-block;margin:6px 4px;padding:12px 26px;background:linear-gradient(135deg,#5ce18b,#25d366);color:#0a0a0a;text-decoration:none;font-weight:bold;border-radius:10px;font-size:15px;">${label}</a>`;
-}
-
+/**
+ * Remove every approved code of a banned member, plus their queue entries.
+ * Returns what actually happened so the caller can report real results.
+ */
 async function deleteUsersCodes(username) {
-  // 1) collect filenames authored by the user from the manifest (author is tracked there)
-  const { data: manifest, sha: manifestSha } = await loadManifest();
   const target = String(username).toLowerCase();
-  const kept = [];
   const removed = [];
-  if (manifest && Array.isArray(manifest.codes)) {
+  const failed = [];
+
+  await updateJson('data/manifest.json', { codes: [] }, (manifest) => {
+    if (!Array.isArray(manifest.codes)) return SKIP_WRITE;
+    const kept = [];
     for (const c of manifest.codes) {
       const item = typeof c === 'string' ? { filename: c } : c;
       if (item.author && String(item.author).toLowerCase() === target) removed.push(item.filename);
       else kept.push(c);
     }
-    if (removed.length) {
-      await putFile('data/manifest.json', JSON.stringify({ ...manifest, codes: kept }, null, 2), `ban: clear codes of ${username}`, manifestSha);
+    if (!removed.length) return SKIP_WRITE;
+    manifest.codes = kept;
+    return null;
+  }, `ban: clear codes of ${username}`);
+
+  for (const name of removed) {
+    try {
+      await deleteFile(`codes/${name}`, `ban: remove ${name}`);
+    } catch (e) {
+      failed.push(name);
+      // eslint-disable-next-line no-console
+      console.error(`[ban] failed to delete codes/${name}:`, e.message);
     }
   }
-  // 2) delete the physical files + pending entries of the removed filenames
-  for (const name of removed) {
-    try { await deleteFile('codes/' + name, `ban: remove ${name}`); } catch (e) { console.error('delete failed', name, e && e.message); }
-  }
-  // Pending items store author inside their JSON body
-  const pendingFiles = await listDir('pending');
-  for (const it of pendingFiles) {
-    if (!it.name || it.name.endsWith('.json') === false) continue;
+
+  for (const it of await listDir('pending')) {
+    if (!it.name || !it.name.endsWith('.json')) continue;
     try {
-      const f = await getFile('pending/' + it.name);
+      const f = await getFile(`pending/${it.name}`, true);
       if (!f) continue;
       const j = JSON.parse(f.content);
       if (j.author && String(j.author).toLowerCase() === target) {
-        await deleteFile('pending/' + it.name, `ban: remove pending ${it.name}`);
+        await deleteFile(`pending/${it.name}`, `ban: remove pending ${it.name}`, f.sha);
+        removed.push(`pending/${it.name}`);
       }
-    } catch { /* skip */ }
+    } catch (e) {
+      failed.push(`pending/${it.name}`);
+      // eslint-disable-next-line no-console
+      console.error(`[ban] failed to clear pending/${it.name}:`, e.message);
+    }
   }
+
+  return { removed, failed };
 }
 
-async function sendBanEmail({ to, username, reason }) {
+async function sendBanEmail(req, { to, username, reason }) {
   await sendMail({
     to,
     subject: '🚫 إغلاق حسابك — ARAB code',
@@ -75,88 +93,126 @@ async function sendBanEmail({ to, username, reason }) {
       <h2 style="margin:0 0 12px;color:#e05252;font-size:20px;">تم إغلاق هذا الحساب</h2>
       <p style="margin:0 0 10px;line-height:1.9;color:#d8c9a3;font-size:15px;">
         مرحباً <b style="color:#f2c675;">${escapeHtml(String(username))}</b>،<br>
-        لقد تم إغلاق حسابك لأسباب أمنية${reason ? `: <b style="color:#e8b7b7;">${escapeHtml(String(reason))}</b>` : '.'}
+        تم إغلاق حسابك${reason ? `: <b style="color:#e8b7b7;">${escapeHtml(String(reason))}</b>` : '.'}
       </p>
-      <p style="margin:14px 0 0;line-height:1.9;color:#d8c9a3;font-size:15px;">
-        يمكنك التواصل مع الدعم عبر واتساب لحل المشكلة وإعادة تفعيل حسابك:
-      </p>
-      <div style="text-align:center;margin-top:18px;">
-        ${waButton('💬 اضغط هنا للمراسلة عبر واتساب', WA_1)}
-      </div>
+      ${supportBlock(req)}
     `),
   });
 }
 
-async function sendUnbanEmail({ to, username }) {
+async function sendUnbanEmail(req, { to, username }) {
   await sendMail({
     to,
     subject: '✅ عودة حسابك — ARAB code',
     html: shell(`
-      <h2 style="margin:0 0 12px;color:#5ce18b;font-size:20px;">عادت حسابك مجدداً ✅</h2>
+      <h2 style="margin:0 0 12px;color:#5ce18b;font-size:20px;">عاد حسابك مجدداً ✅</h2>
       <p style="margin:0 0 10px;line-height:1.9;color:#d8c9a3;font-size:15px;">
         مرحباً <b style="color:#f2c675;">${escapeHtml(String(username))}</b>،<br>
-        تم إعادة تفعيل حسابك بنجاح. يمكنك الآن الدخول والنشر بشكل طبيعي.
+        تم إعادة تفعيل حسابك. يمكنك الآن الدخول والنشر بشكل طبيعي.
       </p>
       <div style="text-align:center;margin-top:18px;">
-        <a href="${SITE_URL}" style="display:inline-block;margin:6px 4px;padding:12px 26px;background:linear-gradient(135deg,#e6a44a,#c67a1e);color:#0a0a0a;text-decoration:none;font-weight:bold;border-radius:10px;font-size:15px;">فتح المنصة</a>
+        <a href="${baseUrl(req)}" style="display:inline-block;margin:6px 4px;padding:12px 26px;background:linear-gradient(135deg,#e6a44a,#c67a1e);color:#0a0a0a;text-decoration:none;font-weight:bold;border-radius:10px;font-size:15px;">فتح المنصة</a>
       </div>
     `),
   });
 }
 
-module.exports = async (req, res) => {
-  try {
-    const me = await currentUser(req);
-    if (!me || !isAdminEmail(me.email)) return res.status(403).json({ error: 'ممنوع' });
+module.exports = wrap('ban', async (req, res) => {
+  if (!methodGuard(req, res, ['GET', 'POST'])) return;
+  noStore(res);
+  const { user: me } = await requireAdmin(req, { csrf: req.method !== 'GET' });
 
-    if (req.method === 'GET') {
-      const url = new URL(req.url, 'http://x');
-      const username = url.searchParams.get('username') || '';
-      const bans = await loadBans();
-      const b = username ? (bans[String(username).toLowerCase()] || null) : bans;
-      return res.status(200).json({ bans: b });
-    }
-
-    // POST
-    const body = await readBody(req);
-    const username = String(body.username || '').trim();
-    const ban = !!body.ban;
-    if (!username) return res.status(400).json({ error: 'حدد المستخدم' });
-
-    const users = (await loadUsers()).users;
-    const target = users.find((u) => String(u.username || '').toLowerCase() === String(username).toLowerCase());
-    if (!target) return res.status(404).json({ error: 'المستخدم غير موجود' });
-    if (isAdminEmail(target.email)) return res.status(400).json({ error: 'لا يمكن حظر الأدمن' });
-
-    const bans = await loadBans();
-    bans[String(username).toLowerCase()] = {
-      banned: ban,
-      reason: String(body.reason || '').trim() || (ban ? 'أسباب أمنية' : null),
-      banned_at: ban ? new Date().toISOString() : (bans[String(username).toLowerCase()] && bans[String(username).toLowerCase()].banned_at) || null,
-      unbanned_at: ban ? null : new Date().toISOString(),
-    };
-    await saveBans(bans);
-
-    if (ban) {
-      try { await deleteUsersCodes(username); }
-      catch (e) { console.error('code deletion failed:', e && e.message); }
-      try { await sendBanEmail({ to: target.email, username: target.username, reason: bans[String(username).toLowerCase()].reason }); }
-      catch (e) { console.error('ban mail failed:', e && e.message); }
-      return res.status(200).json({ ok: true, banned: true });
-    }
-
-    try { await sendUnbanEmail({ to: target.email, username: target.username }); }
-    catch (e) { console.error('unban mail failed:', e && e.message); }
-    return res.status(200).json({ ok: true, banned: false });
-  } catch (e) {
-    res.status(e.status || 500).json({ error: e.message });
+  if (req.method === 'GET') {
+    const url = new URL(req.url, 'http://localhost');
+    const username = url.searchParams.get('username') || '';
+    const { data: bans } = await readJson(BANS_PATH, {});
+    const b = username ? (bans[String(username).toLowerCase()] || null) : bans;
+    return res.status(200).json({ bans: b });
   }
-};
+
+  if (!(await enforce(req, res, 'admin-write', me.username)).allowed) return;
+
+  const body = await readBody(req, { maxBytes: 4096 });
+  const username = String(body.username || '').trim();
+  const ban = !!body.ban;
+  const reason = String(body.reason || '').trim().slice(0, 400);
+  if (!username) throw new HttpError(400, 'حدد المستخدم');
+
+  const { users } = await loadUsers();
+  const target = findUser(users, username);
+  if (!target) throw new HttpError(404, 'المستخدم غير موجود');
+  const { isAdminEmail } = require('../_auth');
+  if (isAdminEmail(target.email)) throw new HttpError(400, 'لا يمكن حظر الأدمن');
+
+  const key = target.username.toLowerCase();
+  let record = null;
+  await updateJson(BANS_PATH, {}, (bans) => {
+    const prev = bans[key] || {};
+    record = {
+      banned: ban,
+      reason: reason || (ban ? 'أسباب أمنية' : null),
+      banned_at: ban ? new Date().toISOString() : (prev.banned_at || null),
+      unbanned_at: ban ? null : new Date().toISOString(),
+      by: me.username,
+    };
+    bans[key] = record;
+    return null;
+  }, `bans: ${ban ? 'ban' : 'unban'} ${target.username}`);
+
+  // Revoke the member's live sessions: a ban must take effect now, not when the
+  // cookie expires.
+  await updateUsers((data) => {
+    const u = findUser(data.users, target.username);
+    if (!u) return SKIP_WRITE;
+    bumpSessionVersion(u);
+    u.banned = ban;
+    if (!ban) delete u.banned;
+    return null;
+  }, `security: rotate sessions after ${ban ? 'ban' : 'unban'} of ${target.username}`);
+
+  let cleanup = { removed: [], failed: [] };
+  if (ban) {
+    try {
+      cleanup = await deleteUsersCodes(target.username);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[ban] code cleanup failed:', e.message);
+      cleanup.failed.push('cleanup-aborted');
+    }
+  }
+
+  let mailed = false;
+  try {
+    if (ban) await sendBanEmail(req, { to: target.email, username: target.username, reason: record.reason });
+    else await sendUnbanEmail(req, { to: target.email, username: target.username });
+    mailed = true;
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('[ban] notification mail failed:', e.message);
+  }
+
+  await logDecision({
+    actor: me.username,
+    action: ban ? 'ban' : 'unban',
+    target: `user:${target.username}`,
+    reason: record.reason,
+    meta: { removed: cleanup.removed.length, failed: cleanup.failed.length, mailed },
+  });
+
+  // Report what really happened — including partial failures.
+  res.status(200).json({
+    ok: cleanup.failed.length === 0,
+    banned: ban,
+    mailed,
+    removed_codes: cleanup.removed.length,
+    failed_deletions: cleanup.failed,
+  });
+});
 
 module.exports.isBanned = async function isBanned(username) {
   if (!username) return null;
   const { data } = await readJson(BANS_PATH, {});
   const b = data[String(username).toLowerCase()] || null;
-  if (!b || !b.banned) return null;
-  return b;
+  return b && b.banned ? b : null;
 };
+module.exports.deleteUsersCodes = deleteUsersCodes;

@@ -8,7 +8,6 @@
 <meta name="keywords" content="أكواد, مطورين عرب, برمجة, مشاركة كود, HTML, CSS, JavaScript, Python, Arab developers, code sharing, programming, snippets">
 <link rel="canonical" href="https://www.arab-code.cv/auth">
 <link rel="alternate" hreflang="ar" href="https://www.arab-code.cv/auth">
-<link rel="alternate" hreflang="en" href="https://www.arab-code.cv/auth">
 <link rel="alternate" hreflang="x-default" href="https://www.arab-code.cv/auth">
 <meta property="og:type" content="website"><meta property="og:site_name" content="ARAB code">
 <meta property="og:locale" content="ar_AR"><meta property="og:locale:alternate" content="en_US">
@@ -53,8 +52,12 @@ form{width:100%;margin:auto}
 .input-box input::placeholder{color:#a99c7a;font-weight:400}
 .input-box i{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:20px;color:#f0b400}
 
-.forgot-link{margin:-12px 0 14px;text-align:left}
-.forgot-link a{font-size:13.5px;color:#a9871d;cursor:pointer}
+.forgot-link{margin:-12px 0 14px;text-align:left;display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-start}
+/* Real <button> elements styled as links: keyboard reachable and announced
+   correctly (they used to be <a> tags with no href, so Tab skipped them). */
+.link-btn{font-size:13.5px;color:#a9871d;cursor:pointer;background:none;border:0;padding:4px 2px;font-family:inherit;text-decoration:underline;min-height:32px}
+.link-btn:hover,.link-btn:focus-visible{color:#d4af37}
+:focus-visible{outline:2px solid #d4af37;outline-offset:2px}
 
 .btn{width:100%;height:48px;background:linear-gradient(135deg,#f0b400,#d4af37);border-radius:10px;box-shadow:0 4px 16px rgba(240,180,0,.25);border:none;cursor:pointer;font-size:16px;color:#111;font-weight:800;font-family:"Cairo",sans-serif;transition:.2s}
 .btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(240,180,0,.4)}
@@ -122,7 +125,7 @@ form{width:100%;margin:auto}
     <form id="login-form">
       <h1 id="login-title">تسجيل الدخول</h1>
       <p id="login-sub">أهلاً بعودتك إلى ARAB code</p>
-      <div id="login-msg" class="msg"></div>
+      <div id="login-msg" class="msg" role="status" aria-live="polite"></div>
 
       <div class="input-box">
         <input type="email" name="email" placeholder="الإيميل" autocomplete="email" required>
@@ -133,7 +136,8 @@ form{width:100%;margin:auto}
         <i class='bx bxs-lock-alt'></i>
       </div>
       <div class="forgot-link" id="forgot-link">
-        <a id="forgot-btn">نسيت كلمة السر؟</a>
+        <button type="button" id="forgot-btn" class="link-btn">نسيت كلمة السر؟</button>
+        <button type="button" id="resend-btn" class="link-btn">لم تستلم رسالة التفعيل؟</button>
       </div>
 
       <div class="cf-turnstile" data-sitekey="0x4AAAAAAFDSVkFD-ysdHC_H" data-theme="dark"></div>
@@ -154,7 +158,7 @@ form{width:100%;margin:auto}
     <form id="signup-form">
       <h1>إنشاء حساب</h1>
       <p>انضم إلى مجتمع ARAB code</p>
-      <div id="signup-msg" class="msg"></div>
+      <div id="signup-msg" class="msg" role="status" aria-live="polite"></div>
 
       <div class="input-box">
         <input type="text" name="username" placeholder="اسم المستخدم" autocomplete="username" maxlength="20" required>
@@ -168,11 +172,6 @@ form{width:100%;margin:auto}
         <input type="password" name="password" placeholder="كلمة السر (8 أحرف فأكثر)" autocomplete="new-password" required minlength="8">
         <i class='bx bxs-lock-alt'></i>
       </div>
-      <div class="input-box">
-        <input type="tel" name="phone" placeholder="رقم واتساب (اختياري)" autocomplete="tel">
-        <i class='bx bxl-whatsapp'></i>
-      </div>
-
       <div class="cf-turnstile" data-sitekey="0x4AAAAAAFDSVkFD-ysdHC_H" data-theme="dark"></div>
       <button type="submit" class="btn" id="signup-btn">إنشاء الحساب</button>
 
@@ -218,6 +217,14 @@ document.querySelector('.login-btn').onclick = () => container.classList.remove(
 // فتح صفحة إنشاء الحساب مباشرة عبر ?mode=signup
 if (params.get('mode') === 'signup') container.classList.add('active');
 
+// ?mode=forgot — رابط «عيّن كلمة سر» في رسالة الترحيب
+if (params.get('mode') === 'forgot') {
+  container.classList.remove('active');
+  const m = document.getElementById('login-msg');
+  m.className = 'msg';
+  m.textContent = 'اكتب بريدك ثم اضغط «نسيت كلمة السر؟» لإرسال رابط تعيين كلمة سر.';
+}
+
 // وضع إعادة تعيين كلمة السر ?mode=reset
 if (params.get('mode') === 'reset') {
   resetMode = true;
@@ -252,21 +259,42 @@ function tsToken(form) {
   return el ? el.value : '';
 }
 
-// نسيت كلمة السر
-document.getElementById('forgot-btn').onclick = () => {
-  const email = document.querySelector('#login-form input[name="email"]').value;
+// نسيت كلمة السر / إعادة إرسال رسالة التفعيل
+// الرد موحّد في الحالتين: لا نكشف ما إذا كان البريد مسجلاً (منع تعداد البريد).
+async function mailFlow(endpoint, successText) {
+  const form = document.getElementById('login-form');
+  const email = form.querySelector('input[name="email"]').value.trim();
   const msg = document.getElementById('login-msg');
+  msg.className = 'msg';
   if (!email) {
     msg.className = 'msg err';
-    msg.textContent = 'يرجى كتابة الإيميل أولاً';
+    msg.textContent = 'اكتب الإيميل أولاً';
+    form.querySelector('input[name="email"]').focus();
     return;
   }
-  if (confirm('هل تريد إرسال رابط استعادة كلمة السر إلى ' + email + '؟')) {
-    api('/api/forgot-password', { method: 'POST', body: JSON.stringify({ email }) })
-      .then(() => { msg.className = 'msg ok'; msg.textContent = '✓ تم إرسال الرابط إلى بريدك.'; })
-      .catch(err => { msg.className = 'msg err'; msg.textContent = err.message; });
+  const token = tsToken(form);
+  if (!token) {
+    msg.className = 'msg err';
+    msg.textContent = 'اضغط زر التحقق الأمني أولاً';
+    return;
   }
-};
+  msg.textContent = 'جارٍ الإرسال...';
+  try {
+    const r = await api(endpoint, { method: 'POST', body: JSON.stringify({ email, turnstile_token: token }) });
+    msg.className = 'msg ok';
+    msg.textContent = '✓ ' + ((r && r.message) || successText);
+  } catch (err) {
+    msg.className = 'msg err';
+    msg.textContent = err.message;
+  } finally {
+    if (window.turnstile) try { turnstile.reset(); } catch (_) {}
+  }
+}
+
+document.getElementById('forgot-btn').onclick = () =>
+  mailFlow('/api/forgot-password', 'إذا كان البريد مسجلاً فستصلك رسالة لإعادة التعيين.');
+document.getElementById('resend-btn').onclick = () =>
+  mailFlow('/api/resend-verification', 'إذا كان البريد مسجلاً وغير مُفعّل فستصلك رسالة تفعيل جديدة.');
 
 // إرسال نموذج الدخول / إعادة التعيين
 document.getElementById('login-form').onsubmit = async (e) => {

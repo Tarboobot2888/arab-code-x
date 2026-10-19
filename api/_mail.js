@@ -1,12 +1,50 @@
 const nodemailer = require('nodemailer');
+const { config } = require('./_config');
 
+// SMTP settings come from the validated config, never straight from process.env,
+// and every send has a timeout so a hung relay cannot hold a lambda open.
 function transporter() {
+  const { smtp } = config();
+  if (!config().mailEnabled) {
+    const err = new Error('SMTP is not configured');
+    err.expose = false;
+    throw err;
+  }
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '465', 10),
-    secure: String(process.env.SMTP_SECURE || 'true') === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.secure,
+    auth: { user: smtp.user, pass: smtp.pass },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
   });
+}
+
+// A recipient is always a single, plain address. The library's own parser has
+// had repeated recipient-validation bypasses (IDN/punycode, RFC 5322 comments),
+// so the address is validated here too and anything exotic is refused outright
+// rather than passed through for the parser to interpret.
+const RECIPIENT_RE = /^[^\s@,;<>"'()\[\]\\]+@[^\s@,;<>"'()\[\]\\]+\.[A-Za-z]{2,}$/;
+
+function assertRecipient(to) {
+  const value = String(to == null ? '' : to).trim();
+  if (!value || value.length > 254 || !RECIPIENT_RE.test(value)) {
+    const err = new Error('invalid recipient address');
+    err.expose = false;
+    throw err;
+  }
+  // CR/LF would allow header injection regardless of the library version.
+  if (/[\r\n]/.test(value)) {
+    const err = new Error('invalid recipient address');
+    err.expose = false;
+    throw err;
+  }
+  return value;
+}
+
+function fromAddress() {
+  return `"ARAB code" <${config().smtp.user}>`;
 }
 
 function verifyEmailHtml({ username, verifyUrl }) {
@@ -45,37 +83,46 @@ function escapeHtml(s) {
 }
 
 async function sendVerification({ to, username, verifyUrl }) {
+  const recipient = assertRecipient(to);
   const t = transporter();
   await t.sendMail({
-    from: `"ARAB code" <${process.env.SMTP_USER}>`,
-    to,
+    from: fromAddress(),
+    to: recipient,
     subject: '✨ تأكيد حسابك في ARAB code',
     html: verifyEmailHtml({ username, verifyUrl }),
   });
 }
 
 async function sendMail({ to, subject, html }) {
+  const recipient = assertRecipient(to);
   const t = transporter();
   await t.sendMail({
-    from: `"ARAB code" <${process.env.SMTP_USER}>`,
-    to,
+    from: fromAddress(),
+    to: recipient,
     subject,
     html,
   });
 }
 
-const SUPPORT_WA_1 = '249918614328';
-const SUPPORT_WA_2 = '96879361317';
-const SUPPORT_EMAIL = 'mzmlzip@gmail.com';
+// Support channels come from configuration (APP-05/APP-09). The audited file
+// hardcoded two personal WhatsApp numbers and a personal Gmail address, which
+// diverged from README.md and from _report.js.
+function supportChannels() {
+  const numbers = String(process.env.SUPPORT_WHATSAPP || '')
+    .split(',').map((n) => n.replace(/[^\d]/g, '')).filter(Boolean).slice(0, 2);
+  return { numbers, email: config().adminEmail };
+}
 
 function supportButtons() {
+  const { numbers, email } = supportChannels();
   const btn = (href, label, bg) =>
-    `<a href="${href}" style="display:inline-block;margin:6px 4px;padding:12px 22px;background:${bg};color:#0a0a0a;text-decoration:none;font-weight:bold;border-radius:10px;font-size:14px;">${label}</a>`;
-  return `<div style="text-align:center;margin:22px 0 6px;">
-    ${btn(`https://wa.me/${SUPPORT_WA_1}`, '💬 واتساب +' + SUPPORT_WA_1, 'linear-gradient(135deg,#5ce18b,#25d366)')}
-    ${btn(`mailto:${SUPPORT_EMAIL}`, '✉️ ' + SUPPORT_EMAIL, 'linear-gradient(135deg,#e6a44a,#c67a1e)')}
-    ${btn(`https://wa.me/${SUPPORT_WA_2}`, '💬 واتساب +' + SUPPORT_WA_2, 'linear-gradient(135deg,#5ce18b,#25d366)')}
-  </div>`;
+    `<a href="${href}" style="display:inline-block;margin:6px 4px;padding:12px 22px;background:${bg};color:#0a0a0a;text-decoration:none;font-weight:bold;border-radius:10px;font-size:14px;">${escapeHtml(label)}</a>`;
+  const green = 'linear-gradient(135deg,#5ce18b,#25d366)';
+  const gold = 'linear-gradient(135deg,#e6a44a,#c67a1e)';
+  const parts = numbers.map((n) => btn(`https://wa.me/${n}`, `💬 واتساب +${n}`, green));
+  if (email) parts.push(btn(`mailto:${email}`, `✉️ ${email}`, gold));
+  if (!parts.length) return '';
+  return `<div style="text-align:center;margin:22px 0 6px;">\n    ${parts.join('\n    ')}\n  </div>`;
 }
 
 function shell(inner) {
@@ -120,40 +167,61 @@ async function sendRejection({ to, username, title, reason, auto }) {
   });
 }
 
-function welcomeCredentialsHtml({ display, email, username, password, loginUrl }) {
-  const row = (label, value) =>
-    `<tr>
-      <td style="padding:9px 12px;color:#a08454;font-size:13px;white-space:nowrap;">${escapeHtml(label)}</td>
-      <td style="padding:9px 12px;color:#f2c675;font-size:14px;font-weight:bold;direction:ltr;text-align:left;word-break:break-all;">${escapeHtml(value)}</td>
-    </tr>`;
+// SEC-10: ARAB code no longer generates a local password for Google accounts and
+// never emails a password in clear text. A Google account signs in with the
+// Google button; if the member wants a local password they set one themselves
+// through the ordinary "forgot password" flow, which proves mailbox control.
+function welcomeHtml({ display, loginUrl, setPasswordUrl }) {
   return shell(`
     <h2 style="margin:0 0 10px;color:#f2c675;font-size:20px;">مرحباً بك في منصة ARAB CODE يا ${escapeHtml(display)} 👋</h2>
     <p style="margin:0 0 16px;line-height:1.9;color:#d8c9a3;font-size:15px;">
-      تم إنشاء حسابك عبر <b style="color:#f2c675;">تسجيل الدخول بجوجل</b>، وأنشأنا لك كلمة سر تلقائية حتى تقدر تدخل بالبريد وكلمة السر مباشرة أيضاً.
+      تم إنشاء حسابك عبر <b style="color:#f2c675;">تسجيل الدخول بجوجل</b>. استخدم زر جوجل في كل مرة للدخول — لا تحتاج إلى كلمة سر.
     </p>
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#150f04;border:1px solid #3a2a10;border-radius:12px;overflow:hidden;">
-      ${row('ايميل حسابك :', email)}
-      ${row('يوزرك :', username)}
-      ${row('كلمه السر :', password)}
-    </table>
     <div style="text-align:center;margin:22px 0 6px;">
       <a href="${loginUrl}" style="display:inline-block;padding:13px 36px;background:linear-gradient(135deg,#e6a44a,#c67a1e);color:#0a0a0a;text-decoration:none;font-weight:bold;border-radius:10px;font-size:15px;">الدخول إلى المنصة</a>
     </div>
     <p style="margin:14px 0 0;color:#a08454;font-size:13px;line-height:1.8;">
-      يمكنك تغيير كلمة السر في أي وقت من صفحة "نسيت كلمة السر" أو من إعدادات حسابك، ويمكنك أيضاً الدخول تلقائياً بزر جوجل.
+      إذا رغبت بكلمة سر محلية إضافية، اطلبها بنفسك من
+      <a href="${setPasswordUrl}" style="color:#f2c675;">صفحة «نسيت كلمة السر»</a>
+      وسنرسل لك رابطاً آمناً لتعيينها. لا نرسل كلمات السر في البريد أبداً.
     </p>
-    <p style="margin:14px 0 0;color:#6a5a3a;font-size:12px;">احتفظ بهذه الرسالة في مكان آمن ولا تشاركها مع أحد.</p>
   `);
 }
 
-async function sendWelcomeCredentials({ to, display, username, password, loginUrl }) {
+async function sendWelcome({ to, display, loginUrl, setPasswordUrl }) {
   return sendMail({
     to,
-    subject: '🎉 مرحباً بك في منصة ARAB CODE — بيانات حسابك',
-    html: welcomeCredentialsHtml({ display, email: to, username, password, loginUrl }),
+    subject: '🎉 مرحباً بك في منصة ARAB CODE',
+    html: welcomeHtml({ display, loginUrl, setPasswordUrl }),
   });
 }
 
+// Password reset mail. The URL contains a single-use, expiring token; it is
+// never logged and the body carries no other account data.
+function passwordResetHtml({ username, resetUrl }) {
+  return shell(`
+    <h2 style="margin:0 0 12px;color:#f2c675;font-size:20px;">استعادة كلمة السر</h2>
+    <p style="margin:0 0 10px;line-height:1.9;color:#d8c9a3;font-size:15px;">
+      أهلاً <b style="color:#f2c675;">${escapeHtml(username || 'عضو ARAB code')}</b>،<br>
+      وصلنا طلب لتعيين كلمة سر جديدة لحسابك. اضغط الزر أدناه لمتابعة العملية.
+    </p>
+    <div style="text-align:center;margin:22px 0 6px;">
+      <a href="${resetUrl}" style="display:inline-block;padding:13px 36px;background:linear-gradient(135deg,#e6a44a,#c67a1e);color:#0a0a0a;text-decoration:none;font-weight:bold;border-radius:10px;font-size:15px;">تعيين كلمة سر جديدة</a>
+    </div>
+    <p style="margin:14px 0 0;color:#a08454;font-size:13px;line-height:1.8;">
+      الرابط صالح لمدة ساعة واحدة ويُستخدم مرة واحدة فقط. إذا لم تطلب هذا الإجراء فتجاهل الرسالة،
+      ولن يتغيّر شيء في حسابك.
+    </p>
+  `);
+}
+
+async function sendPasswordReset({ to, username, resetUrl }) {
+  return sendMail({
+    to,
+    subject: '🔑 استعادة كلمة السر — ARAB code',
+    html: passwordResetHtml({ username, resetUrl }),
+  });
+}
 
 // Rich body: escapes everything, then turns (:النص >الرابط:) or
 // (:النص >الرابط >#25d366:) into a styled button, and newlines into <br>.
@@ -218,5 +286,9 @@ async function sendAccountNotice({ to, username, title, text }) {
   });
 }
 
-module.exports = { sendVerification, sendMail, sendRejection, rejectionHtml, shell, sendWelcomeCredentials, welcomeCredentialsHtml, sendBroadcast, broadcastHtml, renderRichBody, sendChangeEmail, sendAccountNotice };
+module.exports = {
+  sendVerification, sendMail, sendRejection, rejectionHtml, shell, escapeHtml, assertRecipient,
+  sendWelcome, welcomeHtml, sendPasswordReset, passwordResetHtml,
+  sendBroadcast, broadcastHtml, renderRichBody, sendChangeEmail, sendAccountNotice,
+};
 

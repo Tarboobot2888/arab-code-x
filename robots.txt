@@ -1,5 +1,19 @@
 User-agent: *
 Allow: /
+
+# لوحة الإدارة وواجهات API ليست محتوى قابلاً للفهرسة
 Disallow: /admin
 Disallow: /api/
+
+# بيانات التشغيل ومجلد المساهمات ومكتبة ملفات المستخدمين.
+# هذه المسارات محجوبة أصلاً على مستوى النشر (.vercelignore + redirects في
+# vercel.json)؛ وجودها هنا تذكير للزواحف ولا يُعتمد عليه كحماية.
+Disallow: /data/
+Disallow: /pending/
+Disallow: /codes/
+
+# صفحات تتطلب جلسة، لا قيمة لفهرستها
+Disallow: /submit
+Disallow: /zip/new
+
 Sitemap: https://www.arab-code.cv/sitemap.xml

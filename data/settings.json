@@ -1,6 +1,6 @@
 {
-  "auto_approve": true,
-  "filter_enabled": false,
+  "auto_approve": false,
+  "filter_enabled": true,
   "direct_delete": true,
   "delete_requests_enabled": true,
   "google_login_enabled": true,

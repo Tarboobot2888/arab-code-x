@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, follow">
 <title>الملفات الجاهزة | Ready Files · ARAB code</title>
 <meta name="description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files.">
 <meta name="keywords" content="أكواد, مطورين عرب, برمجة, مشاركة كود, HTML, CSS, JavaScript, Python, Arab developers, code sharing, programming, snippets">
 <link rel="canonical" href="https://www.arab-code.cv/zip">
 <link rel="alternate" hreflang="ar" href="https://www.arab-code.cv/zip">
-<link rel="alternate" hreflang="en" href="https://www.arab-code.cv/zip">
 <link rel="alternate" hreflang="x-default" href="https://www.arab-code.cv/zip">
 <meta property="og:type" content="website"><meta property="og:site_name" content="ARAB code">
 <meta property="og:locale" content="ar_AR"><meta property="og:locale:alternate" content="en_US">
@@ -55,9 +55,10 @@ async function gate(){await renderNav();const me=await loadMe();if(!me){location
 </script>
 <script>
 function zipCard(z){
-  const th=z.thumb?`style="background-image:url('${esc(z.thumb)}')"`:'';
+  const thumbCss=escCss(z.thumb);
+  const th=thumbCss?`style="background-image:url('${thumbCss}')"`:'';
   return `<article class="code-card" onclick="location.href='/zip/${encodeURIComponent(z.slug)}'">
-    <div><div class="zip-thumb" ${th}>${z.thumb?'':'📦'}</div>
+    <div><div class="zip-thumb" ${th}>${thumbCss?'':'📦'}</div>
       <h3 class="card-title">${esc(z.title)}</h3>
       <p class="card-desc">${esc(z.description||'لا يوجد وصف')}</p>
       <div class="zip-meta"><span>${fmtSize(z.size)}</span>${z.version?`<span>v${esc(z.version)}</span>`:''}<span>${fmtDate(z.created_at)}</span></div>

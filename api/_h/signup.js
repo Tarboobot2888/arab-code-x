@@ -1,65 +1,94 @@
-const { bcrypt, EMAIL_RE, USERNAME_RE, loadUsers, saveUsers, readBody, randomToken, ADMIN_EMAIL } = require('../_auth');
+const {
+  bcrypt, EMAIL_RE, USERNAME_RE, RESERVED_USERNAMES, updateUsers, readBody, isAdminEmail,
+} = require('../_auth');
+const { SKIP_WRITE } = require('../_gh');
+const tokens = require('../_tokens');
 const { sendVerification } = require('../_mail');
 const { getSettings } = require('../_settings');
 const { verifyTurnstile, clientIp } = require('../_turnstile');
+const { wrap, methodGuard, HttpError, noStore, assertSameOrigin } = require('../_http');
+const { enforce } = require('../_ratelimit');
+const { baseUrl } = require('../_config');
 
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  try {
-    const _s = await getSettings();
-    if (_s.signup_enabled === false) return res.status(403).json({ error: 'التسجيل الجديد متوقف مؤقتاً' });
-    let { username, email, password, phone, turnstile_token } = await readBody(req);
-    const ts = await verifyTurnstile(turnstile_token, clientIp(req));
-    if (!ts.ok) return res.status(400).json({ error: ts.error });
-    username = (username || '').trim();
-    email = (email || '').trim();
-    phone = (phone || '').trim();
+module.exports = wrap('signup', async (req, res) => {
+  if (!methodGuard(req, res, 'POST')) return;
+  assertSameOrigin(req);
+  noStore(res);
 
-    if (!username || !email || !password) return res.status(400).json({ error: 'الاسم والإيميل وكلمة السر مطلوبة' });
-    if (!USERNAME_RE.test(username)) return res.status(400).json({ error: 'اسم المستخدم: 3-20 حرف/رقم/شرطة سفلية' });
-    if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'إيميل غير صالح' });
-    if (password.length < 8) return res.status(400).json({ error: 'كلمة السر 8 أحرف على الأقل' });
-    // phone is fully optional; accept any reasonable string (digits, +, spaces, dashes, parens)
-    if (phone && !/^[\d+\-\s()]{4,25}$/.test(phone)) {
-      return res.status(400).json({ error: 'رقم الهاتف يحتوي على رموز غير مسموحة' });
+  if (!(await enforce(req, res, 'signup')).allowed) return;
+
+  const s = await getSettings();
+  if (s.signup_enabled === false) throw new HttpError(403, 'التسجيل الجديد متوقف مؤقتاً');
+
+  const body = await readBody(req, { maxBytes: 8192 });
+  const ts = await verifyTurnstile(body.turnstile_token, clientIp(req));
+  if (!ts.ok) throw new HttpError(400, ts.error);
+
+  const username = String(body.username || '').trim();
+  const email = String(body.email || '').trim();
+  const password = String(body.password || '');
+  // `phone` is deliberately NOT read. It was collected and stored but never used
+  // by any feature, so keeping it was personal data held without a purpose
+  // (plan 9.3: "اجعل الهاتف اختيارياً فقط إذا كانت له حاجة منتجية").
+
+  if (!username || !email || !password) throw new HttpError(400, 'الاسم والإيميل وكلمة السر مطلوبة');
+  if (!USERNAME_RE.test(username)) throw new HttpError(400, 'اسم المستخدم: 3-20 حرف/رقم/شرطة سفلية');
+  if (RESERVED_USERNAMES.has(username.toLowerCase())) throw new HttpError(400, 'اسم المستخدم محجوز');
+  if (!EMAIL_RE.test(email) || email.length > 254) throw new HttpError(400, 'إيميل غير صالح');
+  if (password.length < 8) throw new HttpError(400, 'كلمة السر 8 أحرف على الأقل');
+  if (password.length > 200) throw new HttpError(400, 'كلمة السر طويلة جداً');
+
+  const emailLower = email.toLowerCase();
+  if (isAdminEmail(emailLower)) throw new HttpError(400, 'الإيميل مسجل مسبقاً');
+
+  const password_hash = await bcrypt.hash(password, 10);
+  let verifyToken = null;
+  let conflict = null;
+
+  // One atomic read-modify-write: the uniqueness check and the insert can no
+  // longer be split by a concurrent signup (SEC-08).
+  const { written } = await updateUsers((data) => {
+    if (data.users.some((u) => String(u.username || '').toLowerCase() === username.toLowerCase())) {
+      conflict = 'اسم المستخدم مستخدم مسبقاً';
+      return SKIP_WRITE;
     }
-
-    const data = await loadUsers();
-    const emailLower = email.toLowerCase();
-    if (data.users.some((u) => u.username.toLowerCase() === username.toLowerCase()))
-      return res.status(400).json({ error: 'اسم المستخدم مستخدم مسبقاً' });
-    if (data.users.some((u) => u.email.toLowerCase() === emailLower))
-      return res.status(400).json({ error: 'الإيميل مسجل مسبقاً' });
-
-    // The main admin already exists; public signup can never create an admin.
-    if (emailLower === ADMIN_EMAIL) return res.status(400).json({ error: 'الإيميل مسجل مسبقاً' });
-    const password_hash = await bcrypt.hash(password, 10);
-    const verification_token = randomToken(24);
+    if (data.users.some((u) => String(u.email || '').toLowerCase() === emailLower)) {
+      conflict = 'الإيميل مسجل مسبقاً';
+      return SKIP_WRITE;
+    }
     const user = {
-      username, email, phone: phone || '',
+      username,
+      email,
       password_hash,
       display_name: username,
       verified: false,
       is_verified_badge: false,
-      verification_token,
+      session_version: 0,
       created_at: new Date().toISOString(),
     };
+    // Stores sha256(token) + a mandatory 24h expiry; the plaintext only ever
+    // leaves in the email link (SEC-01).
+    verifyToken = tokens.issue(user, 'verify');
     data.users.push(user);
-    await saveUsers(data, `chore: register ${username}`);
+    return null;
+  }, `chore: register ${username}`);
 
-    {
-      const base = process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`;
-      const verifyUrl = `${base}/api/verify?token=${verification_token}&u=${encodeURIComponent(username)}`;
-      try {
-        await sendVerification({ to: email, username, verifyUrl });
-      } catch (e) {
-        console.error('mail error', e);
-        return res.status(200).json({ ok: true, warning: 'الحساب أنشئ لكن فشل إرسال إيميل التفعيل. جرّب "نسيت كلمة السر" أو راسل الإدارة.' });
-      }
-    }
-    res.status(200).json({ ok: true, needs_verification: true });
+  if (conflict) throw new HttpError(409, conflict);
+  if (!written) throw new HttpError(500, 'تعذّر إنشاء الحساب، حاول لاحقاً');
+
+  const verifyUrl = `${baseUrl(req)}/api/verify?token=${verifyToken}&u=${encodeURIComponent(username)}`;
+  try {
+    await sendVerification({ to: email, username, verifyUrl });
   } catch (e) {
-    console.error('signup error:', e);
-    res.status(500).json({ error: 'خطأ داخلي: ' + (e && e.message ? e.message : 'unknown') });
+    // The account exists; say so without leaking SMTP details.
+    // eslint-disable-next-line no-console
+    console.error('[signup] verification mail failed:', e.message);
+    return res.status(200).json({
+      ok: true,
+      needs_verification: true,
+      warning: 'الحساب أنشئ لكن فشل إرسال إيميل التفعيل. اطلب رسالة تفعيل جديدة أو راسل الإدارة.',
+    });
   }
-};
+
+  res.status(200).json({ ok: true, needs_verification: true });
+});

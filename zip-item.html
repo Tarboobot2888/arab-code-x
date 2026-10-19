@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>ملف · ARAB code</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,19 +38,20 @@ function fmtDate(d){try{return new Date(d).toLocaleDateString("ar")}catch{return
 async function gate(){await renderNav();const me=await loadMe();if(!me){location.href="/auth?mode=login";return null}return me}
 </script>
 <script>
-function md(s){try{return DOMPurify.sanitize(marked.parse(s,{breaks:true,gfm:true}))}catch{return esc(s)}}
+// Shared renderer: escapes instead of injecting when DOMPurify is unavailable.
+function md(s){return window.renderMarkdown(s)}
 (async()=>{const me=await gate();if(!me)return;
   const slug=decodeURIComponent(location.pathname.split('/').filter(Boolean)[1]||'');
   const box=document.getElementById('box');
   try{const {zip:z}=await api('/api/zip?slug='+encodeURIComponent(slug));
     document.title=z.title+' · ARAB code';
     const own=me.is_admin||me.username.toLowerCase()===z.author.toLowerCase();
-    box.innerHTML=`${z.thumb?`<div class="zip-thumb" style="height:260px;background-image:url('${esc(z.thumb)}')"></div>`:''}
+    box.innerHTML=`${escCss(z.thumb)?`<div class="zip-thumb" style="height:260px;background-image:url('${escCss(z.thumb)}')"></div>`:''}
       <h1 style="margin:10px 0 6px">${esc(z.title)}</h1>
       <p style="color:var(--muted)">${esc(z.description||'')}</p>
       <div class="zip-meta" style="margin:10px 0 16px">${authorLink(z)}<span class="lang-badge">${esc(z.type)}</span><span>${fmtSize(z.size)}</span>${z.version?`<span>v${esc(z.version)}</span>`:''}<span>${fmtDate(z.created_at)}</span>${(z.tags||[]).map(t=>`<span>#${esc(t)}</span>`).join('')}</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <a class="btn primary" href="${esc(z.url)}" download="${esc(z.filename)}" target="_blank" rel="noopener">⬇ تحميل الملف</a>
+        <a class="btn primary" href="${escUrl(z.url)}" download="${esc(z.filename)}" target="_blank" rel="noopener noreferrer">⬇ تحميل الملف</a>
         ${own?'<button class="btn ghost" id="del" style="color:var(--danger)">حذف</button>':''}
       </div>
       <section class="readme" style="margin-top:22px"><div class="readme-head"><span>📄 README.md</span></div>

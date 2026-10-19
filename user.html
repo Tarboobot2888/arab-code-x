@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index, follow">
+<link rel="canonical" id="canonical-link" href="https://www.arab-code.cv/">
+<link rel="alternate" hreflang="ar" href="https://www.arab-code.cv/">
+<link rel="alternate" hreflang="x-default" href="https://www.arab-code.cv/">
 <title>ملف مستخدم · ARAB code</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,19 +79,27 @@ function revealUserCards(container) {
   });
 }
 
-function mdToHtml(md) {
-  try {
-    const raw = window.marked ? marked.parse(md, { breaks: true, gfm: true }) : esc(md).replace(/\n/g, '<br>');
-    return window.DOMPurify ? DOMPurify.sanitize(raw, { ADD_ATTR: ['target'] }) : raw;
-  } catch { return esc(md); }
+// Delegates to app.js renderMarkdown(), which FAILS CLOSED when DOMPurify is
+// unavailable. The old implementation returned the unsanitised marked output in
+// that case, which turned a blocked CDN into stored XSS in a member's README.
+function mdToHtml(md) { return window.renderMarkdown(md); }
+
+function setCanonical(username) {
+  // Canonical points at the real profile path, not whatever alias or query
+  // string the visitor arrived with (APP-04).
+  const el = document.getElementById('canonical-link');
+  if (el && username) el.href = `${location.origin}/u/${encodeURIComponent(username)}`;
 }
 
 function renderProfile(user, count) {
   const badge = isVerified(user) ? verifiedBadge(user.is_admin ? 'حساب الإدارة الموثّق' : 'حساب موثّق') : '';
-  const banner = user.banner_url ? `style="background-image:url('${esc(user.banner_url)}')"` : '';
-  const links = (user.links || []).map(l =>
-    `<a class="btn sm" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.icon || '🔗')} ${esc(l.label)}</a>`
-  ).join('');
+  const bannerCss = user.banner_url ? escCss(user.banner_url) : '';
+  const banner = bannerCss ? `style="background-image:url('${bannerCss}')"` : '';
+  const links = (user.links || []).map(l => {
+    const href = escUrl(l.url);
+    if (!href) return '';
+    return `<a class="btn sm" href="${href}" target="_blank" rel="noopener noreferrer">${esc(l.icon || '🔗')} ${esc(l.label)}</a>`;
+  }).join('');
   const self = ME && ME.username.toLowerCase() === user.username.toLowerCase();
   const actions = self ? `
     <div class="profile-actions">
@@ -97,6 +109,7 @@ function renderProfile(user, count) {
       <button class="btn sm ghost" onclick="toggleAccount()">⚙️ إعدادات الحساب</button>
     </div>` : '';
 
+  setCanonical(user.username);
   return `<section class="profile-card">
     <div class="profile-banner" ${banner}></div>
     <div class="profile-body">
@@ -106,7 +119,7 @@ function renderProfile(user, count) {
       <div class="profile-stats">
         <span><b>${count}</b> كود منشور</span>
         <span>عضو منذ <b>${new Date(user.created_at).toLocaleDateString('ar')}</b></span>
-        ${user.website ? `<span><a href="${esc(user.website)}" target="_blank" rel="noopener">${esc(user.website.replace(/^https:\/\//, ''))}</a></span>` : ''}
+        ${escUrl(user.website) ? `<span><a href="${escUrl(user.website)}" target="_blank" rel="noopener noreferrer">${esc(String(user.website).replace(/^https:\/\//, ''))}</a></span>` : ''}
       </div>
       ${links ? `<div class="profile-links">${links}</div>` : ''}
       ${actions}

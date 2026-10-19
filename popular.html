@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index, follow">
 <title>الأكثر إعجابًا | Most Liked · ARAB code</title>
 <meta name="description" content="ARAB code منصة عربية للمطورين العرب لنشر ومشاركة الأكواد والمشاريع والملفات الجاهزة. ARAB code is an Arabic platform for Arab developers to share code, projects and ready-made files.">
 <meta name="keywords" content="أكواد, مطورين عرب, برمجة, مشاركة كود, HTML, CSS, JavaScript, Python, Arab developers, code sharing, programming, snippets">
 <link rel="canonical" href="https://www.arab-code.cv/popular">
 <link rel="alternate" hreflang="ar" href="https://www.arab-code.cv/popular">
-<link rel="alternate" hreflang="en" href="https://www.arab-code.cv/popular">
 <link rel="alternate" hreflang="x-default" href="https://www.arab-code.cv/popular">
 <meta property="og:type" content="website"><meta property="og:site_name" content="ARAB code">
 <meta property="og:locale" content="ar_AR"><meta property="og:locale:alternate" content="en_US">
@@ -40,50 +40,63 @@
   <div class="sphere"></div>
   <h1>🔥 الأكثر إعجابًا</h1>
   <p class="tag">أكواد اختارها المجتمع بالاعجاب</p>
-  <div class="stats-bar" id="stats"></div>
+  <div class="stats-bar" id="stats" role="status" aria-live="polite"></div>
 </header>
 
 <main class="container">
   <div id="codes" class="grid"></div>
-  <p id="empty" style="text-align:center;color:var(--muted);display:none;margin-top:40px">لا توجد أكواد بإعجابات بعد. كن أول من يضع إعجابًا!</p>
+  <p id="empty" role="status" aria-live="polite" style="text-align:center;color:var(--muted);display:none;margin-top:40px">لا توجد أكواد بإعجابات بعد. كن أول من يضع إعجابًا!</p>
 </main>
 
 <script src="/app.js"></script>
 <script>
+// /api/likes now exists (APP-01). Its ?top=1 reply is { top: [{code,total}],
+// totals }, and the totals come straight from the like keys, so no per-code
+// follow-up request and no separately incremented counter that can drift.
 async function fetchAndRenderCodes() {
-  // Top liked codes
+  const box = document.getElementById('codes');
+  const empty = document.getElementById('empty');
+  const stats = document.getElementById('stats');
   try {
-    const topResp = await api(`/api/likes?top=1&_t=${Date.now()}`);
-    const codes = topResp.codes || [];
-    const box = document.getElementById('codes');
-    if (!codes || !codes.length) {
-      document.getElementById('empty').style.display = 'block';
+    const [likes, listResp] = await Promise.all([
+      api(`/api/likes?top=1&limit=48&_t=${Date.now()}`),
+      api('/api/list').catch(() => ({ codes: [] })),
+    ]);
+    const top = Array.isArray(likes.top) ? likes.top : [];
+    if (!top.length) {
+      empty.hidden = false;
+      empty.style.display = 'block';
       box.innerHTML = '';
+      stats.textContent = '';
       return;
     }
-    document.getElementById('empty').style.display = 'none';
-    // Merge with full metadata from /api/list (top response may lack author fields)
-    let listResp;
-    try { listResp = await api('/api/list'); } catch { listResp = { codes: [] }; }
+    empty.style.display = 'none';
     const byName = new Map((listResp.codes || []).map((c) => [c.filename, c]));
-    // Fetch like totals for every code
-    const totals = {};
-    await Promise.all(codes.map(async (c) => {
-      const name = c.filename || c.code;
-      try { totals[name] = (await api('/api/likes?code=' + encodeURIComponent(name))).total || 0; }
-      catch { totals[name] = 0; }
-    }));
-    const merged = codes.map((c) => {
-      const full = byName.get(c.filename || c.code) || {};
-      return { filename: c.filename || c.code, ...full, ...c };
-    });
-    box.innerHTML = merged.map((c) => codeCard(c, { likes: totals[c.filename] || 0 })).join('');
-    const devs = new Set(codes.map(c => (c.author || '').toLowerCase()).filter(Boolean));
-    const totalLikes = Object.values(totals).reduce((a, b) => a + (b || 0), 0);
-    document.getElementById('stats').innerHTML =
-      `<div><b>${codes.length}</b> كود بمُتصدّرة</div><div><b>${totalLikes}</b> إجمالي الإعجابات</div><div><b>${devs.size}</b> مطوّر</div>`;
+    // Only codes still present in the public index are shown — a like left over
+    // from a deleted code must not render a dead card.
+    const merged = top
+      .map((t) => {
+        const full = byName.get(t.code);
+        return full ? { ...full, likes: t.total } : null;
+      })
+      .filter(Boolean);
+
+    if (!merged.length) {
+      empty.style.display = 'block';
+      box.innerHTML = '';
+      stats.textContent = '';
+      return;
+    }
+    box.innerHTML = merged.map((c) => codeCard(c)).join('');
+    const devs = new Set(merged.map((c) => String(c.author || '').toLowerCase()).filter(Boolean));
+    const totalLikes = merged.reduce((a, c) => a + (c.likes || 0), 0);
+    stats.innerHTML = `<div><b>${merged.length}</b> كود متصدّر</div>`
+      + `<div><b>${totalLikes}</b> إجمالي الإعجابات</div>`
+      + `<div><b>${devs.size}</b> مطوّر</div>`;
   } catch (e) {
-    console.error('Error fetching codes:', e);
+    box.innerHTML = '';
+    empty.style.display = 'block';
+    empty.textContent = 'تعذّر تحميل قائمة الأكثر إعجاباً، حاول لاحقاً.';
   }
 }
 

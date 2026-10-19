@@ -10,6 +10,9 @@
 <meta name="keywords" content="ARAB CODE, عرب كود, اكواد برمجية, منصة برمجية, أكواد مفتوحة المصدر, برمجة, تطوير المواقع, JavaScript, HTML, CSS, Python, مشاركة الكود, مكتبة البرمجة العربية">
 <meta name="author" content="ARAB CODE">
 <meta name="robots" content="index, follow">
+<link rel="canonical" id="canonical-link" href="https://www.arab-code.cv/">
+<link rel="alternate" hreflang="ar" href="https://www.arab-code.cv/">
+<link rel="alternate" hreflang="x-default" href="https://www.arab-code.cv/">
 
 <!-- Open Graph / Facebook / Telegram -->
 <meta property="og:type" content="website">
@@ -195,9 +198,9 @@
   <div id="preview-wrap" style="display:none;margin-top:14px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <strong style="color:var(--gold-2)">معاينة حيّة</strong>
-      <span style="font-size:12px;color:var(--muted)">تعمل داخل صندوق آمن (sandbox)</span>
+      <span style="font-size:12px;color:var(--muted)">تعمل داخل صندوق معزول (sandbox) بدون صلاحيات الموقع ولا اتصال بالشبكة</span>
     </div>
-    <iframe id="preview" sandbox="allow-scripts allow-modals allow-popups" style="width:100%;height:420px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
+    <iframe id="preview" sandbox="allow-scripts" referrerpolicy="no-referrer" loading="lazy" title="معاينة الكود في صندوق معزول" style="width:100%;height:420px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
   </div>
 
   <!-- ===== التعليقات والبلاغ ===== -->
@@ -267,12 +270,18 @@
     updateMeta('og:title', fullTitle, 'property');
     updateMeta('og:description', meta.description || `كود ${meta.title} متاح الآن على ARAB code.`, 'property');
     updateMeta('og:url', window.location.href, 'property');
+    // Canonical must point at the resolved filename, not whatever alias or
+    // query string the visitor arrived with (APP-04).
+    const canonical = document.getElementById('canonical-link');
+    if (canonical) canonical.href = `${location.origin}/c/${encodeURIComponent(filename)}`;
     updateMeta('twitter:title', fullTitle);
     updateMeta('twitter:description', meta.description || `تصفح كود ${meta.title} على ARAB code.`);
   }
 
   const rawUrl = `/api/raw?file=${encodeURIComponent(filename)}`;
-  const ghRaw = `https://raw.githubusercontent.com/mzml-gg/arab-web/main/codes/${encodeURIComponent(filename)}`;
+  // Served as text/plain + attachment by /api/raw; the GitHub path used to be
+  // hardcoded here, which leaked the repository name and broke for a private repo.
+  const ghRaw = rawUrl;
   window.__filename = filename;
   const me = await loadMe();
   const isOwner = me && me.username.toLowerCase() === (meta.author||'').toLowerCase();
@@ -468,7 +477,7 @@
       <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       نسخ
     </button>
-    <a class="btn" href="${ghRaw}" target="_blank">Raw</a>
+    <a class="btn" href="${esc(ghRaw)}" target="_blank" rel="noopener noreferrer">Raw / تنزيل</a>
     <a class="btn" href="/submit?fork=${encodeURIComponent(filename)}">🍴 Fork</a>
     ${previewable ? `<button class="btn" id="previewBtn" onclick="togglePreview()">▶ تشغيل / معاينة</button>` : ''}
     ${canDirectDelete ? `<button class="btn danger" onclick="directDelete('${esc(filename)}')">حذف</button>` : (canRequestDelete ? `<button class="btn danger" onclick="requestDelete()">طلب حذف</button>` : '')}
@@ -530,15 +539,39 @@ async function copyCode() {
 
 function buildPreviewDoc(text, ext) {
   const e = String(ext || '').toLowerCase();
-  if (e === 'css') return `<!doctype html><meta charset="utf-8"><style>${text}</style>
-    <body style="font-family:system-ui;padding:16px">
-      <h1>عنوان تجريبي</h1><p>فقرة نصية لمعاينة تنسيقات CSS.</p>
-      <button>زر</button> <a href="#">رابط</a>
-      <div class="box card container" style="margin-top:12px">.box / .card / .container</div>
-    </body>`;
-  if (e === 'svg') return `<!doctype html><meta charset="utf-8"><body style="margin:0;display:grid;place-items:center;height:100vh">${text}</body>`;
-  if (e === 'md' || e === 'markdown') return `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;padding:16px;white-space:pre-wrap">${text.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</body>`;
-  return text; // html
+  // The iframe is sandboxed WITHOUT allow-same-origin, so the preview runs on an
+  // opaque origin and cannot read this page's cookies or storage. This CSP adds
+  // the second half: the preview cannot call out to the network either, so it
+  // cannot exfiltrate anything a visitor pastes into it.
+  const CSP = "<meta http-equiv=\"Content-Security-Policy\" content=\""
+    + "default-src 'none'; img-src data: blob:; style-src 'unsafe-inline' data:; "
+    + "script-src 'unsafe-inline' 'unsafe-eval'; font-src data:; "
+    + "connect-src 'none'; form-action 'none'; frame-src 'none'; base-uri 'none'\">";
+  const head = '<!doctype html><html><head><meta charset="utf-8">' + CSP;
+  const escapeText = (t) => String(t).replace(/[&<>]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;' }[c]));
+
+  if (e === 'css') {
+    return head + '<style>' + text + '</style></head>'
+      + '<body style="font-family:system-ui;padding:16px">'
+      + '<h1>عنوان تجريبي</h1><p>فقرة نصية لمعاينة تنسيقات CSS.</p>'
+      + '<button>زر</button> <a href="#">رابط</a>'
+      + '<div class="box card container" style="margin-top:12px">.box / .card / .container</div>'
+      + '</body></html>';
+  }
+  if (e === 'svg') {
+    return head + '</head><body style="margin:0;display:grid;place-items:center;height:100vh">'
+      + text + '</body></html>';
+  }
+  if (e === 'md' || e === 'markdown') {
+    return head + '</head><body style="font-family:system-ui;padding:16px;white-space:pre-wrap">'
+      + escapeText(text) + '</body></html>';
+  }
+  // HTML: inject the CSP right after <head> (or at the start) so the policy
+  // applies even to a document that declares its own <head>.
+  const t = String(text);
+  if (/<head[^>]*>/i.test(t)) return t.replace(/<head[^>]*>/i, (m) => m + CSP);
+  if (/<html[^>]*>/i.test(t)) return t.replace(/<html[^>]*>/i, (m) => m + '<head>' + CSP + '</head>');
+  return head + '</head><body>' + t + '</body></html>';
 }
 
 function togglePreview() {

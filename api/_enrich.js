@@ -1,5 +1,9 @@
-// Joins stored code entries with the LIVE user record so avatars / verified
+// Joins stored code entries with the LIVE user record so avatars and verified
 // badges are never stale snapshots.
+//
+// APP-03: trust markers come from the account record and the configured admin
+// address only. No username is ever special-cased (app.js used to grant the
+// admin badge to whoever was called "ziad").
 const { loadUsers, isAdminEmail } = require('./_auth');
 
 async function userMap() {
@@ -10,7 +14,10 @@ async function userMap() {
 }
 
 function liveAuthor(entry, u) {
-  if (!u) return { ...entry };
+  if (!u) {
+    // Unknown author (deleted account): never inherit a badge from the snapshot.
+    return { ...entry, author_verified: false, author_is_admin: false, admin_added: !!entry.admin_added };
+  }
   const admin = isAdminEmail(u.email);
   return {
     ...entry,
